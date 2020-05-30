@@ -52,6 +52,5 @@ Target.create "All" ignore
   ==> "All"
 
 "Tool"
-  ==> "Setup"
 
 Target.runOrDefault "All"
