@@ -64,6 +64,11 @@ Target.create "Publish" (fun _ ->
   )
 )
 
+Target.create "CI" (fun _ ->
+  "src/RouteTiles.Core/RouteTiles.Core.fsproj"
+  |> DotNet.build id
+)
+
 Target.create "All" ignore
 
 "Clean"
