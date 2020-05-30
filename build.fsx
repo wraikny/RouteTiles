@@ -36,6 +36,7 @@ Target.create "Clean" (fun _ ->
   ++ "src/**/obj"
   ++ "tests/**/bin"
   ++ "tests/**/obj"
+  ++ "publish"
   |> Shell.cleanDirs
 )
 
@@ -43,6 +44,24 @@ Target.create "Build" (fun _ ->
   !! "src/**/*.*proj"
   ++ "tests/**/*.*proj"
   |> Seq.iter (DotNet.build id)
+)
+
+Target.create "Publish" (fun _ ->
+  [ "linux-x64"; "win-x64"; "osx-x64" ]
+  |> Seq.iter (fun target ->
+    "src/RouteTiles/RouteTiles.fsproj"
+    |> DotNet.publish (fun p ->
+      { p with
+          Common =
+            { DotNet.Options.Create() with
+                CustomParams = Some "-p:PublishSingleFile=true -p:PublishTrimmed=true" }
+          Runtime = Some target
+          Configuration = DotNet.BuildConfiguration.Release
+          SelfContained = Some true
+          OutputPath = sprintf "publish/RouteTiles.%s" target |> Some
+      }
+    )
+  )
 )
 
 Target.create "All" ignore

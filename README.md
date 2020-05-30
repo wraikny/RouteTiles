@@ -3,6 +3,11 @@
 # RouteTiles
 distributed under [MIT License](/LICENSE)
 
+# Dependencies
+Altseed2
+https://github.com/altseed/Altseed2-csharp/tree/e2b49bcc558c1be7c59b4b91d8bcff5cded1daff
+
+
 ## Requirements
 .NET Core 3.1  
 https://dotnet.microsoft.com/download  
