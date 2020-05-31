@@ -6,6 +6,10 @@ nuget FSharp.Core
 // nuget Expecto
 // nuget Expecto.FsCheck
 nuget Affogato
+nuget Elmish
+
+github wraikny/Elmish.Reactive:8073adbf1e22f2c8f0035cef2738e26b6bb4c521 Elmish.Reactive.fs
+
 // [ FAKE GROUP ]
 group Build
     storage none
