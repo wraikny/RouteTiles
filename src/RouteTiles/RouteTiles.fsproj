@@ -1,40 +1,33 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Winexe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\RouteTiles.Core\RouteTiles.Core.fsproj">
       <Name>RouteTiles.Core.fsproj</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Affogato.fs" />
+    <Compile Include="ZOrder.fs" />
+    <Compile Include="NodePool.fs" />
+    <Compile Include="Board.fs" />
     <Compile Include="Program.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\lib\Altseed2\Altseed_core.dll" Condition="(('$(OS)'=='Windows' Or '$(OS)'=='Windows_NT') And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='win-x64'">
+    <None Include="../../lib/Altseed2/Altseed_core.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </None>
-    <None Include="..\..\lib\Altseed2\libAltseed_core.dylib" Condition=" ('$(OS)'=='OSX' And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='osx-x64' ">
+    <None Include="../../lib/Altseed2/libAltseed_core.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </None>
-    <None Include="..\..\lib\Altseed2\libAltseed_core" Condition=" ('$(OS)'=='Linux' And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='linux-x64' ">
+    <None Include="../../lib/Altseed2/libAltseed_core">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </None>
   </ItemGroup>
   <ItemGroup>
