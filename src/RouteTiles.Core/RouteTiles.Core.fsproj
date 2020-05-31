@@ -9,5 +9,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <Compile Include="Model.fs" />
+  </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
