@@ -27,7 +27,10 @@ jobs:
         dotnet-version: ${{ matrix.dotnet }}
 
     - name: Build
-      run: dotnet fake build -t CI
+      run: |
+        dotnet tool restore
+        dotnet paket restore
+        dotnet fake build -t CI
       env:
         CI: true
 
