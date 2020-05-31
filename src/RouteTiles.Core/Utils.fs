@@ -15,3 +15,6 @@ module Array =
       yield f array.[index]
       yield! array.[index+1..array.Length-1]
     |]
+
+[<Measure>] type sec
+[<Measure>] type milisec

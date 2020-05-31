@@ -2,6 +2,7 @@ namespace RouteTiles.App
 
 open RouteTiles.Core
 open RouteTiles.Core.Effect
+open RouteTiles.Core.Utils
 
 open System
 open Affogato
@@ -24,6 +25,8 @@ type Handler = {
       [| for _ in 1..length -> h.rand.Next(min, max) |] |> k
     )
 
+module Consts =
+  let tileSlideInterval = 200<milisec>
 
 type Game() =
   inherit Node()
@@ -42,7 +45,7 @@ type Game() =
         |> Eff.handle handler
       )
 
-  let board = Board()
+  let board = Board(Consts.tileSlideInterval)
 
   do
     program
@@ -51,18 +54,29 @@ type Game() =
     |> ignore
 
   override this.OnAdded() =
-    let keys = [|
+    let laneSlideKeys = [|
       Keys.Z, 0
       Keys.X, 1
       Keys.C, 2
       Keys.V, 3
     |]
 
+    let mutable enabledSlideInput = true
+
     this.AddChildNode({ new Node() with
         member __.OnUpdate() =
-          for (key, lane) in keys do
-            if Engine.Keyboard.GetKeyState(key) = ButtonState.Push then
+          if enabledSlideInput then
+            // Slide
+            laneSlideKeys
+            |> Seq.tryFind(fun (key, _) -> Engine.Keyboard.GetKeyState(key) = ButtonState.Push)
+            |> Option.iter(fun (_, lane) ->
               program.Dispatch(Update.GameMsg.SlideLane lane)
+              async {
+                enabledSlideInput <- false
+                do! Async.Sleep (int Consts.tileSlideInterval)
+                enabledSlideInput <- true
+              } |> Async.StartImmediate
+            )
     })
 
     this.AddChildNode(board)

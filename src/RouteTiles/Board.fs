@@ -1,22 +1,24 @@
 namespace RouteTiles.App
 
 open RouteTiles.Core
-
+open RouteTiles.Core.Utils
 open System
+open System.Threading.Tasks
 open Affogato
 open Altseed
 
-type Board() =
+type Board(slideInterval: int<milisec>) =
   inherit Node()
 
-  let tilePos = Vector2F(20.f, 20.0f)
+  let tilesPos = Vector2F(50.f, 100.0f)
   let tileSize = Vector2F(100.0f, 100.0f)
   let tileMergin = Vector2F(10.0f, 10.0f)
 
-  let boardSize = Vector2F(4.0f, 5.0f)
+  let boardSize = Vector2.init 4 5
 
-  let calcPos(x, y) = 
-    tileSize * 0.5f + tilePos + tileMergin + (tileSize + tileMergin) * (Vector2F(x, y))
+  let backGroundColor = Color(100, 100, 100, 255)
+
+  let calcTilePos({Vector2.x=x; y=y}) = tileMergin + (tileSize + tileMergin) * (Vector2F(float32 x, float32 y))
 
   let tilesPool =
     let texture = Texture2D.Load(@"tiles.png")
@@ -36,36 +38,64 @@ type Board() =
           node
 
         member __.Update(node, (tile: Model.Tile, cdn: int Vector2), isFirstUpdate) =
-          node.Position <- calcPos(float32 cdn.x, float32 cdn.y)
+          let pos = tileSize * 0.5f + calcTilePos cdn
 
           if isFirstUpdate then
-            let ((x, y), angle) = tile.dir |> function
-              | Model.TileDir.UpDown -> ((0, 0), 0.0f)
-              | Model.TileDir.RightLeft -> ((0, 0), 90.0f)
-              | Model.TileDir.UpRight -> ((0, 1), 0.0f)
-              | Model.TileDir.RightDown -> ((0, 1), 90.0f)
-              | Model.TileDir.DownLeft -> ((0, 1), 180.0f)
-              | Model.TileDir.UpLeft -> ((0, 1), 270.0f)
-              | Model.TileDir.Cross -> ((3, 0), 0.0f)
-              | Model.TileDir.Empty -> ((0, 2), 0.0f)
+            async {
+              node.IsDrawn <- false
+              do! Async.Sleep (int slideInterval)
 
-            node.Src <- RectF(Vector2F(float32 x, float32 y) * 100.0f, Vector2F(100.0f, 100.0f))
-            node.Angle <- angle
+              let ((x, y), angle) = tile.dir |> function
+                | Model.TileDir.UpDown -> ((0, 0), 0.0f)
+                | Model.TileDir.RightLeft -> ((0, 0), 90.0f)
+                | Model.TileDir.UpRight -> ((0, 1), 0.0f)
+                | Model.TileDir.RightDown -> ((0, 1), 90.0f)
+                | Model.TileDir.DownLeft -> ((0, 1), 180.0f)
+                | Model.TileDir.UpLeft -> ((0, 1), 270.0f)
+                | Model.TileDir.Cross -> ((3, 0), 0.0f)
+                | Model.TileDir.Empty -> ((0, 2), 0.0f)
+
+              node.Position <- pos
+              node.Src <- RectF(Vector2F(float32 x, float32 y) * 100.0f, Vector2F(100.0f, 100.0f))
+              node.Angle <- angle
+
+              node.IsDrawn <- true
+            } |> Async.StartImmediate
+          else
+            async {
+              let firstPos = node.Position
+              let mutable t = 0.0f
+              while t * 1000.0f < float32 slideInterval do
+                t <- t + Engine.DeltaSecond
+                node.Position <- Easing.GetEasing(EasingType.InQuad, t * 1000.0f / (float32 slideInterval)) * (pos - firstPos) + firstPos
+                do! Async.Sleep(1)
+              node.Position <- pos
+            } |> Async.StartImmediate
     }
 
-  let background =
-    let p0 = calcPos(0.0f, 0.0f)
-    let pl = calcPos(float32 boardSize.X, float32 boardSize.Y)
+  let tilesBackground =
+    let pl = calcTilePos (boardSize)
     RectangleNode(
-      Color    = Color(100, 100, 100, 255),
-      Position = tilePos,
-      Size     = pl - p0 + tileMergin,
+      Color    = backGroundColor,
+      Position = tilesPos,
+      Size     = pl,
       ZOrder   = ZOrder.board 0
     )
 
+  // let nextsPool =
+  //   ()
+    
+  // let nextBackground =
+  //   RectangleNode(
+  //     Color    = backGroundColor,
+  //     // Position = tilePos,
+  //     // Size     = pl,
+  //     ZOrder   = ZOrder.board 0
+  //   )
+
   override this.OnAdded() =
-    this.AddChildNode(background)
-    this.AddChildNode(tilesPool)
+    this.AddChildNode(tilesBackground)
+    tilesBackground.AddChildNode(tilesPool)
 
   interface IObserver<Model.Board> with
     member __.OnCompleted() = ()
@@ -74,7 +104,6 @@ type Board() =
       let tiles =
         board
         |> Model.Board.getTiles
-        |> fun x -> printfn "%A" (Array.filter (fun (_, x) -> Vector.x x = 0) x); x
         |> Seq.map(fun (tile, cdn) -> (tile.id, (tile, cdn)))
 
       tilesPool.Update(tiles)
