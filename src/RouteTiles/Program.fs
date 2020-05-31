@@ -1,4 +1,4 @@
-﻿module RouteTiles.Program
+﻿module RouteTiles.App.Program
 
 open Altseed
 
@@ -6,12 +6,19 @@ open Altseed
 let main _ =
   let config =
     Configuration(
-      ConsoleLoggingEnabled = true,
       FileLoggingEnabled = true,
       LogFileName = "Log.txt"
     )
 
+  #if DEBUG
+  config.ConsoleLoggingEnabled <- true
+  #endif
+
   if Engine.Initialize("RouteTiles", 800, 600, config) then
+
+    Engine.ClearColor <- Color(250, 255, 156, 255)
+
+    Engine.AddNode(Board())
 
     let rec loop() =
       if Engine.DoEvents() then
