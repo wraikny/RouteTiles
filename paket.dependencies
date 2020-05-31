@@ -5,9 +5,7 @@ source https://www.nuget.org/api/v2
 nuget FSharp.Core
 // nuget Expecto
 // nuget Expecto.FsCheck
-
-github wraikny/Affogato:e40d053ba713bae22412ea053e7871eb49392122
-
+nuget Affogato
 // [ FAKE GROUP ]
 group Build
     storage none

@@ -1,21 +1,9 @@
 NUGET
   remote: https://www.nuget.org/api/v2
-    Expecto (9.0)
-      FSharp.Core (>= 4.6) - restriction: || (>= net461) (>= netstandard2.0)
-      Mono.Cecil (>= 0.11.2) - restriction: || (>= net461) (>= netstandard2.0)
-    Expecto.FsCheck (9.0)
-      Expecto (>= 9.0) - restriction: || (>= net461) (>= netstandard2.0)
-      FsCheck (>= 2.14.2) - restriction: || (>= net461) (>= netstandard2.0)
-    FsCheck (2.14.2) - restriction: || (>= net461) (>= netstandard2.0)
-      FSharp.Core (>= 4.2.3) - restriction: || (>= net452) (>= netstandard1.6)
+    Affogato (0.1)
+      FSharp.Core (>= 4.7.1) - restriction: >= netstandard2.0
     FSharp.Core (4.7.2)
-    Mono.Cecil (0.11.2) - restriction: || (>= net461) (>= netstandard2.0)
-GITHUB
-  remote: wraikny/Affogato
-    FULLPROJECT (e40d053ba713bae22412ea053e7871eb49392122)
-      Expecto
-      Expecto.FsCheck
-      FSharp.Core (>= 4.7)
+
 GROUP Build
 STORAGE: NONE
 NUGET
