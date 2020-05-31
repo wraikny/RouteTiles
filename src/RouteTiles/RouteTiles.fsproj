@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Winexe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -16,11 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../paket-files/wraikny/Elmish.Reactive/Elmish.Reactive.fs" />
-    <Compile Include="Affogato.fs" />
-    <Compile Include="ZOrder.fs" />
-    <Compile Include="NodePool.fs" />
-    <Compile Include="Board.fs" />
-    <Compile Include="Program.fs" />
     <None Include="../../lib/Altseed2/Altseed_core.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -30,6 +25,12 @@
     <None Include="../../lib/Altseed2/libAltseed_core">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Include="Affogato.fs" />
+    <Compile Include="ZOrder.fs" />
+    <Compile Include="NodePool.fs" />
+    <Compile Include="Board.fs" />
+    <Compile Include="Game.fs" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="..\..\lib\Altseed2\Altseed2.dll" />

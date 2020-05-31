@@ -15,8 +15,8 @@ type TileDir =
   | RightDown
   | RightLeft
   | DownLeft
-  | NoDir
-  | CrossDir
+  | Cross
+  | Empty
 
 [<Struct>]
 type Tile = {
@@ -36,6 +36,9 @@ type Game = {
   points: int
 }
 
+open Effect
+open EffFs
+
 module Dir =
   let toVector (dir: Dir) =
     let (a, b) = dir |> function
@@ -48,19 +51,17 @@ module Dir =
 
 module TileDir =
   let pairs = [|
-    TileDir.UpRight, struct (Dir.Up, Dir.Right)
-    TileDir.UpDown, struct (Dir.Up, Dir.Down)
-    TileDir.UpLeft, struct (Dir.Up, Dir.Left)
-    TileDir.RightDown, struct (Dir.Right, Dir.Down)
-    TileDir.RightLeft, struct (Dir.Right, Dir.Left)
-    TileDir.DownLeft, struct (Dir.Down, Dir.Left)
+    TileDir.UpRight, (Dir.Up, Dir.Right)
+    TileDir.UpDown, (Dir.Up, Dir.Down)
+    TileDir.UpLeft, (Dir.Up, Dir.Left)
+    TileDir.RightDown, (Dir.Right, Dir.Down)
+    TileDir.RightLeft, (Dir.Right, Dir.Left)
+    TileDir.DownLeft, (Dir.Down, Dir.Left)
   |]
 
-  let pairMap = dict pairs
+  // let pairMap = dict pairs
 
-  let tiles = pairs |> Array.map fst
-
-let (|TileDir|) x = TileDir.pairMap.Item(x)
+  let primitiveTiles = pairs |> Array.map fst
 
 module Board =
   let inline isOutOfBoard (cdn: int Vector2) (board: Board) =
@@ -77,3 +78,31 @@ module Board =
       for y in 0..board.size.y-1 do
         yield (board.tiles.[lane].[y], Vector2.init lane y)
     |]
+
+  let inline init (nextCounts: int) (size: int Vector2) =
+    eff {
+      let! tiles = RandomIntArray(size.x * size.y, (0, 6))
+      let tiles =
+        tiles
+        |> Array.mapi(fun i d -> { id = i * 1<TileId>; dir = TileDir.primitiveTiles.[d]})
+        |> Array.chunkBySize size.y
+
+      let! nextTiles = RandomIntArray(nextCounts, (0, 6))
+      let nextTiles = nextTiles |> Array.mapi(fun i d -> { id = (size.x * size.y + i) * 1<TileId>; dir = TileDir.primitiveTiles.[d]})
+
+      return {
+        nextId = (size.x * size.y + nextCounts) * 1<TileId>
+        size = size
+        tiles = tiles
+        nextTiles = nextTiles
+      }
+    }
+
+module Game =
+  let inline init nextCounts size =
+    eff {
+      let! board = Board.init nextCounts size
+      return { board = board; points = 0 }
+    }
+
+  let inline addPoint p game = { game with points = p + game.points }

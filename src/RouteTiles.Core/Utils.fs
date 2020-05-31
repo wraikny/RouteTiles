@@ -1,15 +1,17 @@
 module RouteTiles.Core.Utils
 
 module Array =
-  let inline pushFrontPopBack (item: 'a) (array: 'a []): 'a[] * 'a option =
-    [|
-      yield item
-      yield! array.[0..array.Length-2]
-    |], Array.tryLast array
+  let inline pushFrontPopBack (item: 'a) (array: 'a []): 'a[] * 'a =
+    if Array.isEmpty array then Array.empty, item
+    else
+      [|
+        yield item
+        yield! array.[0..array.Length-2]
+      |], Array.last array
 
   let inline mapOfIndex (index: int) (f: 'a -> 'a) (array: 'a[]): 'a[] =
     [|
-      for i in 0..index-1 -> array.[i]
+      yield! array.[0..index-1]
       yield f array.[index]
-      for i in index+1..array.Length-1 -> array.[i]
+      yield! array.[index+1..array.Length-1]
     |]

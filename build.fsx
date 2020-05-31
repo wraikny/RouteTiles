@@ -46,6 +46,22 @@ Target.create "Build" (fun _ ->
   |> Seq.iter (DotNet.build id)
 )
 
+Target.create "Resources" (fun _ ->
+  let targetProject = "RouteTiles"
+  let resources = "Resources"
+  // let password = Some "password"
+
+  let outDir x = sprintf "src/%s/bin/%s/netcoreapp3.1" targetProject x
+
+  // for Debug
+  let dir = outDir "Debug"
+  let target = sprintf "%s/%s" dir resources
+  Directory.create dir
+  Directory.delete target |> ignore
+  Shell.copyDir target resources (fun _ -> true)
+  Trace.trace "Finished Copying Resources for Debug"
+)
+
 Target.create "Publish" (fun _ ->
   [ "linux-x64"; "win-x64"; "osx-x64" ]
   |> Seq.iter (fun target ->

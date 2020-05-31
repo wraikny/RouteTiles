@@ -4,21 +4,28 @@ open Altseed
 
 [<EntryPoint>]
 let main _ =
-  let config =
-    Configuration(
-      FileLoggingEnabled = true,
-      LogFileName = "Log.txt"
-    )
+  try
+    let config =
+      Configuration(
+        FileLoggingEnabled = true,
+        LogFileName = "Log.txt"
+      )
 
-  #if DEBUG
-  config.ConsoleLoggingEnabled <- true
-  #endif
+#if DEBUG
+    config.ConsoleLoggingEnabled <- true
+#endif
 
-  if Engine.Initialize("RouteTiles", 800, 600, config) then
+    if not <| Engine.Initialize("RouteTiles", 800, 600, config) then
+      failwith "Failed to initialize the Altseed"
 
-    Engine.ClearColor <- Color(250, 255, 156, 255)
+    Engine.ClearColor <- Color(200, 200, 200, 255)
 
-    Engine.AddNode(Board())
+#if DEBUG
+    if not <| Engine.File.AddRootDirectory(@"Resources") then
+      failwithf "Failed to add root directory %s" "Resources"
+#endif
+
+    Engine.AddNode(Game())
 
     let rec loop() =
       if Engine.DoEvents() then
@@ -28,7 +35,7 @@ let main _ =
     loop()
 
     Engine.Terminate()
-  else
-    printfn "Failed to initialize altseed."
+  with e ->
+    printfn "%A: %s" (e.GetType()) e.Message
 
   0 // return an integer exit code

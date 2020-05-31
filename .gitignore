@@ -355,4 +355,6 @@ MigrationBackup/
 
 **/Log.txt
 
+/Resources/**
+
 !/**/.gitkeep

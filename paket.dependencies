@@ -8,7 +8,8 @@ nuget FSharp.Core
 nuget Affogato
 nuget Elmish
 
-github wraikny/Elmish.Reactive:8073adbf1e22f2c8f0035cef2738e26b6bb4c521 Elmish.Reactive.fs
+github wraikny/Elmish.Reactive:0e37c84314722724e3fae5ee472db58debbae9ce Elmish.Reactive.fs
+github wraikny/EffFs:1ac4202ff820ad8394b7fc0c7a9494b57317cdc3 src/EffFs/EffFs.fs
 
 // [ FAKE GROUP ]
 group Build
