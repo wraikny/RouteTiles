@@ -16,15 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../paket-files/wraikny/Elmish.Reactive/Elmish.Reactive.fs" />
-    <None Include="../../lib/Altseed2/Altseed_core.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="../../lib/Altseed2/libAltseed_core.dylib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="../../lib/Altseed2/libAltseed_core">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <Compile Include="Affogato.fs" />
     <Compile Include="ZOrder.fs" />
     <Compile Include="NodePool.fs" />
@@ -33,6 +24,19 @@
     <Compile Include="Game.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
+
+  <ItemGroup >
+    <None Include="../../lib/Altseed2/Altseed_core.dll" Condition="(('$(OS)'=='Windows' Or '$(OS)'=='Windows_NT') And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='win-x64'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="../../lib/Altseed2/libAltseed_core.dylib" Condition=" ('$(OS)'=='OSX' And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='osx-x64' ">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="../../lib/Altseed2/libAltseed_core" Condition=" ('$(OS)'=='Linux' And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='linux-x64' ">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <ItemGroup>
     <Reference Include="..\..\lib\Altseed2\Altseed2.dll" />
   </ItemGroup>
