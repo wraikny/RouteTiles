@@ -28,6 +28,7 @@
     <Compile Include="Affogato.fs" />
     <Compile Include="ZOrder.fs" />
     <Compile Include="NodePool.fs" />
+    <Compile Include="Consts.fs" />
     <Compile Include="Board.fs" />
     <Compile Include="Game.fs" />
     <Compile Include="Program.fs" />

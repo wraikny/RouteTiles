@@ -18,10 +18,16 @@ type TileDir =
   | Cross
   | Empty
 
+[<Struct; RequireQualifiedAccess>]
+type ColorMode =
+  | Default
+  | Route
+
 [<Struct>]
 type Tile = {
   id: int<TileId>
   dir: TileDir
+  colorMode: ColorMode
 }
 
 type Board = {
@@ -40,7 +46,15 @@ open Effect
 open EffFs
 
 module Dir =
-  let toVector (dir: Dir) =
+  let dirs = [| Dir.Up; Dir.Down; Dir.Right; Dir.Left |]
+
+  let inline rev dir = dir |> function
+    | Dir.Up -> Dir.Down
+    | Dir.Right -> Dir.Left
+    | Dir.Down -> Dir.Up
+    | Dir.Left -> Dir.Right
+
+  let inline toVector (dir: Dir) =
     let (a, b) = dir |> function
       | Dir.Up -> (0, -1)
       | Dir.Down -> (0, 1)
@@ -50,52 +64,110 @@ module Dir =
     Vector2.init a b
 
 module TileDir =
-  let pairs = [|
-    TileDir.UpRight, (Dir.Up, Dir.Right)
-    TileDir.UpDown, (Dir.Up, Dir.Down)
-    TileDir.UpLeft, (Dir.Up, Dir.Left)
-    TileDir.RightDown, (Dir.Right, Dir.Down)
-    TileDir.RightLeft, (Dir.Right, Dir.Left)
-    TileDir.DownLeft, (Dir.Down, Dir.Left)
+  let primitiveTiles = [|
+    TileDir.UpRight
+    TileDir.UpDown
+    TileDir.UpLeft
+    TileDir.RightDown
+    TileDir.RightLeft
+    TileDir.DownLeft
   |]
 
-  // let pairMap = dict pairs
+  let private correspondence =
+    let pairs = [|
+      TileDir.UpRight, (Dir.Up, Dir.Right)
+      TileDir.UpDown, (Dir.Up, Dir.Down)
+      TileDir.UpLeft, (Dir.Up, Dir.Left)
+      TileDir.RightDown, (Dir.Right, Dir.Down)
+      TileDir.RightLeft, (Dir.Right, Dir.Left)
+      TileDir.DownLeft, (Dir.Down, Dir.Left)
+      TileDir.Cross, (Dir.Up, Dir.Down)
+      TileDir.Cross, (Dir.Right, Dir.Left)
+    |]
+    seq {
+      for d, (a, b) in pairs do
+        yield ((a, d), b)
+        yield ((b, d), a)
+    } |> dict
 
-  let primitiveTiles = pairs |> Array.map fst
+  let contains dir tileDir = correspondence.ContainsKey((dir, tileDir))
+
+  let goThrough (from: Dir) (tile: TileDir) =
+    correspondence.TryGetValue ((from, tile))
+    |> function
+    | true, x -> ValueSome x
+    | _ -> ValueNone
+
+module Tile =
+  let inline dir x = x.dir
 
 module Board =
   let inline isOutOfBoard (cdn: int Vector2) (board: Board) =
     cdn.x < 0 || board.size.x <= cdn.x || cdn.y < 0 || board.size.y <= cdn.y
 
   let getTile (cdn: int Vector2) (board: Board) =
-    if isOutOfBoard cdn board
-    then ValueNone
+    if isOutOfBoard cdn board then ValueNone
     else ValueSome board.tiles.[cdn.x].[cdn.y]
 
-  let getTiles board: (Tile * int Vector2)[] =
+  let getTiles board: (int Vector2 * Tile)[] =
     [|
       for lane in 0..board.size.x-1 do
       for y in 0..board.size.y-1 do
-        yield (board.tiles.[lane].[y], Vector2.init lane y)
+        yield (Vector2.init lane y, board.tiles.[lane].[y])
     |]
+
+  let colorize board =
+    let tiles =
+      getTiles board
+      |> Seq.map (fun (cdn, tile) ->
+        let isRoute =
+          Dir.dirs
+          |> Seq.filter(fun d -> TileDir.contains d tile.dir)
+          |> Seq.exists(fun d ->
+            board
+            |> getTile (cdn + Dir.toVector d)
+            |> ValueOption.bind(Tile.dir >> TileDir.goThrough (Dir.rev d))
+            |> ValueOption.isSome
+          )
+        { tile with colorMode = if isRoute then ColorMode.Route else ColorMode.Default }
+      )
+      |> Seq.chunkBySize board.size.y
+      |> Array.ofSeq
+
+    { board with tiles = tiles }
 
   let inline init (nextCounts: int) (size: int Vector2) =
     eff {
       let! tiles = RandomIntArray(size.x * size.y, (0, 6))
       let tiles =
         tiles
-        |> Array.mapi(fun i d -> { id = i * 1<TileId>; dir = TileDir.primitiveTiles.[d]})
+        |> Array.mapi(fun i d ->
+          { id = i * 1<TileId>
+            dir = TileDir.primitiveTiles.[d]
+            colorMode = ColorMode.Default
+          }
+        )
         |> Array.chunkBySize size.y
 
       let! nextTiles = RandomIntArray(nextCounts, (0, 6))
-      let nextTiles = nextTiles |> Array.mapi(fun i d -> { id = (size.x * size.y + i) * 1<TileId>; dir = TileDir.primitiveTiles.[d]})
+      let nextTiles =
+        nextTiles
+        |> Array.mapi(fun i d ->
+          { id = (size.x * size.y + i) * 1<TileId>
+            dir = TileDir.primitiveTiles.[d]
+            colorMode = ColorMode.Default
+          }
+        )
 
-      return {
-        nextId = (size.x * size.y + nextCounts) * 1<TileId>
-        size = size
-        tiles = tiles
-        nextTiles = nextTiles
-      }
+      let board =
+        { nextId = (size.x * size.y + nextCounts) * 1<TileId>
+          size = size
+          tiles = tiles
+          nextTiles = nextTiles
+        }
+        |> colorize
+
+      return board
     }
 
 module Game =

@@ -25,8 +25,6 @@ type Handler = {
       [| for _ in 1..length -> h.rand.Next(min, max) |] |> k
     )
 
-module Consts =
-  let tileSlideInterval = 200<milisec>
 
 type Game() =
   inherit Node()
@@ -35,7 +33,7 @@ type Game() =
 
   let program =
     let gameModel =
-      Model.Game.init 3 (Vector2.init 4 5)
+      Model.Game.init Consts.nextsCount Consts.boardSize
       |> Eff.handle handler
 
     RxProgram.mkSimple
@@ -45,7 +43,7 @@ type Game() =
         |> Eff.handle handler
       )
 
-  let board = Board(Consts.tileSlideInterval)
+  let board = Board()
 
   do
     program
