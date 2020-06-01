@@ -8,7 +8,6 @@ open System
 open Affogato
 open Altseed
 open EffFs
-open Elmish.Reactive
 
 type Handler = {
   rand: Random
@@ -31,22 +30,12 @@ type Game() =
 
   let handler = { rand = Random(0) }
 
-  let program =
-    let gameModel =
-      Model.Game.init Consts.nextsCount Consts.boardSize
-      |> Eff.handle handler
-
-    RxProgram.mkSimple
-      gameModel
-      (fun msg model ->
-        Update.Game.update msg model
-        |> Eff.handle handler
-      )
+  let updater = Updater<Model.Game, _>()
 
   let board = Board()
 
   do
-    program
+    updater
     |> Observable.map(fun x -> x.board)
     |> fun o -> o.Subscribe(board)
     |> ignore
@@ -68,7 +57,7 @@ type Game() =
             laneSlideKeys
             |> Seq.tryFind(fun (key, _) -> Engine.Keyboard.GetKeyState(key) = ButtonState.Push)
             |> Option.iter(fun (_, lane) ->
-              program.Dispatch(Update.GameMsg.SlideLane lane)
+              updater.Dispatch(Update.GameMsg.SlideLane lane)
               async {
                 enabledSlideInput <- false
                 do! Async.Sleep (int Consts.tileSlideInterval)
@@ -79,4 +68,13 @@ type Game() =
 
     this.AddChildNode(board)
 
-    program.Run()
+    let gameModel =
+      Model.Game.init Consts.nextsCount Consts.boardSize
+      |> Eff.handle handler
+
+
+    let update msg model =
+      Update.Game.update msg model
+      |> Eff.handle handler
+
+    updater.Init(gameModel, update)

@@ -15,7 +15,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../../paket-files/wraikny/Elmish.Reactive/Elmish.Reactive.fs" />
+    <Compile Include="Updater.fs" />
     <Compile Include="Affogato.fs" />
     <Compile Include="ZOrder.fs" />
     <Compile Include="NodePool.fs" />

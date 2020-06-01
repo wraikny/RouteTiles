@@ -3,12 +3,8 @@ version 5.226.0
 source https://www.nuget.org/api/v2
 
 nuget FSharp.Core
-// nuget Expecto
-// nuget Expecto.FsCheck
 nuget Affogato
-nuget Elmish
 
-github wraikny/Elmish.Reactive:0e37c84314722724e3fae5ee472db58debbae9ce Elmish.Reactive.fs
 github wraikny/EffFs:1ac4202ff820ad8394b7fc0c7a9494b57317cdc3 src/EffFs/EffFs.fs
 
 // [ FAKE GROUP ]
