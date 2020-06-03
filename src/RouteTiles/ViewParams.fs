@@ -1,4 +1,4 @@
-module RouteTiles.App
+namespace RouteTiles.App
 
 open RouteTiles.Core.Utils
 
