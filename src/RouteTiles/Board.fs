@@ -8,47 +8,10 @@ open System.Threading.Tasks
 open Affogato
 open Altseed
 
-module Helper =
-  let colorModeDelta colorMode =
-    colorMode
-    |> function
-    | ColorMode.Default -> 0
-    | ColorMode.Route -> 1
-
-  let tileTextureSrc (tile: Tile) =
-    let (x, y) = tile.dir |> function
-      | TileDir.Empty -> (0, 2)
-
-      | TileDir.Cross -> (3, 0)
-
-      | TileDir.UpDown
-      | TileDir.RightLeft -> (colorModeDelta tile.colorMode, 0)
-
-      | TileDir.UpRight
-      | TileDir.RightDown
-      | TileDir.DownLeft
-      | TileDir.UpLeft -> (colorModeDelta tile.colorMode, 1)
-
-    RectF(Vector2F(float32 x, float32 y) * 100.0f, Vector2F(100.0f, 100.0f))
-
-
-  let tileTextureAngle (tile: Tile) =
-    tile.dir |> function
-    | TileDir.Cross
-    | TileDir.Empty
-    | TileDir.UpRight
-    | TileDir.UpDown-> 0.0f
-
-    | TileDir.RightLeft
-    | TileDir.RightDown -> 90.0f
-
-    | TileDir.DownLeft -> 180.0f
-    | TileDir.UpLeft -> 270.0f
-
 type Board() =
   inherit Node()
 
-  let calcTilePos({Vector2.x=x; y=y}) = Consts.tileMergin + (Consts.tileSize + Consts.tileMergin) * (Vector2F(float32 x, float32 y))
+  
   
   let createTile() =
     let node =
@@ -64,13 +27,13 @@ type Board() =
     node
 
   let updateTile (node: SpriteNode, (cdn, tile), isNewTile) =
-    let pos = Consts.tileSize * 0.5f + calcTilePos cdn
-    let src = Helper.tileTextureSrc tile
+    let pos = Helper.calcTilePosCenter cdn
+    let src = Binding.tileTextureSrc tile
 
     if isNewTile then
       node.IsDrawn <- false
       node.Position <- pos
-      node.Angle <- Helper.tileTextureAngle tile
+      node.Angle <- Binding.tileTextureAngle tile
       node.Src <- src
 
       async {
@@ -98,7 +61,7 @@ type Board() =
     }
 
   let tilesBackground =
-    let pl = calcTilePos (Consts.boardSize)
+    let pl = Helper.calcTilePos (Consts.boardSize)
     RectangleNode(
       Color    = Consts.backGroundColor,
       Position = Consts.tilesPos,
@@ -115,7 +78,7 @@ type Board() =
     }
 
   let nextsBackground =
-    let pl = calcTilePos (Vector2.init (Consts.nextsCount) 1)
+    let pl = Helper.calcTilePos (Vector2.init (Consts.nextsCount) 1)
     RectangleNode(
       Color    = Consts.backGroundColor,
       Position = Consts.nextsPos,

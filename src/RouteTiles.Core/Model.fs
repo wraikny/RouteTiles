@@ -136,8 +136,8 @@ module Board =
 
     { board with tiles = tiles }
 
-  let inline init (nextCounts: int) (size: int Vector2) =
-    eff {
+  let inline private initTiles (nextCounts) (size: int Vector2) =
+    random {
       let! tiles =
         Random.int 0 6
         |> Random.seq (size.x * size.y)
@@ -151,7 +151,6 @@ module Board =
           >> Seq.chunkBySize size.y
           >> Seq.toArray
         )
-        |> RandomEffect
 
       let! nextTiles =
         Random.int 0 6
@@ -165,6 +164,14 @@ module Board =
           )
           >> Seq.toArray
         )
+
+      return tiles, nextTiles
+    }
+
+  let inline init (nextCounts: int) (size: int Vector2) =
+    eff {
+      let! tiles, nextTiles =
+        initTiles nextCounts size
         |> RandomEffect
 
       let board =
