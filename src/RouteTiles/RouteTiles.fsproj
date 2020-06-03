@@ -14,6 +14,28 @@
       <Name>RouteTiles.Core.fsproj</Name>
     </ProjectReference>
   </ItemGroup>
+
+  <ItemGroup Condition="(('$(OS)'=='Windows' Or '$(OS)'=='Windows_NT') And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='win-x64'">
+    <None Include="../../lib/Altseed2/Altseed_core.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup Condition=" ('$(OS)'=='OSX' And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='osx-x64' ">
+    <None Include="../../lib/Altseed2/libAltseed_core.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup Condition=" ('$(OS)'=='Linux' And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='linux-x64' ">
+    <None Include="../../lib/Altseed2/libAltseed_core">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="Updater.fs" />
     <Compile Include="Affogato.fs" />
@@ -22,15 +44,6 @@
     <Compile Include="Board.fs" />
     <Compile Include="Game.fs" />
     <Compile Include="Program.fs" />
-    <None Include="../../lib/Altseed2/Altseed_core.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="../../lib/Altseed2/libAltseed_core.dylib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="../../lib/Altseed2/libAltseed_core">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="..\..\lib\Altseed2\Altseed2.dll" />
