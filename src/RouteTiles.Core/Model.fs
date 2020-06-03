@@ -138,26 +138,34 @@ module Board =
 
   let inline init (nextCounts: int) (size: int Vector2) =
     eff {
-      let! tiles = RandomIntArray(size.x * size.y, (0, 6))
-      let tiles =
-        tiles
-        |> Array.mapi(fun i d ->
-          { id = i * 1<TileId>
-            dir = TileDir.primitiveTiles.[d]
-            colorMode = ColorMode.Default
-          }
+      let! tiles =
+        Random.int 0 6
+        |> Random.seq (size.x * size.y)
+        |> Random.map(
+          Seq.mapi(fun i d ->
+            { id = i * 1<TileId>
+              dir = TileDir.primitiveTiles.[d]
+              colorMode = ColorMode.Default
+            }
+          )
+          >> Seq.chunkBySize size.y
+          >> Seq.toArray
         )
-        |> Array.chunkBySize size.y
+        |> RandomEffect
 
-      let! nextTiles = RandomIntArray(nextCounts, (0, 6))
-      let nextTiles =
-        nextTiles
-        |> Array.mapi(fun i d ->
+      let! nextTiles =
+        Random.int 0 6
+        |> Random.seq nextCounts
+        |> Random.map(
+          Seq.mapi(fun i d ->
           { id = (size.x * size.y + i) * 1<TileId>
             dir = TileDir.primitiveTiles.[d]
             colorMode = ColorMode.Default
           }
+          )
+          >> Seq.toArray
         )
+        |> RandomEffect
 
       let board =
         { nextId = (size.x * size.y + nextCounts) * 1<TileId>

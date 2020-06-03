@@ -42,8 +42,14 @@ module Game =
     msg |> function
     | SlideLane lane ->
       eff {
-        let! nextIndex = RandomInt(0, 6)
-        let nextDir = TileDir.primitiveTiles.[nextIndex]
+        let nextsHeadDir = game.board.nextTiles |> Array.head |> Tile.dir
+
+        let! nextDir =
+          Random.int 0 6
+          |> Random.map(fun i -> TileDir.primitiveTiles.[i])
+          |> Random.until((<>) nextsHeadDir)
+          |> RandomEffect
+
         let board = Board.slideLane lane nextDir game.board |> ValueOption.get
         let game = { game with board = board }
         return game

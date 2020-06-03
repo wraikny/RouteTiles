@@ -14,14 +14,9 @@ type Handler = {
 } with
   static member Handle(x) = x
 
-  static member Handle(RandomInt(min, max), k) =
+  static member Handle(RandomEffect (Random.Generator f), k) =
     Eff.capture(fun h ->
-      h.rand.Next(min, max) |> k
-    )
-
-  static member Handle(RandomIntArray(length, (min, max)), k) =
-    Eff.capture(fun h ->
-      [| for _ in 1..length -> h.rand.Next(min, max) |] |> k
+      f h.rand |> k
     )
 
 
