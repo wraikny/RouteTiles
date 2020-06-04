@@ -19,7 +19,7 @@ module Consts =
 
   let backGroundColor = Color(100, 100, 100, 255)
 
-  let tileSlideInterval = 150<milisec>
+  let tileSlideInterval = 150<millisec>
 
 module Binding =
   open RouteTiles.Core

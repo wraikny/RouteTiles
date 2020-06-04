@@ -11,8 +11,8 @@ open Altseed
 type Board() =
   inherit Node()
 
-  
-  
+  let coroutineNode = CoroutineNode()
+
   let createTile() =
     let node =
       SpriteNode(
@@ -36,28 +36,28 @@ type Board() =
       node.Angle <- Binding.tileTextureAngle tile
       node.Src <- src
 
-      async {
-        do! Async.Sleep (int Consts.tileSlideInterval)
+      coroutineNode.Add (seq {
+        for _ in Coroutine.milliseconds Consts.tileSlideInterval -> ()
         node.IsDrawn <- true
-      }
+        yield()
+      })
     else
-      async {
+      coroutineNode.Add (seq {
         let firstPos = node.Position
-        let mutable t = 0.0f
-        while t * 1000.0f < float32 Consts.tileSlideInterval do
-          t <- t + Engine.DeltaSecond
-          node.Position <- Easing.GetEasing(EasingType.InQuad, t * 1000.0f / (float32 Consts.tileSlideInterval)) * (pos - firstPos) + firstPos
-          do! Async.Sleep(1)
+        for t in Coroutine.milliseconds Consts.tileSlideInterval do
+          node.Position <- Easing.GetEasing(EasingType.InQuad, t) * (pos - firstPos) + firstPos
+          yield()
+
         node.Position <- pos
         node.Src <- src
-      }
+        yield()
+      })
 
   let tilesPool =
     { new NodePool<int<Model.TileId>, _, _>() with
         member __.Create() = createTile()
         member __.Update(node, (cdn: int Vector2, tile: Model.Tile), isNewTile) =
           updateTile(node, (cdn, tile), isNewTile)
-          |> Async.StartImmediate
     }
 
   let tilesBackground =
@@ -74,7 +74,6 @@ type Board() =
         member __.Create() = createTile()
         member __.Update(node, (index: int, tile: Model.Tile), isNewTile) =
           updateTile(node, ((Vector2.init (Consts.nextsCount - index - 1) 0), tile), isNewTile)
-          |> Async.StartImmediate
     }
 
   let nextsBackground =
@@ -88,6 +87,8 @@ type Board() =
     )
 
   override this.OnAdded() =
+    this.AddChildNode(coroutineNode)
+
     this.AddChildNode(tilesBackground)
     tilesBackground.AddChildNode(tilesPool)
 

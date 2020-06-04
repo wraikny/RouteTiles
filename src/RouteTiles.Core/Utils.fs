@@ -17,4 +17,4 @@ module Array =
     |]
 
 [<Measure>] type sec
-[<Measure>] type milisec
+[<Measure>] type millisec

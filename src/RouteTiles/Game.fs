@@ -27,6 +27,8 @@ type Game() =
 
   let updater = Updater<Model.Game, _>()
 
+  let coroutineNode = CoroutineNode()
+
   let board = Board()
 
   do
@@ -35,7 +37,7 @@ type Game() =
     |> fun o -> o.Subscribe(board)
     |> ignore
 
-  override this.OnAdded() =
+  do
     let laneSlideKeys = [|
       Keys.Z, 0
       Keys.X, 1
@@ -45,30 +47,35 @@ type Game() =
 
     let mutable enabledSlideInput = true
 
-    this.AddChildNode({ new Node() with
-        member __.OnUpdate() =
-          if enabledSlideInput then
-            // Slide
-            laneSlideKeys
-            |> Seq.tryFind(fun (key, _) -> Engine.Keyboard.GetKeyState(key) = ButtonState.Push)
-            |> Option.iter(fun (_, lane) ->
-              updater.Dispatch(Update.GameMsg.SlideLane lane)
-              async {
-                enabledSlideInput <- false
-                do! Async.Sleep (int Consts.tileSlideInterval)
-                enabledSlideInput <- true
-              } |> Async.StartImmediate
-            )
+    coroutineNode.Add(Coroutine.loop <| seq {
+      if enabledSlideInput then
+        // Slide
+        let input =
+          laneSlideKeys
+          |> Seq.tryFind(fst >> Engine.Keyboard.GetKeyState >> (=) ButtonState.Push)
+
+        match input with
+        | None -> yield ()
+        | Some (_, lane) ->
+          updater.Dispatch(Update.GameMsg.SlideLane lane)
+          enabledSlideInput <- false
+          yield! Coroutine.sleep Consts.tileSlideInterval
+          enabledSlideInput <- true
+          yield()
     })
 
+  override this.OnAdded() =
+    this.AddChildNode(coroutineNode)
     this.AddChildNode(board)
 
     let gameModel =
       Model.Game.init Consts.nextsCount Consts.boardSize
       |> Eff.handle handler
 
-
     let update msg model =
+#if DEBUG
+      printfn "Msg: %A" msg
+#endif
       Update.Game.update msg model
       |> Eff.handle handler
 
