@@ -39,6 +39,7 @@
   <ItemGroup>
     <Compile Include="Updater.fs" />
     <Compile Include="Affogato.fs" />
+    <Compile Include="AltseedExtension.fs" />
     <Compile Include="Coroutine.fs" />
     <Compile Include="NodePool.fs" />
     <Compile Include="ViewParams.fs" />

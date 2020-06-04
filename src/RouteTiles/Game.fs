@@ -52,7 +52,7 @@ type Game() =
         // Slide
         let input =
           laneSlideKeys
-          |> Seq.tryFind(fst >> Engine.Keyboard.GetKeyState >> (=) ButtonState.Push)
+          |> Seq.tryFind(fst >> Engine.Keyboard.IsPushState)
 
         match input with
         | None -> yield ()
