@@ -46,6 +46,9 @@ Target.create "Build" (fun _ ->
   |> Seq.iter (DotNet.build id)
 )
 
+let runtimes = [ "linux-x64"; "win-x64"; "osx-x64" ]
+let publishOutput = sprintf "publish/RouteTiles.%s"
+
 Target.create "Resources" (fun _ ->
   let targetProject = "RouteTiles"
   let resources = "Resources"
@@ -60,10 +63,26 @@ Target.create "Resources" (fun _ ->
   Directory.delete target |> ignore
   Shell.copyDir target resources (fun _ -> true)
   Trace.trace "Finished Copying Resources for Debug"
+
+  dotnet "fsi" "--exec pack.fsx"
+
+  let packedResources = sprintf "%s.pack" resources
+
+  [
+    yield!
+      runtimes
+      |> Seq.map (fun r ->
+        sprintf "%s/%s" (publishOutput r) packedResources
+      )
+    yield outDir "Release"
+  ] |> Seq.iter(fun target ->
+    packedResources
+    |> Shell.copyFile target
+  )
 )
 
 Target.create "Publish" (fun _ ->
-  [ "linux-x64"; "win-x64"; "osx-x64" ]
+  runtimes
   |> Seq.iter (fun target ->
     "src/RouteTiles/RouteTiles.fsproj"
     |> DotNet.publish (fun p ->
@@ -74,7 +93,7 @@ Target.create "Publish" (fun _ ->
           Runtime = Some target
           Configuration = DotNet.BuildConfiguration.Release
           SelfContained = Some true
-          OutputPath = sprintf "publish/RouteTiles.%s" target |> Some
+          OutputPath = publishOutput target |> Some
       }
     )
   )

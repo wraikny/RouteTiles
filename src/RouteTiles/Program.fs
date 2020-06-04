@@ -22,7 +22,10 @@ let main _ =
 
 #if DEBUG
     if not <| Engine.File.AddRootDirectory(@"Resources") then
-      failwithf "Failed to add root directory %s" "Resources"
+      failwithf "Failed to add root directory"
+#else
+    if not <| Engine.File.AddRootPackage(@"Resources.pack") then
+      failwithf "Ffailed to add root package"
 #endif
 
     Engine.AddNode(Game())
