@@ -74,6 +74,10 @@ module TileDir =
     TileDir.DownLeft
   |]
 
+  let random =
+    Random.int 0 primitiveTiles.Length
+    |> Random.map(fun d -> primitiveTiles.[d])
+
   let private correspondence =
     let pairs = [|
       TileDir.UpRight, (Dir.Up, Dir.Right)
@@ -138,45 +142,47 @@ module Board =
 
     { board with tiles = tiles }
 
-  let inline private initTiles (nextCounts) (size: int Vector2) =
-    random {
-      let! tiles =
-        Random.int 0 6
-        |> Random.seq (size.x * size.y)
-        |> Random.map(
-          Seq.mapi(fun i d ->
-            { id = i * 1<TileId>
-              dir = TileDir.primitiveTiles.[d]
-              colorMode = ColorMode.Default
-            }
-          )
-          >> Seq.chunkBySize size.y
-          >> Seq.toArray
-        )
+  let initTiles tiles nextTiles (size: int Vector2) =
+    let tiles =
+      tiles
+      |> Seq.mapi (fun i d ->
+        { id = i * 1<TileId>
+          dir = d
+          colorMode = ColorMode.Default
+        }
+      )
+      |> Seq.chunkBySize size.y
+      |> Seq.toArray
 
-      let! nextTiles =
-        Random.int 0 6
-        |> Random.seq nextCounts
-        |> Random.map(
-          Seq.mapi(fun i d ->
-          { id = (size.x * size.y + i) * 1<TileId>
-            dir = TileDir.primitiveTiles.[d]
-            colorMode = ColorMode.Default
-          }
-          )
-          >> Seq.toArray
-        )
+    let nextTiles =
+      nextTiles
+      |> Seq.mapi (fun i d ->
+        { id = (tiles.Length * size.y + i) * 1<TileId>
+          dir = d
+          colorMode = ColorMode.Default
+        }
+      )
+      |> Seq.toArray
 
-      return tiles, nextTiles
-    }
+    tiles, nextTiles
 
   let inline init config =
     eff {
-      let {nextCounts=nextCounts; size = size } = config
+      let { nextCounts = nextCounts; size = size } = config
 
-      let! tiles, nextTiles =
-        initTiles nextCounts size
-        |> RandomEffect
+      let! tiles, nextTiles = RandomEffect(random {
+        let! tiles =
+          TileDir.random
+          |> Random.seq (size.x * size.y)
+
+        let! nextTiles =
+          TileDir.random
+          |> Random.seq nextCounts
+
+        return tiles, nextTiles
+      })
+
+      let tiles, nextTiles = initTiles tiles nextTiles size
 
       let board =
         { nextId = (size.x * size.y + nextCounts) * 1<TileId>
