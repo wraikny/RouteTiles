@@ -15,7 +15,7 @@ let main _ =
     config.ConsoleLoggingEnabled <- true
 #endif
 
-    if not <| Engine.Initialize("RouteTiles", 1280, 720, config) then
+    if not <| Engine.Initialize("RouteTiles", Consts.windowSize.X, Consts.windowSize.Y, config) then
       failwith "Failed to initialize the Altseed"
 
     Engine.ClearColor <- Color(200, 200, 200, 255)

@@ -6,17 +6,22 @@ open Altseed
 open Affogato
 
 module Consts =
+  // -- Core --
 
   let nextsCount = 5
   let boardSize = Vector2.init 4 5
 
-  // let nextsPos = Vector2F(550.0f, 50.0f)
-  let nextsScale = 0.5f
+  // -- View --
 
-  let boardViewPos = Vector2F(100.f, 120.0f)
+  let windowSize = Vector2I(1280, 720)
+
+  // let nextsPos = Vector2F(550.0f, 50.0f)
+  let nextsScale = 0.6f
+
+  // let boardViewPos = Vector2F(100.f, 120.0f)
   let tileSize = Vector2F(100.0f, 100.0f)
   let tileMergin = Vector2F(10.0f, 10.0f)
-  let nextsBoardMerginY = 20.0f
+  let nextsBoardMergin = 100.0f
 
   let backGroundColor = Color(100, 100, 100, 255)
 
@@ -60,17 +65,28 @@ module Binding =
     | TileDir.DownLeft -> 180.0f
     | TileDir.UpLeft -> 270.0f
 
+
 module Helper =
   let calcTilePos({Vector2.x=x; y=y}) = Consts.tileMergin + (Consts.tileSize + Consts.tileMergin) * (Vector2F(float32 x, float32 y))
 
   let calcTilePosCenter cdn = Consts.tileSize * 0.5f + calcTilePos cdn
 
-  let nextsIndexToCoordinate index = Vector2.init (Consts.nextsCount - index - 1) 0
+  let nextsIndexToCoordinate index =
+    Vector2.init 0 (Consts.nextsCount - index - 1)
+    |> Vector.yx
 
   let boardViewSize = calcTilePos Consts.boardSize
-  let nextsViewSize = calcTilePos <| Vector2.init Consts.nextsCount 1
 
-  let nextsViewPos = Vector2F(boardViewSize.X, -Consts.nextsBoardMerginY) - nextsViewSize * Consts.nextsScale
+  let nextsViewSize =
+    Vector2.init 1 Consts.nextsCount
+    |> Vector.yx
+    |> calcTilePos
+
+  let nextsViewPos = Vector2F(Consts.nextsBoardMergin + boardViewSize.X, 0.0f)
+
+  let boardViewPos =
+    let p = (Consts.windowSize.To2F() - boardViewSize) * 0.5f
+    Vector2F(150.0f, p.Y)
 
 
 module ZOrder =

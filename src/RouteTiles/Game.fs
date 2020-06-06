@@ -67,7 +67,7 @@ type Game() =
     viewBaseNode.AddChildNode(viewNode)
 
   do
-    BoardNode(Consts.boardViewPos)
+    BoardNode(Helper.boardViewPos)
     |> registerViewNode
 
   override this.OnAdded() =
