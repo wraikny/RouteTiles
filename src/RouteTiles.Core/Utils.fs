@@ -5,6 +5,11 @@ open RouteTiles.Core.Effects
 
 let random = Random.RandomBuilder()
 
+let inline clamp minVal maxVal x =
+  if x < minVal then minVal
+  elif maxVal < x then maxVal
+  else x
+
 module Array =
   let inline pushFrontPopBack (item: 'a) (array: 'a []): 'a[] * 'a =
     if Array.isEmpty array then Array.empty, item
@@ -21,5 +26,14 @@ module Array =
       yield! array.[index+1..array.Length-1]
     |]
 
+module Array2D =
+  let inline tryGet x y (arr: 'a[,]) =
+    let (w, h) = Array2D.length1 arr, Array2D.length2 arr
+
+    if 0 <= x && x < w && 0 <= y && y < h
+    then ValueSome arr.[x,y]
+    else ValueNone
+
 [<Measure>] type sec
 [<Measure>] type millisec
+

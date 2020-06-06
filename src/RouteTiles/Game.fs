@@ -32,29 +32,29 @@ type Game() =
   let coroutineNode = CoroutineNode()
 
   do
-    let laneSlideKeys = [|
-      Keys.Z, 0
-      Keys.X, 1
-      Keys.C, 2
-      Keys.V, 3
+    let inputs = [|
+      Keys.W, Board.Msg.MoveCursor Dir.Up
+      Keys.D, Board.Msg.MoveCursor Dir.Right
+      Keys.S, Board.Msg.MoveCursor Dir.Down
+      Keys.A, Board.Msg.MoveCursor Dir.Left
     |]
-
+  
     let mutable enabledSlideInput = true
 
     coroutineNode.Add(Coroutine.loop <| seq {
       if enabledSlideInput then
         // Slide
         let input =
-          laneSlideKeys
+          inputs
           |> Seq.tryFind(fst >> Engine.Keyboard.IsPushState)
 
         match input with
         | None -> yield ()
-        | Some (_, lane) ->
-          updater.Dispatch(Board.Msg.SlideLane lane)
-          enabledSlideInput <- false
-          yield! Coroutine.sleep Consts.tileSlideInterval
-          enabledSlideInput <- true
+        | Some (_, msg) ->
+          updater.Dispatch(msg)
+          // enabledSlideInput <- false
+          // yield! Coroutine.sleep Consts.tileSlideInterval
+          // enabledSlideInput <- true
           yield()
     })
 

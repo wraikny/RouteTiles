@@ -1,5 +1,6 @@
 namespace RouteTiles.App
 
+open RouteTiles.Core
 open RouteTiles.Core.Board.Model
 open System
 open System.Threading.Tasks
@@ -16,7 +17,7 @@ type BoardNode(boardPosition) =
       SpriteNode(
         Texture = Texture2D.Load(@"tiles.png"),
         Src = RectF(0.0f, 0.0f, 100.0f, 100.0f),
-        ZOrder = ZOrder.board 1
+        ZOrder = ZOrder.Board.tiles
       )
 
     node.AdjustSize()
@@ -60,11 +61,43 @@ type BoardNode(boardPosition) =
 
   let tilesBackground =
     RectangleNode(
-      Color    = Consts.backGroundColor,
+      Color    = Consts.boardBackGroundColor,
       Position = boardPosition,
       Size     = Helper.boardViewSize,
-      ZOrder   = ZOrder.board 0
+      ZOrder   = ZOrder.Board.background
     )
+
+  let cursorX =
+    RectangleNode(
+      Color = Consts.cursorColor,
+      Size = Helper.cursorXSize,
+      ZOrder = ZOrder.Board.cursor
+    )
+
+  let cursorY =
+    RectangleNode(
+      Color = Consts.cursorColor,
+      Size = Helper.cursorYSize,
+      ZOrder = ZOrder.Board.cursor
+    )
+
+  let mutable cursorMemo = ValueNone
+  let mutable cursorTime = 0.0f
+  let setCusorMemo c =
+    cursorMemo <- ValueSome c
+
+  do
+    coroutineNode.Add(seq {
+      while true do
+        cursorTime <- cursorTime + Engine.DeltaSecond
+
+        let t = cursorTime / (float32 Consts.cursorColorFlashingPeriod / 1000.0f)
+        let col = Helper.lerpColor Consts.boardBackGroundColor Consts.cursorColor (sin t * sin t)
+        cursorX.Color <- col
+        cursorY.Color <- col
+
+        yield()
+    })
 
   let nextsPool =
     { new NodePool<int<TileId>, _, _>() with
@@ -75,21 +108,24 @@ type BoardNode(boardPosition) =
 
   let nextsBackground =
     RectangleNode(
-      Color    = Consts.backGroundColor,
+      Color    = Consts.boardBackGroundColor,
       Position = boardPosition + Helper.nextsViewPos,
       Scale = Vector2F(1.0f, 1.0f) * Consts.nextsScale,
       Size     = Helper.nextsViewSize,
-      ZOrder   = ZOrder.board 0
+      ZOrder   = ZOrder.Board.background
     )
 
   override this.OnAdded() =
     this.AddChildNode(coroutineNode)
 
     this.AddChildNode(tilesBackground)
+    tilesBackground.AddChildNode(cursorX)
+    tilesBackground.AddChildNode(cursorY)
     tilesBackground.AddChildNode(tilesPool)
 
     this.AddChildNode(nextsBackground)
     nextsBackground.AddChildNode(nextsPool)
+
 
   interface IObserver<Board> with
     member __.OnCompleted() = ()
@@ -102,3 +138,12 @@ type BoardNode(boardPosition) =
       nextsPool.Update(seq {
         for (i, t) in Seq.indexed board.nextTiles -> (t.id, (i, t))
       })
+
+      cursorMemo |> function
+      | ValueSome(c) when c = board.cursor -> ()
+      | _ ->
+        setCusorMemo board.cursor
+
+        let cursorXPos, cursorYPos = Helper.cursorPos board.cursor
+        cursorX.Position <- cursorXPos
+        cursorY.Position <- cursorYPos

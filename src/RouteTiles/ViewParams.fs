@@ -23,8 +23,11 @@ module Consts =
   let tileMergin = Vector2F(10.0f, 10.0f)
   let nextsBoardMergin = 100.0f
 
-  let backGroundColor = Color(100, 100, 100, 255)
+  let clearColor = Color(200, 200, 200, 255)
+  let boardBackGroundColor = Color(100, 100, 100, 255)
+  let cursorColor = Color(200, 250, 200, 255)
 
+  let cursorColorFlashingPeriod = 500<millisec>
   let tileSlideInterval = 150<millisec>
 
 module Binding =
@@ -67,6 +70,13 @@ module Binding =
 
 
 module Helper =
+  let lerpColor (x: Color) (y: Color) (t: float32) =
+    let inline f a b =
+      float32 a * (1.0f - t) + float32 b * t
+      |> clamp 0.0f 255.0f
+      |> byte
+    Color(f x.R y.R, f x.G y.G, f x.B y.B, f x.A y.A)
+
   let calcTilePos({Vector2.x=x; y=y}) = Consts.tileMergin + (Consts.tileSize + Consts.tileMergin) * (Vector2F(float32 x, float32 y))
 
   let calcTilePosCenter cdn = Consts.tileSize * 0.5f + calcTilePos cdn
@@ -88,6 +98,19 @@ module Helper =
     let p = (Consts.windowSize.To2F() - boardViewSize) * 0.5f
     Vector2F(150.0f, p.Y)
 
+  let cursorXSize = calcTilePos { Consts.boardSize with x = 1 }
+  let cursorYSize = calcTilePos { Consts.boardSize with y = 1 }
+
+  let cursorPos (cdn: int Vector2) =
+    calcTilePos { cdn with y = 0 } - Consts.tileMergin,
+    calcTilePos { cdn with x = 0 } - Consts.tileMergin
+
 
 module ZOrder =
-  let board = (|||) (10 <<< 16)
+
+  module Board =
+    let offset = (|||) (10 <<< 16)
+
+    let background = offset 0
+    let cursor = offset 1
+    let tiles = offset 2

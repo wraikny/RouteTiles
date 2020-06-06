@@ -13,6 +13,7 @@
     <Compile Include="Effects/Random.fs" />
     <Compile Include="Effects/Effect.fs" />
     <Compile Include="Utils.fs" />
+    <Compile Include="Common.fs" />
     <Compile Include="Board/Model.fs" />
     <Compile Include="Board/Update.fs" />
   </ItemGroup>
