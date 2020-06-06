@@ -15,14 +15,17 @@ type Handler = {
 
   static member Handle(RandomEffect (Random.Generator f), k) =
     Eff.capture(fun h ->
-      f h.rand |> k
-    )
+      let res = f h.rand
 
+#if DEBUG
+      printfn "RandomEffect(%A)" res
+#endif
+
+      k res
+    )
 
 type Game() =
   inherit Node()
-
-  let handler = { rand = Random(0) }
 
   let updater = Updater<Board.Model.Board, _>()
 
@@ -70,6 +73,14 @@ type Game() =
   override this.OnAdded() =
     this.AddChildNode(coroutineNode)
     this.AddChildNode(viewBaseNode)
+
+    let handler: Handler = {
+#if DEBUG
+      rand = Random(0)
+#else
+      rand = Random()
+#endif
+    }
 
     let initModel =
       Board.Model.Board.init {
