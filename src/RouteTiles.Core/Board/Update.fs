@@ -1,48 +1,41 @@
-module RouteTiles.Core.Update
+namespace RouteTiles.Core.Board
 
-open Utils
-open Model
+open RouteTiles.Core
+open RouteTiles.Core.Board.Model
 
-// module TileDir =
-  
+type Msg = SlideLane of int
 
-module Board =
-  let slideLane (lane: int) (nextDir: TileDir) (board: Board): Board voption =
-    if lane < 0 || board.size.x <= lane then ValueNone
+module Update =
+  let slideLane (lane: int) (nextDir: TileDir) (board: Board): Board =
+    if lane < 0 || board.config.size.x <= lane then failwithf "lane = '%d' is out of range" lane
     else
       let newTile =
         { id = board.nextId
           dir = nextDir
           colorMode = ColorMode.Default
         }
-      
+
       let (nextTiles, next) = board.nextTiles |> Array.pushFrontPopBack newTile
       let tiles =
         board.tiles
         |> Array.mapOfIndex lane (Array.pushFrontPopBack next >> fst)
 
-      
       { board with
           nextId = board.nextId + 1<TileId>
           tiles = tiles
           nextTiles = nextTiles
       }
       |> Board.colorize
-      |> ValueSome
 
 
-type GameMsg =
-  | SlideLane of int
+  open EffFs
+  open RouteTiles.Core.Effects
 
-open EffFs
-open Effect
-
-module Game =
-  let inline update (msg: GameMsg) (game: Game) =
+  let inline update (msg: Msg) (board: Board) =
     msg |> function
     | SlideLane lane ->
       eff {
-        let nextsHeadDir = game.board.nextTiles |> Array.head |> Tile.dir
+        let nextsHeadDir = board.nextTiles |> Array.head |> Tile.dir
 
         let! nextDir =
           Random.int 0 6
@@ -50,7 +43,6 @@ module Game =
           |> Random.until((<>) nextsHeadDir)
           |> RandomEffect
 
-        let board = Board.slideLane lane nextDir game.board |> ValueOption.get
-        let game = { game with board = board }
-        return game
+        let board = slideLane lane nextDir board
+        return board
       }

@@ -1,4 +1,9 @@
+[<AutoOpen>]
 module RouteTiles.Core.Utils
+
+open RouteTiles.Core.Effects
+
+let random = Random.RandomBuilder()
 
 module Array =
   let inline pushFrontPopBack (item: 'a) (array: 'a []): 'a[] * 'a =

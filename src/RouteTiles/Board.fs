@@ -1,14 +1,12 @@
 namespace RouteTiles.App
 
-open RouteTiles.Core
-open RouteTiles.Core.Model
-open RouteTiles.Core.Utils
+open RouteTiles.Core.Board.Model
 open System
 open System.Threading.Tasks
 open Affogato
 open Altseed
 
-type Board() =
+type BoardNode(boardPosition) =
   inherit Node()
 
   let coroutineNode = CoroutineNode()
@@ -54,35 +52,33 @@ type Board() =
       })
 
   let tilesPool =
-    { new NodePool<int<Model.TileId>, _, _>() with
+    { new NodePool<int<TileId>, _, _>() with
         member __.Create() = createTile()
-        member __.Update(node, (cdn: int Vector2, tile: Model.Tile), isNewTile) =
+        member __.Update(node, (cdn: int Vector2, tile: Tile), isNewTile) =
           updateTile(node, (cdn, tile), isNewTile)
     }
 
   let tilesBackground =
-    let pl = Helper.calcTilePos (Consts.boardSize)
     RectangleNode(
       Color    = Consts.backGroundColor,
-      Position = Consts.tilesPos,
-      Size     = pl,
+      Position = boardPosition,
+      Size     = Helper.boardViewSize,
       ZOrder   = ZOrder.board 0
     )
 
   let nextsPool =
-    { new NodePool<int<Model.TileId>, _, _>() with
+    { new NodePool<int<TileId>, _, _>() with
         member __.Create() = createTile()
-        member __.Update(node, (index: int, tile: Model.Tile), isNewTile) =
-          updateTile(node, ((Vector2.init (Consts.nextsCount - index - 1) 0), tile), isNewTile)
+        member __.Update(node, (index: int, tile: Tile), isNewTile) =
+          updateTile(node, (Helper.nextsIndexToCoordinate index, tile), isNewTile)
     }
 
   let nextsBackground =
-    let pl = Helper.calcTilePos (Vector2.init (Consts.nextsCount) 1)
     RectangleNode(
       Color    = Consts.backGroundColor,
-      Position = Consts.nextsPos,
+      Position = boardPosition + Helper.nextsViewPos,
       Scale = Vector2F(1.0f, 1.0f) * Consts.nextsScale,
-      Size     = pl,
+      Size     = Helper.nextsViewSize,
       ZOrder   = ZOrder.board 0
     )
 
@@ -95,7 +91,7 @@ type Board() =
     this.AddChildNode(nextsBackground)
     nextsBackground.AddChildNode(nextsPool)
 
-  interface IObserver<Model.Board> with
+  interface IObserver<Board> with
     member __.OnCompleted() = ()
     member __.OnError(_) = ()
     member __.OnNext(board) =

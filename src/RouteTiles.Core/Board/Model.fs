@@ -1,4 +1,7 @@
-module RouteTiles.Core.Model
+namespace RouteTiles.Core.Board.Model
+
+open RouteTiles.Core
+open RouteTiles.Core.Effects
 
 open Affogato
 
@@ -30,19 +33,17 @@ type Tile = {
   colorMode: ColorMode
 }
 
-type Board = {
+type BoardConfig = {
   size: int Vector2
+  nextCounts: int
+}
+
+type Board = {
+  config: BoardConfig
   nextId: int<TileId>
   tiles: Tile[][]
   nextTiles: Tile[]
 }
-
-type Game = {
-  board: Board
-  points: int
-}
-
-open Effect
 open EffFs
 
 module Dir =
@@ -102,17 +103,18 @@ module Tile =
   let inline dir x = x.dir
 
 module Board =
-  let inline isOutOfBoard (cdn: int Vector2) (board: Board) =
-    cdn.x < 0 || board.size.x <= cdn.x || cdn.y < 0 || board.size.y <= cdn.y
+  let inline isOutOfBoard (cdn: int Vector2) ({ config = { size = size } }: Board) =
+    cdn.x < 0 || size.x <= cdn.x || cdn.y < 0 || size.y <= cdn.y
 
   let getTile (cdn: int Vector2) (board: Board) =
     if isOutOfBoard cdn board then ValueNone
     else ValueSome board.tiles.[cdn.x].[cdn.y]
 
   let getTiles board: (int Vector2 * Tile)[] =
+    let size = board.config.size;
     [|
-      for lane in 0..board.size.x-1 do
-      for y in 0..board.size.y-1 do
+      for lane in 0..size.x-1 do
+      for y in 0..size.y-1 do
         yield (Vector2.init lane y, board.tiles.[lane].[y])
     |]
 
@@ -131,7 +133,7 @@ module Board =
           )
         { tile with colorMode = if isRoute then ColorMode.Route else ColorMode.Default }
       )
-      |> Seq.chunkBySize board.size.y
+      |> Seq.chunkBySize board.config.size.y
       |> Array.ofSeq
 
     { board with tiles = tiles }
@@ -168,15 +170,17 @@ module Board =
       return tiles, nextTiles
     }
 
-  let inline init (nextCounts: int) (size: int Vector2) =
+  let inline init config =
     eff {
+      let {nextCounts=nextCounts; size = size } = config
+
       let! tiles, nextTiles =
         initTiles nextCounts size
         |> RandomEffect
 
       let board =
         { nextId = (size.x * size.y + nextCounts) * 1<TileId>
-          size = size
+          config = config
           tiles = tiles
           nextTiles = nextTiles
         }
@@ -184,12 +188,3 @@ module Board =
 
       return board
     }
-
-module Game =
-  let inline init nextCounts size =
-    eff {
-      let! board = Board.init nextCounts size
-      return { board = board; points = 0 }
-    }
-
-  let inline addPoint p game = { game with points = p + game.points }

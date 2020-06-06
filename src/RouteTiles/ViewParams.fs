@@ -7,24 +7,23 @@ open Affogato
 
 module Consts =
 
-  let nextsCount = 3
+  let nextsCount = 5
   let boardSize = Vector2.init 4 5
 
-  let nextsPos = Vector2F(550.0f, 50.0f)
-  let nextsScale = 0.8f
+  // let nextsPos = Vector2F(550.0f, 50.0f)
+  let nextsScale = 0.5f
 
-  let tilesPos = Vector2F(50.f, 120.0f)
+  let boardViewPos = Vector2F(100.f, 120.0f)
   let tileSize = Vector2F(100.0f, 100.0f)
   let tileMergin = Vector2F(10.0f, 10.0f)
+  let nextsBoardMerginY = 20.0f
 
   let backGroundColor = Color(100, 100, 100, 255)
 
   let tileSlideInterval = 150<millisec>
 
 module Binding =
-  open RouteTiles.Core
-  open RouteTiles.Core.Model
-  open RouteTiles.Core.Utils
+  open RouteTiles.Core.Board.Model
 
   let colorModeDelta colorMode =
     colorMode
@@ -65,6 +64,13 @@ module Helper =
   let calcTilePos({Vector2.x=x; y=y}) = Consts.tileMergin + (Consts.tileSize + Consts.tileMergin) * (Vector2F(float32 x, float32 y))
 
   let calcTilePosCenter cdn = Consts.tileSize * 0.5f + calcTilePos cdn
+
+  let nextsIndexToCoordinate index = Vector2.init (Consts.nextsCount - index - 1) 0
+
+  let boardViewSize = calcTilePos Consts.boardSize
+  let nextsViewSize = calcTilePos <| Vector2.init Consts.nextsCount 1
+
+  let nextsViewPos = Vector2F(boardViewSize.X, -Consts.nextsBoardMerginY) - nextsViewSize * Consts.nextsScale
 
 
 module ZOrder =

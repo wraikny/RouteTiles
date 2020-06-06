@@ -1,8 +1,7 @@
 namespace RouteTiles.App
 
 open RouteTiles.Core
-open RouteTiles.Core.Effect
-open RouteTiles.Core.Utils
+open RouteTiles.Core.Effects
 
 open System
 open Affogato
@@ -25,17 +24,9 @@ type Game() =
 
   let handler = { rand = Random(0) }
 
-  let updater = Updater<Model.Game, _>()
+  let updater = Updater<Board.Model.Board, _>()
 
   let coroutineNode = CoroutineNode()
-
-  let board = Board()
-
-  do
-    updater
-    |> Observable.map(fun x -> x.board)
-    |> fun o -> o.Subscribe(board)
-    |> ignore
 
   do
     let laneSlideKeys = [|
@@ -57,26 +48,41 @@ type Game() =
         match input with
         | None -> yield ()
         | Some (_, lane) ->
-          updater.Dispatch(Update.GameMsg.SlideLane lane)
+          updater.Dispatch(Board.Msg.SlideLane lane)
           enabledSlideInput <- false
           yield! Coroutine.sleep Consts.tileSlideInterval
           enabledSlideInput <- true
           yield()
     })
 
+  let viewBaseNode = Node()
+  let observerUnregisterers = ResizeArray<_>()
+
+  let registerViewNode(viewNode) =
+    let observableUpdater = updater :> IObservable<_>
+    observableUpdater.Subscribe(viewNode) |> observerUnregisterers.Add
+    viewBaseNode.AddChildNode(viewNode)
+
+  do
+    BoardNode(Consts.boardViewPos)
+    |> registerViewNode
+
   override this.OnAdded() =
     this.AddChildNode(coroutineNode)
-    this.AddChildNode(board)
+    this.AddChildNode(viewBaseNode)
 
-    let gameModel =
-      Model.Game.init Consts.nextsCount Consts.boardSize
+    let initModel =
+      Board.Model.Board.init {
+        nextCounts = Consts.nextsCount
+        size = Consts.boardSize
+      }
       |> Eff.handle handler
 
     let update msg model =
 #if DEBUG
       printfn "Msg: %A" msg
 #endif
-      Update.Game.update msg model
+      Board.Update.update msg model
       |> Eff.handle handler
 
-    updater.Init(gameModel, update)
+    updater.Init(initModel, update)

@@ -36,4 +36,5 @@ type Updater<'model, 'msg>() =
 
   interface IObservable<'model> with
     member __.Subscribe(observer) =
+      model |> ValueOption.iter(observer.OnNext >> ignore)
       modelEvent.Publish.Subscribe(observer)

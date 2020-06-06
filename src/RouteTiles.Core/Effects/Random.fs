@@ -1,6 +1,4 @@
-module RouteTiles.Core.Effect
-
-open EffFs
+namespace RouteTiles.Core.Effects
 
 [<RequireQualifiedAccess>]
 module Random =
@@ -51,8 +49,3 @@ module Random =
     member __.Return(x) = Generator.Return(x)
     member __.Bind(x,f) = Generator.(>>=)(x,f)
 
-let random = Random.RandomBuilder()
-
-type 'a RandomEffect = RandomEffect of Random.Generator<'a>
-with
-  static member Effect(_: 'a RandomEffect) = Eff.output<'a>
