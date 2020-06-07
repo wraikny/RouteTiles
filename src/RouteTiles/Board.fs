@@ -49,6 +49,11 @@ type BoardNode(boardPosition) =
 
         node.Position <- pos
         node.Src <- src
+        
+        // Consts.tilesVanishInterval
+        // 消去
+        // Effect追加
+
         yield()
       })
 
