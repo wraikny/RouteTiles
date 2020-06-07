@@ -25,7 +25,10 @@ module Update =
           let cdn = Vector2.init x y - dirVec
           board.tiles
           |> Array2D.tryGet cdn.x cdn.y
-          |> ValueOption.defaultValue nextTile
+          |> function
+          | ValueNone -> ValueSome nextTile
+          | ValueSome ValueNone -> tile
+          | ValueSome x -> x
         else
           tile
       )

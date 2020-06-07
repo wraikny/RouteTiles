@@ -39,7 +39,7 @@ type Board = {
   config: BoardConfig
   nextId: int<TileId>
   cursor: int Vector2
-  tiles: Tile[,]
+  tiles: Tile voption [,]
   nextTiles: Tile list * Tile list
 }
 
@@ -91,32 +91,35 @@ module Board =
   let inline isOutOfBoard (cdn: int Vector2) ({ config = { size = size } }: Board) =
     cdn.x < 0 || size.x <= cdn.x || cdn.y < 0 || size.y <= cdn.y
 
-  let getTile (cdn: int Vector2) (board: Board) =
-    if isOutOfBoard cdn board then ValueNone
-    else ValueSome board.tiles.[cdn.x,cdn.y]
-
   let getTiles board: (int Vector2 * Tile)[] =
     let size = board.config.size;
     [|
       for y in 0..size.y-1 do
       for x in 0..size.x-1 do
-        yield (Vector2.init x y, board.tiles.[x, y])
+        match board.tiles.[x, y] with
+        | ValueSome t ->
+          yield (Vector2.init x y, t)
+        | _ -> ()
     |]
 
   let colorize board =
     let tiles =
       board.tiles
-      |> Array2D.mapi (fun x y tile ->
-        let isRoute =
-          Dir.dirs
-          |> Seq.filter(fun d -> TileDir.contains d tile.dir)
-          |> Seq.exists(fun d ->
-            board
-            |> getTile (Vector2.init x y + Dir.toVector d)
-            |> ValueOption.bind(Tile.dir >> TileDir.goThrough (Dir.rev d))
-            |> ValueOption.isSome
-          )
-        { tile with colorMode = if isRoute then ColorMode.Route else ColorMode.Default }
+      |> Array2D.mapi (fun x y ->
+        ValueOption.map(fun tile ->
+          let isRoute =
+            Dir.dirs
+            |> Seq.filter(fun d -> TileDir.contains d tile.dir)
+            |> Seq.exists(fun d ->
+              let dv = Dir.toVector d
+              board.tiles
+              |> Array2D.tryGet (dv.x + x) (dv.y + y)
+              |> ValueOption.flatten
+              |> ValueOption.bind(Tile.dir >> TileDir.goThrough (Dir.rev d))
+              |> ValueOption.isSome
+            )
+          { tile with colorMode = if isRoute then ColorMode.Route else ColorMode.Default }
+        )
       )
 
     { board with tiles = tiles }
@@ -136,7 +139,7 @@ module Board =
         { id = i * 1<TileId>
           dir = d
           colorMode = ColorMode.Default
-        }
+        } |> ValueSome
       )
       |> Seq.chunkBySize size.y
       |> array2D
