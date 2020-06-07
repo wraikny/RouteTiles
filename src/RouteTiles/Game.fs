@@ -40,12 +40,16 @@ type Game() =
     viewBaseNode.AddChildNode(viewNode)
 
   do
+    base.AddChildNode(coroutineNode)
+    base.AddChildNode(viewBaseNode)
+
     BoardNode(Helper.boardViewPos)
     |> registerViewNode
 
+    GameInfoNode(Helper.gameInfoCenterPos)
+    |> registerViewNode
+
   override this.OnAdded() =
-    this.AddChildNode(coroutineNode)
-    this.AddChildNode(viewBaseNode)
 
     let handler: Handler = {
 #if DEBUG

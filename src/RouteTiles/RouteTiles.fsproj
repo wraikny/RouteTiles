@@ -43,6 +43,7 @@
     <Compile Include="Coroutine.fs" />
     <Compile Include="NodePool.fs" />
     <Compile Include="ViewParams.fs" />
+    <Compile Include="GameInfo.fs" />
     <Compile Include="Board.fs" />
     <Compile Include="Game.fs" />
     <Compile Include="Program.fs" />

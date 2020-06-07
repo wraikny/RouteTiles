@@ -23,12 +23,17 @@ module Consts =
   // let boardViewPos = Vector2F(100.f, 120.0f)
   let tileSize = Vector2F(100.0f, 100.0f)
   let tileMergin = Vector2F(10.0f, 10.0f)
-  let nextsBoardMergin = 100.0f
+  let nextsBoardMergin = 200.0f
+
+  let gameinfoMerginY = 100.0f
+  let gameinfoSeparateLineLength = 300.0f
 
   let clearColor = Color(200, 200, 200, 255)
   let boardBackGroundColor = Color(100, 100, 100, 255)
   let cursorColor = Color(105, 255, 220, 255)
   let cursorColorMin = 0.25f
+
+  let gameInfoColor = Color(30, 30, 30, 255)
 
   let cursorColorFlashingPeriod = 600<millisec>
   let tileSlideInterval = 120<millisec>
@@ -52,7 +57,7 @@ module Binding =
       match dir, routeState with
       | TileDir.Empty, RouteState.Empty -> (0, 2)
 
-      | TileDir.Cross, RouteState.Cross(v, h) -> (3 + routeStateDelta v, 0 + routeStateDelta h)
+      | TileDir.Cross, RouteState.Cross(h, v) -> (3 + routeStateDelta v, 0 + routeStateDelta h)
 
       | TileDir.UpDown, RouteState.Single(ss)
       | TileDir.RightLeft, RouteState.Single(ss) -> (routeStateDelta ss, 0)
@@ -118,6 +123,11 @@ module Helper =
     calcTilePos { cdn with y = 0 } - Consts.tileMergin,
     calcTilePos { cdn with x = 0 } - Consts.tileMergin
 
+  let gameInfoCenterPos =
+    let x = boardViewPos.X + boardViewSize.X + 300.0f
+    let y = boardViewPos.Y + boardViewSize.Y * 0.5f
+    Vector2F(x, y)
+
 
 module ZOrder =
 
@@ -127,3 +137,7 @@ module ZOrder =
     let background = offset 0
     let cursor = offset 1
     let tiles = offset 2
+
+  module GameInfo =
+    let offset = (|||) (20 <<< 16)
+    let text = offset 0
