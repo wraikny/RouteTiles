@@ -93,7 +93,11 @@ type BoardNode(boardPosition) =
         cursorTime <- cursorTime + Engine.DeltaSecond
 
         let t = cursorTime / (float32 Consts.cursorColorFlashingPeriod / 1000.0f)
-        let col = Helper.lerpColor Consts.boardBackGroundColor Consts.cursorColor (cos t * cos t)
+        let col =
+          Helper.lerpColor
+            Consts.boardBackGroundColor
+            Consts.cursorColor
+            (Consts.cursorColorMin + (1.0f - Consts.cursorColorMin) * (cos t * cos t))
         cursorX.Color <- col
         cursorY.Color <- col
 
