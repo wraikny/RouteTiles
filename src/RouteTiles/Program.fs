@@ -11,6 +11,8 @@ let main _ =
 
     Engine.ClearColor <- Consts.clearColor
 
+    Engine.Joystick.RefreshConnectedState()
+
   let rec loop() =
     if Engine.DoEvents() then
       Engine.Update() |> ignore

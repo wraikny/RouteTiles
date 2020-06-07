@@ -85,6 +85,7 @@ type BoardNode(boardPosition) =
   let mutable cursorTime = 0.0f
   let setCusorMemo c =
     cursorMemo <- ValueSome c
+    cursorTime <- 0.0f
 
   do
     coroutineNode.Add(seq {
@@ -92,7 +93,7 @@ type BoardNode(boardPosition) =
         cursorTime <- cursorTime + Engine.DeltaSecond
 
         let t = cursorTime / (float32 Consts.cursorColorFlashingPeriod / 1000.0f)
-        let col = Helper.lerpColor Consts.boardBackGroundColor Consts.cursorColor (sin t * sin t)
+        let col = Helper.lerpColor Consts.boardBackGroundColor Consts.cursorColor (cos t * cos t)
         cursorX.Color <- col
         cursorY.Color <- col
 

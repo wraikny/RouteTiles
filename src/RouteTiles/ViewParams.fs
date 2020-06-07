@@ -25,10 +25,11 @@ module Consts =
 
   let clearColor = Color(200, 200, 200, 255)
   let boardBackGroundColor = Color(100, 100, 100, 255)
-  let cursorColor = Color(200, 250, 200, 255)
+  let cursorColor = Color(200, 220, 200, 255)
 
-  let cursorColorFlashingPeriod = 500<millisec>
+  let cursorColorFlashingPeriod = 750<millisec>
   let tileSlideInterval = 150<millisec>
+  let inputInterval = 50<millisec>
 
 module Binding =
   open RouteTiles.Core.Board.Model

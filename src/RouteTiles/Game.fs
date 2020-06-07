@@ -31,33 +31,6 @@ type Game() =
 
   let coroutineNode = CoroutineNode()
 
-  do
-    let inputs = [|
-      Keys.W, Board.Msg.MoveCursor Dir.Up
-      Keys.D, Board.Msg.MoveCursor Dir.Right
-      Keys.S, Board.Msg.MoveCursor Dir.Down
-      Keys.A, Board.Msg.MoveCursor Dir.Left
-    |]
-  
-    let mutable enabledSlideInput = true
-
-    coroutineNode.Add(Coroutine.loop <| seq {
-      if enabledSlideInput then
-        // Slide
-        let input =
-          inputs
-          |> Seq.tryFind(fst >> Engine.Keyboard.IsPushState)
-
-        match input with
-        | None -> yield ()
-        | Some (_, msg) ->
-          updater.Dispatch(msg)
-          // enabledSlideInput <- false
-          // yield! Coroutine.sleep Consts.tileSlideInterval
-          // enabledSlideInput <- true
-          yield()
-    })
-
   let viewBaseNode = Node()
   let observerUnregisterers = ResizeArray<_>()
 
@@ -73,6 +46,8 @@ type Game() =
   override this.OnAdded() =
     this.AddChildNode(coroutineNode)
     this.AddChildNode(viewBaseNode)
+
+    this.BindingInput()
 
     let handler: Handler = {
 #if DEBUG
@@ -97,3 +72,48 @@ type Game() =
       |> Eff.handle handler
 
     updater.Init(initModel, update)
+
+  member private __.BindingInput() =
+    // let inputs = [|
+    //   JoystickButtonType.LeftUp, Board.MoveCursor Dir.Up
+    //   JoystickButtonType.LeftRight, Board.MoveCursor Dir.Right
+    //   JoystickButtonType.LeftDown, Board.MoveCursor Dir.Down
+    //   JoystickButtonType.LeftLeft, Board.MoveCursor Dir.Left
+    //   JoystickButtonType.RightUp, Board.Slide Dir.Up
+    //   JoystickButtonType.RightRight, Board.Slide Dir.Right
+    //   JoystickButtonType.RightDown, Board.Slide Dir.Down
+    //   JoystickButtonType.RightLeft, Board.Slide Dir.Left
+    // |]
+
+    let inputs = [|
+      Keys.W, Board.MoveCursor Dir.Up
+      Keys.D, Board.MoveCursor Dir.Right
+      Keys.S, Board.MoveCursor Dir.Down
+      Keys.A, Board.MoveCursor Dir.Left
+      Keys.I, Board.Slide Dir.Up
+      Keys.L, Board.Slide Dir.Right
+      Keys.K, Board.Slide Dir.Down
+      Keys.J, Board.Slide Dir.Left
+    |]
+  
+    let mutable enabledSlideInput = true
+
+    coroutineNode.Add(Coroutine.loop <| seq {
+      if enabledSlideInput then
+        // Slide
+        let input =
+          // inputs
+          // |> Seq.tryFind(fun (button, _) ->
+          //   Engine.Joystick.IsPushState(0, button)
+          // )
+          inputs |> Seq.tryFind (fst >> Engine.Keyboard.IsPushState)
+
+        match input with
+        | None -> yield ()
+        | Some (_, msg) ->
+          updater.Dispatch(msg)
+          enabledSlideInput <- false
+          yield! Coroutine.sleep Consts.inputInterval
+          enabledSlideInput <- true
+          yield()
+    })
