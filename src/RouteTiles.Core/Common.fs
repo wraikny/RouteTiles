@@ -24,3 +24,20 @@ module Dir =
     Vector2.init a b
 
   let isVertical = function | Dir.Up | Dir.Down -> true | _ -> false
+
+[<CustomEquality; NoComparison>]
+type SetOf2<'a when 'a : equality> = SetOf2 of 'a * 'a
+
+with
+  override x.Equals(yobj) = 
+    match yobj with
+    | :? SetOf2<'a> as y ->
+      match x, y with
+      | SetOf2(xa, xb), SetOf2(ya, yb) when (xa = ya && xb = yb) || (xa = yb && xb = ya) -> true
+      | _ -> false
+    | _ -> false
+
+    override x.GetHashCode() =
+      x |> function
+      | SetOf2(a, b) ->
+        hash a ||| hash b

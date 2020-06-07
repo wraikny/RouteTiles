@@ -19,6 +19,7 @@ Msg.Slide
 type Msg =
   | MoveCursor of Dir
   | Slide of Dir
+  | ApplyVanishment
 
 module Update =
   let sldieTiles (slideDir: Dir) (nextTile) (board: Board): Board =
@@ -58,6 +59,25 @@ module Update =
     }
     |> Board.routeTiles
 
+  let vanish board =
+    let routesAndLoops = board.routesAndLoops
+    printfn "%A" routesAndLoops
+
+    { board with
+        tiles =
+          board.tiles
+          |> Array2D.map(function
+            | ValueSome { routeState = RouteState.Single(LineState.Routed) }
+            | ValueSome { routeState = RouteState.Single(LineState.Looped) }
+            | ValueSome { routeState = RouteState.Cross(LineState.Routed, _) }
+            | ValueSome { routeState = RouteState.Cross(LineState.Looped, _) }
+            | ValueSome { routeState = RouteState.Cross(_, LineState.Routed) }
+            | ValueSome { routeState = RouteState.Cross(_, LineState.Looped) }
+            | ValueNone -> ValueNone
+            | x -> x
+          )
+        routesAndLoops = Set.empty
+    }
 
   open EffFs
   open RouteTiles.Core.Effects
@@ -66,6 +86,10 @@ module Update =
     let config = board.config
 
     msg |> function
+    | ApplyVanishment ->
+      vanish board
+      |> Eff.pure'
+
     | MoveCursor dir ->
       let cursor = board.cursor + Dir.toVector dir
 

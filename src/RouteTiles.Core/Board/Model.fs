@@ -32,6 +32,11 @@ type RouteState =
   | Cross of vertical:LineState * horizontal:LineState
   | Empty
 
+[<RequireQualifiedAccess>]
+type RouteOrLoop =
+  | Route of Set<int Vector2 * int<TileId>>
+  | Loop of Set<int Vector2 * int<TileId>>
+
 [<Struct>]
 type Tile = {
   id: int<TileId>
@@ -52,6 +57,8 @@ type Board = {
   cursor: int Vector2
   tiles: Tile voption [,]
   nextTiles: Tile list * Tile list
+
+  routesAndLoops: Set<RouteOrLoop>
 }
 
 open EffFs
@@ -138,87 +145,71 @@ module Board =
 
   open System.Collections.Generic
 
-  [<Struct; RequireQualifiedAccess>]
-  type RouteResult =
-    | Marker
-    | Self
+  [<RequireQualifiedAccess>]
+  type private RouteResult =
+    | Marker of (int Vector2 * int<TileId>) list
+    | Self of (int Vector2 * int<TileId>) list
     | Fail of int
 
   let routeTiles (board: Board) =
     let routes firstId cdn dir =
-      let rec f failCount cdn dir =
+      let rec f tiles cdn dir =
         let cdn = cdn + Dir.toVector dir
         let rDir = Dir.rev dir
         board
         |> tryGetTile cdn
         |> function
-        | ValueSome(ValueSome tile) when tile.id = firstId -> RouteResult.Self
+        | ValueSome(ValueSome tile) when tile.id = firstId -> RouteResult.Self tiles
         | ValueSome (ValueSome tile) ->
           TileDir.goThrough rDir tile.dir
           |> function
-          | ValueSome nextDir -> f (failCount + 1) cdn nextDir
-          | ValueNone -> RouteResult.Fail failCount
-        | ValueNone when board.markers |> Seq.contains (cdn.x, cdn.y, rDir) -> RouteResult.Marker
-        | _ -> RouteResult.Fail failCount
+          | ValueSome nextDir -> f ((cdn, tile.id) :: tiles) cdn nextDir
+          | ValueNone -> RouteResult.Fail tiles.Length
+        | ValueNone when board.markers |> Seq.contains (cdn.x, cdn.y, rDir) -> RouteResult.Marker tiles
+        | _ -> RouteResult.Fail tiles.Length
 
-      f 0 cdn dir
+      f [cdn, firstId] cdn dir
 
-    let routeResultsToState = function
-      | RouteResult.Self, RouteResult.Self -> LineState.Looped
-      | RouteResult.Marker, RouteResult.Marker -> LineState.Routed
-      | RouteResult.Marker, _ | _, RouteResult.Marker -> LineState.Routing
-      | RouteResult.Fail a, RouteResult.Fail b when a + b > 0 -> LineState.Looping
-      | _ -> LineState.Default
+    let routesDirs id cdn dir1 dir2 =
+      (routes id cdn dir1, routes id cdn dir2) |> function
+      | RouteResult.Self tiles, RouteResult.Self _ ->
+        LineState.Looped,
+        Set.ofSeq tiles |> RouteOrLoop.Loop |> ValueSome
+      
+      | RouteResult.Marker tiles1, RouteResult.Marker tiles2 ->
+        LineState.Routed,
+        Set.ofSeq(seq { yield! tiles1; yield! tiles2 }) |> RouteOrLoop.Route |> ValueSome
+      
+      | RouteResult.Marker _, _ | _, RouteResult.Marker _ -> LineState.Routing, ValueNone
+      | RouteResult.Fail a, RouteResult.Fail b when a + b > 0 -> LineState.Looping, ValueNone
+      | _ -> LineState.Default, ValueNone
 
 
     let getRouteState cdn (tile: Tile) =
       match tile.dir with
-      | TileDir.Empty -> RouteState.Empty
+      | TileDir.Empty -> RouteState.Empty, Seq.empty
       | TileDir.Cross ->
-        let up = routes tile.id cdn Dir.Up
-        let down = routes tile.id cdn Dir.Down
-        let right = routes tile.id cdn Dir.Right
-        let left = routes tile.id cdn Dir.Left
-        let vState = routeResultsToState (up, down)
-        let hState = routeResultsToState (right, left)
-        RouteState.Cross(vState, hState)
+        let vState, vrl = routesDirs tile.id cdn Dir.Up Dir.Down
+        let hState, hrl = routesDirs tile.id cdn Dir.Right Dir.Left
+        RouteState.Cross(vState, hState), seq { yield vrl; yield hrl }
       | TileDir.Single(a, b) ->
-        routeResultsToState(routes tile.id cdn a, routes tile.id cdn b)
-        |> RouteState.Single
+        let state, rl = routesDirs tile.id cdn a b
+        RouteState.Single state, seq { yield rl }
       | x -> failwithf "Unexpected pattern: %A" x
+
+    let routesAndLoops = ResizeArray()
 
     let tiles =
       board.tiles
       |> Array2D.mapi (fun x y ->
         ValueOption.map(fun tile ->
-          { tile with
-              routeState = getRouteState (Vector2.init x y) tile
-          }
+          let state, rls = getRouteState (Vector2.init x y) tile
+          rls |> Seq.iter(ValueOption.iter(routesAndLoops.Add))
+          { tile with routeState = state }
         )
       )
 
-
-    { board with tiles = tiles }
-    // let tiles =
-    //   board.tiles
-    //   |> Array2D.mapi (fun x y ->
-    //     ValueOption.map(fun tile ->
-    //       let isRoute =
-    //         Dir.dirs
-    //         |> Seq.filter(fun d -> TileDir.contains d tile.dir)
-    //         |> Seq.exists(fun d ->
-    //           let dv = Dir.toVector d
-    //           board.tiles
-    //           |> Array2D.tryGet (dv.x + x) (dv.y + y)
-    //           |> ValueOption.flatten
-    //           |> ValueOption.bind(Tile.dir >> TileDir.goThrough (Dir.rev d))
-    //           |> ValueOption.isSome
-    //         )
-    //       { tile with routeState = if isRoute then routeState.Route else routeState.Default }
-    //     )
-    //   )
-
-    // { board with tiles = tiles }
+    { board with tiles = tiles; routesAndLoops = Set.ofSeq routesAndLoops }
 
   let nextDirsToTiles offset =
     Seq.mapi (fun i d ->
@@ -290,6 +281,8 @@ module Board =
           cursor = Vector.zero
           tiles = tiles
           nextTiles = nextTiles
+
+          routesAndLoops = Set.empty
         }
         |> routeTiles
 

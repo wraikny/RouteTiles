@@ -32,6 +32,7 @@ module Consts =
 
   let cursorColorFlashingPeriod = 600<millisec>
   let tileSlideInterval = 120<millisec>
+  let tilesVanishInterval = 100<millisec>
   let inputInterval = 120<millisec>
 
 module Binding =

@@ -31,8 +31,10 @@ type Updater<'model, 'msg>() =
       let m = update' msg m
       modelEvent.Trigger(m)
       model <- ValueSome m
+      model
     | _ ->
       queue.Enqueue(msg)
+      ValueNone
 
   interface IObservable<'model> with
     member __.Subscribe(observer) =

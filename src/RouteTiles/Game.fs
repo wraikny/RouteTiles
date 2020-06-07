@@ -95,11 +95,9 @@ type Game() =
       Keys.K, Board.Slide Dir.Down
       Keys.J, Board.Slide Dir.Left
     |]
-  
-    let mutable enabledSlideInput = true
 
-    coroutineNode.Add(Coroutine.loop <| seq {
-      if enabledSlideInput then
+    coroutineNode.Add(seq {
+      while true do
         // Slide
         let input =
           // inputs
@@ -111,9 +109,13 @@ type Game() =
         match input with
         | None -> yield ()
         | Some (_, msg) ->
-          updater.Dispatch(msg)
-          enabledSlideInput <- false
+          let m = updater.Dispatch(msg) |> ValueOption.get
+
           yield! Coroutine.sleep Consts.inputInterval
-          enabledSlideInput <- true
+
+          if not m.routesAndLoops.IsEmpty then
+            yield! Coroutine.sleep Consts.tilesVanishInterval
+            updater.Dispatch(Board.Msg.ApplyVanishment) |> ignore
+
           yield()
     })
