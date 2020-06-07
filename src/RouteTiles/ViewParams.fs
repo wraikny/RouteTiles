@@ -25,7 +25,7 @@ module Consts =
   let tileMergin = Vector2F(10.0f, 10.0f)
   let nextsBoardMergin = 200.0f
 
-  let gameinfoMerginY = 100.0f
+  let gameinfoMerginY = 0.0f
   let gameinfoSeparateLineLength = 300.0f
 
   let clearColor = Color(200, 200, 200, 255)
@@ -124,7 +124,7 @@ module Helper =
     calcTilePos { cdn with x = 0 } - Consts.tileMergin
 
   let gameInfoCenterPos =
-    let x = boardViewPos.X + boardViewSize.X + 300.0f
+    let x = boardViewPos.X + nextsViewPos.X + nextsViewSize.X * 0.5f * Consts.nextsScale
     let y = boardViewPos.Y + boardViewSize.Y * 0.5f
     Vector2F(x, y)
 

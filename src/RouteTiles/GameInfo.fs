@@ -36,7 +36,6 @@ type GameInfoNode(centerPosition) =
   let timeText =
     TextNode(
       Font = timeFont,
-      Text = "00:00",
       Position = Vector2F(0.0f, Consts.gameinfoMerginY),
       Color = Consts.gameInfoColor,
       ZOrder = ZOrder.GameInfo.text
@@ -46,14 +45,14 @@ type GameInfoNode(centerPosition) =
     if scoreText.Text <> text then
       scoreText.Text <- text
       scoreText.AdjustSize()
-      scoreText.CenterPosition <- Vector2F(scoreText.Size.X * 0.5f, 0.0f)
+      scoreText.CenterPosition <- Vector2F(scoreText.Size.X * 0.5f, scoreText.Size.Y)
 
   let updateTimeText text =
     if timeText.Text <> text then
       timeText.Text <- text
       timeText.AdjustSize()
-      timeText.CenterPosition <- Vector2F(timeText.Size.X * 0.5f, timeText.Size.Y)
-  
+      timeText.CenterPosition <- Vector2F(timeText.Size.X * 0.5f, 0.0f)
+
   do
     updateScoreText "0"
     updateTimeText "00:00"
