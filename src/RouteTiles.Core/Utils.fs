@@ -34,6 +34,14 @@ module Array2D =
     then ValueSome arr.[x,y]
     else ValueNone
 
+  let inline toSeq (arr: 'a[,]) =
+    let (w, h) = Array2D.length1 arr, Array2D.length2 arr
+    seq {
+      for x in 0..w-1 do
+      for y in 0..h-1 do
+        yield arr.[x, y]
+    }
+
 [<Measure>] type sec
 [<Measure>] type millisec
 

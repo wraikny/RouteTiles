@@ -22,3 +22,5 @@ module Dir =
       | Dir.Left -> (-1, 0)
 
     Vector2.init a b
+
+  let isVertical = function | Dir.Up | Dir.Down -> true | _ -> false

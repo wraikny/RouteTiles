@@ -5,6 +5,17 @@ open RouteTiles.Core.Board.Model
 
 open Affogato
 
+(*
+
+Msg.Slide
+-> Update (colorized)
+-> (Waiting Animation -> Apply Color)
+-> Msg.CheckVanishment
+-> ? (View: Vanishment Animation)
+-> ...
+
+*)
+
 type Msg =
   | MoveCursor of Dir
   | Slide of Dir
@@ -45,7 +56,7 @@ module Update =
         nextId = board.nextId + 1<TileId>
         tiles = tiles
     }
-    |> Board.colorize
+    |> Board.routeTiles
 
 
   open EffFs
@@ -81,7 +92,10 @@ module Update =
                 |> Random.shuffle
                 |> RandomEffect
 
-              let newNexts = newNexts |> Board.nextDirsToTiles (int board.nextId)
+              let newNexts =
+                newNexts
+                |> Board.nextDirsToTiles (int board.nextId)
+                |> Seq.toList
 
               let board =
                 { board with

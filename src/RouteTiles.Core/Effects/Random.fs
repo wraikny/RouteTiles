@@ -47,7 +47,10 @@ module Random =
 
   let inline shuffle (xs: seq<'a>): seq<'a> Generator =
     Generator(fun r ->
-      xs |> Seq.map(fun x -> (r.Next(), x)) |> Seq.sortBy fst |> Seq.map snd
+      xs
+      |> Seq.map(fun x -> (r.Next(), x))
+      |> Seq.sortBy fst
+      |> Seq.map snd
     )
 
   type RandomBuilder() =

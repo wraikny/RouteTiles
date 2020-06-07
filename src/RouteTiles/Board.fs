@@ -16,7 +16,7 @@ type BoardNode(boardPosition) =
     let node =
       SpriteNode(
         Texture = Texture2D.Load(@"tiles.png"),
-        Src = RectF(0.0f, 0.0f, 100.0f, 100.0f),
+        Src = RectF(Vector2F(), Consts.tileSize),
         ZOrder = ZOrder.Board.tiles
       )
 
@@ -27,12 +27,12 @@ type BoardNode(boardPosition) =
 
   let updateTile (node: SpriteNode, (cdn, tile), isNewTile) =
     let pos = Helper.calcTilePosCenter cdn
-    let src = Binding.tileTextureSrc tile
+    let src = Binding.tileTextureSrc tile.dir tile.routeState
 
     if isNewTile then
       node.IsDrawn <- false
       node.Position <- pos
-      node.Angle <- Binding.tileTextureAngle tile
+      node.Angle <- Binding.tileTextureAngle tile.dir
       node.Src <- src
 
       coroutineNode.Add (seq {
@@ -119,6 +119,32 @@ type BoardNode(boardPosition) =
       Size     = Helper.nextsViewSize,
       ZOrder   = ZOrder.Board.background
     )
+
+  do
+    let markers = [|
+      for x in [-1; Consts.boardSize.x] do
+      for y in 1..3 do
+        yield (x, y, Vector2F(float32 <| sign x, 0.0f))
+
+      for y in [-1; Consts.boardSize.y] do
+      for x in 1..2 do
+        yield (x, y, Vector2F(0.0f, float32 <| sign y))
+    |]
+
+    for (x, y, offset) in markers do
+      let node =
+        RectangleNode(
+          Position = 20.0f * -offset + Helper.calcTilePosCenter (Vector2.init x y),
+          Size = Vector2F(1.0f, 1.0f) * 20.0f,
+          Color = Color(255, 255, 100, 255),
+          Angle = 45.0f,
+          ZOrder = ZOrder.Board.tiles
+        )
+      
+      // node.AdjustSize()
+      node.CenterPosition <- node.Size / 2.0f
+
+      tilesBackground.AddChildNode(node)
 
   override this.OnAdded() =
     this.AddChildNode(coroutineNode)

@@ -37,30 +37,36 @@ module Consts =
 module Binding =
   open RouteTiles.Core.Board.Model
 
-  let colorModeDelta colorMode =
-    colorMode
+  let routeStateDelta routeState =
+    routeState
     |> function
-    | ColorMode.Default -> 0
-    | ColorMode.Route -> 1
+    | LineState.Default -> 0
+    | LineState.Routing
+    | LineState.Routed -> 1
+    | LineState.Looping
+    | LineState.Looped -> 2
 
-  let tileTextureSrc (tile: Tile) =
-    let (x, y) = tile.dir |> function
-      | TileDir.Empty -> (0, 2)
+  let tileTextureSrc dir routeState =
+    let (x, y) =
+      match dir, routeState with
+      | TileDir.Empty, RouteState.Empty -> (0, 2)
 
-      | TileDir.Cross -> (3, 0)
+      | TileDir.Cross, RouteState.Cross(v, h) -> (3 + routeStateDelta v, 0 + routeStateDelta h)
 
-      | TileDir.UpDown
-      | TileDir.RightLeft -> (colorModeDelta tile.colorMode, 0)
+      | TileDir.UpDown, RouteState.Single(ss)
+      | TileDir.RightLeft, RouteState.Single(ss) -> (routeStateDelta ss, 0)
 
-      | TileDir.UpRight
-      | TileDir.RightDown
-      | TileDir.DownLeft
-      | TileDir.UpLeft -> (colorModeDelta tile.colorMode, 1)
+      | TileDir.UpRight, RouteState.Single(ss)
+      | TileDir.RightDown, RouteState.Single(ss)
+      | TileDir.DownLeft, RouteState.Single(ss)
+      | TileDir.UpLeft, RouteState.Single(ss) -> (routeStateDelta ss, 1)
 
-    RectF(Vector2F(float32 x, float32 y) * 100.0f, Vector2F(100.0f, 100.0f))
+      | _ -> failwith "Unexpected TileDir and RouteState pair"
 
-  let tileTextureAngle (tile: Tile) =
-    tile.dir |> function
+    RectF(Vector2F(float32 x, float32 y) * Consts.tileSize, Consts.tileSize)
+
+  let tileTextureAngle (dir) =
+    dir |> function
     | TileDir.Cross
     | TileDir.Empty
     | TileDir.UpRight
