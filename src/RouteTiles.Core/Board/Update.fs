@@ -30,18 +30,18 @@ module Update =
         | Dir.Up | Dir.Down -> fun x _ -> x = board.cursor.x
         | Dir.Right | Dir.Left -> fun _ y -> y = board.cursor.y
 
-      let rec isSlidedTile x y =
-        board.tiles
-        |> Array2D.tryGet x y
+      let rec isSlidedTile cdn =
+        board
+        |> Board.tryGetTile cdn
         |> function
         | ValueNone -> true
         | ValueSome ValueNone -> false
-        | _ -> isSlidedTile (x - dirVec.x) (y - dirVec.y)
+        | _ -> isSlidedTile (cdn - dirVec)
 
       board.tiles
       |> Array2D.mapi(fun x y tile ->
-        if isSlideTarget x y && isSlidedTile x y then
-          let cdn = Vector2.init x y - dirVec
+        let cdn = Vector2.init x y - dirVec
+        if isSlideTarget x y && isSlidedTile cdn then
           board.tiles
           |> Array2D.tryGet cdn.x cdn.y
           |> function
