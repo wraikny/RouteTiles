@@ -45,7 +45,13 @@ module Random =
   let inline pair (g1 : 'a Generator) (g2 : 'b Generator) : ('a * 'b) Generator =
     map2 (fun a b -> a, b) g1 g2
 
+  let inline shuffle (xs: seq<'a>): seq<'a> Generator =
+    Generator(fun r ->
+      xs |> Seq.map(fun x -> (r.Next(), x)) |> Seq.sortBy fst |> Seq.map snd
+    )
+
   type RandomBuilder() =
+    member __.ReturnFrom(x) = x
     member __.Return(x) = Generator.Return(x)
     member __.Bind(x,f) = Generator.(>>=)(x,f)
 

@@ -15,6 +15,8 @@ module Consts =
 
   let windowSize = Vector2I(1280, 720)
 
+  let nextsCountToShow = 5
+
   // let nextsPos = Vector2F(550.0f, 50.0f)
   let nextsScale = 0.6f
 
@@ -28,8 +30,8 @@ module Consts =
   let cursorColor = Color(200, 220, 200, 255)
 
   let cursorColorFlashingPeriod = 750<millisec>
-  let tileSlideInterval = 150<millisec>
-  let inputInterval = 50<millisec>
+  let tileSlideInterval = 120<millisec>
+  let inputInterval = 80<millisec>
 
 module Binding =
   open RouteTiles.Core.Board.Model
@@ -82,15 +84,17 @@ module Helper =
 
   let calcTilePosCenter cdn = Consts.tileSize * 0.5f + calcTilePos cdn
 
-  let nextsIndexToCoordinate index =
-    Vector2.init 0 (Consts.nextsCount - index - 1)
-    |> Vector.yx
-
   let boardViewSize = calcTilePos Consts.boardSize
+
+  let private flipNexts: int Vector2 -> _ = Vector.yx
+
+  let nextsIndexToCoordinate index =
+    Vector2.init 0 index
+    |> flipNexts
 
   let nextsViewSize =
     Vector2.init 1 Consts.nextsCount
-    |> Vector.yx
+    |> flipNexts
     |> calcTilePos
 
   let nextsViewPos = Vector2F(Consts.nextsBoardMergin + boardViewSize.X, 0.0f)

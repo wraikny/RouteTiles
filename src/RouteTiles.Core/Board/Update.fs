@@ -10,15 +10,7 @@ type Msg =
   | Slide of Dir
 
 module Update =
-  let sldieTiles (slideDir: Dir) (nextDir: TileDir) (board: Board): Board =
-    let newTile =
-      { id = board.nextId
-        dir = nextDir
-        colorMode = ColorMode.Default
-      }
-
-    let (nextTiles, next) = board.nextTiles |> Array.pushFrontPopBack newTile
-
+  let sldieTiles (slideDir: Dir) (nextTile) (board: Board): Board =
     let tiles =
       let dirVec = Dir.toVector slideDir
 
@@ -33,7 +25,7 @@ module Update =
           let cdn = Vector2.init x y - dirVec
           board.tiles
           |> Array2D.tryGet cdn.x cdn.y
-          |> ValueOption.defaultValue next
+          |> ValueOption.defaultValue nextTile
         else
           tile
       )
@@ -41,7 +33,6 @@ module Update =
     { board with
         nextId = board.nextId + 1<TileId>
         tiles = tiles
-        nextTiles = nextTiles
     }
     |> Board.colorize
 
@@ -67,14 +58,30 @@ module Update =
 
     | Slide dir ->
       eff {
-        let nextsHeadDir = board.nextTiles |> Array.head |> Tile.dir
+        let! (board, next) =
+          match board.nextTiles with
+          | next::nexts, nexts2 ->
+            ({ board with nextTiles = (nexts, nexts2)}, next)
+            |> Eff.pure'
+          | [], next::nexts ->
+            eff {
+              let! newNexts =
+                TileDir.primitiveTiles
+                |> Random.shuffle
+                |> RandomEffect
 
-        let! nextDir =
-          Random.int 0 6
-          |> Random.map(fun i -> TileDir.primitiveTiles.[i])
-          |> Random.until((<>) nextsHeadDir)
-          |> RandomEffect
+              let newNexts = newNexts |> Board.nextDirsToTiles (int board.nextId)
 
-        let board = sldieTiles dir nextDir board
+              let board =
+                { board with
+                    nextTiles = (nexts, newNexts)
+                    nextId = board.nextId + newNexts.Length * 1<TileId>
+                }
+
+              return board, next
+            }
+          | x -> failwithf "Unexpected nextTiles state: %A" x
+
+        let board = sldieTiles dir next board
         return board
       }

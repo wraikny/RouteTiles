@@ -136,9 +136,16 @@ type BoardNode(boardPosition) =
         for (cdn, t) in Board.getTiles board -> (t.id, (cdn, t))
       })
 
-      nextsPool.Update(seq {
-        for (i, t) in Seq.indexed board.nextTiles -> (t.id, (i, t))
-      })
+      nextsPool.Update(
+        seq {
+          let n1, n2 = board.nextTiles
+          yield! n1
+          yield! n2
+        }
+        |> Seq.indexed
+        |> Seq.map(fun (i, t) -> (t.id, (i, t)))
+        |> Seq.take Consts.nextsCountToShow
+      )
 
       cursorMemo |> function
       | ValueSome(c) when c = board.cursor -> ()

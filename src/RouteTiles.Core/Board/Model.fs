@@ -40,7 +40,7 @@ type Board = {
   nextId: int<TileId>
   cursor: int Vector2
   tiles: Tile[,]
-  nextTiles: Tile[]
+  nextTiles: Tile list * Tile list
 }
 
 open EffFs
@@ -121,7 +121,15 @@ module Board =
 
     { board with tiles = tiles }
 
-  let initTiles tiles nextTiles (size: int Vector2) =
+  let nextDirsToTiles offset =
+    Seq.mapi (fun i d ->
+      { id = (offset + i) * 1<TileId>
+        dir = d
+        colorMode = ColorMode.Default
+      }
+    ) >> Seq.toList
+
+  let initTiles tiles (nextTiles1, nextTiles2) (size: int Vector2) =
     let tiles =
       tiles
       |> Seq.mapi (fun i d ->
@@ -133,38 +141,36 @@ module Board =
       |> Seq.chunkBySize size.y
       |> array2D
 
-    let nextTiles =
-      nextTiles
-      |> Seq.mapi (fun i d ->
-        { id = (tiles.Length * size.y + i) * 1<TileId>
-          dir = d
-          colorMode = ColorMode.Default
-        }
-      )
-      |> Seq.toArray
+    let nextTilesPair =
+      nextTiles1 |> nextDirsToTiles tiles.Length,
+      nextTiles2 |> nextDirsToTiles (tiles.Length + TileDir.primitiveTiles.Length)
 
-    tiles, nextTiles
+    tiles, nextTilesPair
 
   let inline init config =
     eff {
-      let { nextCounts = nextCounts; size = size } = config
+      let { nextCounts = _; size = size } = config
 
       let! tiles, nextTiles = RandomEffect(random {
         let! tiles =
           TileDir.random
           |> Random.seq (size.x * size.y)
 
-        let! nextTiles =
-          TileDir.random
-          |> Random.seq nextCounts
+        let! nextTiles1 =
+          TileDir.primitiveTiles
+          |> Random.shuffle
 
-        return tiles, nextTiles
+        let! nextTiles2 =
+          TileDir.primitiveTiles
+          |> Random.shuffle
+
+        return tiles, (nextTiles1, nextTiles2)
       })
 
       let tiles, nextTiles = initTiles tiles nextTiles size
 
       let board =
-        { nextId = (size.x * size.y + nextCounts) * 1<TileId>
+        { nextId = (tiles.Length + TileDir.primitiveTiles.Length * 2) * 1<TileId>
           config = config
           cursor = Vector.zero
           tiles = tiles
