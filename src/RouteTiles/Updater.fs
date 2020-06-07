@@ -24,6 +24,7 @@ type Updater<'model, 'msg>() =
       modelEvent.Trigger(m)
 
     model <- ValueSome m
+    m
 
   member __.Dispatch(msg: 'msg) =
     model |> function
@@ -35,6 +36,8 @@ type Updater<'model, 'msg>() =
     | _ ->
       queue.Enqueue(msg)
       ValueNone
+
+  member __.Model with get() = model
 
   interface IObservable<'model> with
     member __.Subscribe(observer) =

@@ -29,7 +29,7 @@ type LineState =
 [<Struct; RequireQualifiedAccess>]
 type RouteState =
   | Single of single:LineState
-  | Cross of vertical:LineState * horizontal:LineState
+  | Cross of horizontal:LineState * vertical:LineState
   | Empty
 
 [<RequireQualifiedAccess>]
@@ -58,7 +58,11 @@ type Board = {
   tiles: Tile voption [,]
   nextTiles: Tile list * Tile list
 
+  point: int
+
   routesAndLoops: Set<RouteOrLoop>
+  routesHistory: Set<int<TileId>> list
+  loopsHistory: Set<int<TileId>> list
 }
 
 open EffFs
@@ -126,6 +130,10 @@ module RouteState =
     | TileDir.Cross -> RouteState.Cross(LineState.Default, LineState.Default)
     | _ -> RouteState.Single LineState.Default
 
+module RouteOrLoop =
+  let getRoute = function | RouteOrLoop.Route x -> ValueSome x | _ -> ValueNone
+  let getLoop = function | RouteOrLoop.Loop x -> ValueSome x | _ -> ValueNone
+
 module Tile =
   let inline dir x = x.dir
 
@@ -152,23 +160,26 @@ module Board =
     | Fail of int
 
   let routeTiles (board: Board) =
-    let routes firstId cdn dir =
+    let routes firstTile cdn firstDir =
       let rec f tiles cdn dir =
         let cdn = cdn + Dir.toVector dir
         let rDir = Dir.rev dir
         board
         |> tryGetTile cdn
         |> function
-        | ValueSome(ValueSome tile) when tile.id = firstId -> RouteResult.Self tiles
+        | ValueNone when board.markers |> Seq.contains (cdn.x, cdn.y, rDir) -> RouteResult.Marker tiles
         | ValueSome (ValueSome tile) ->
           TileDir.goThrough rDir tile.dir
           |> function
-          | ValueSome nextDir -> f ((cdn, tile.id) :: tiles) cdn nextDir
+          | ValueSome nextDir ->
+            if tile.id = firstTile.id && nextDir = firstDir then
+              RouteResult.Self tiles
+            else
+              f ((cdn, tile.id) :: tiles) cdn nextDir
           | ValueNone -> RouteResult.Fail tiles.Length
-        | ValueNone when board.markers |> Seq.contains (cdn.x, cdn.y, rDir) -> RouteResult.Marker tiles
         | _ -> RouteResult.Fail tiles.Length
 
-      f [cdn, firstId] cdn dir
+      f [cdn, firstTile.id] cdn firstDir
 
     let routesDirs id cdn dir1 dir2 =
       (routes id cdn dir1, routes id cdn dir2) |> function
@@ -181,7 +192,7 @@ module Board =
         Set.ofSeq(seq { yield! tiles1; yield! tiles2 }) |> RouteOrLoop.Route |> ValueSome
       
       | RouteResult.Marker _, _ | _, RouteResult.Marker _ -> LineState.Routing, ValueNone
-      | RouteResult.Fail a, RouteResult.Fail b when a + b > 0 -> LineState.Looping, ValueNone
+      | RouteResult.Fail a, RouteResult.Fail b when a + b > 2 -> LineState.Looping, ValueNone
       | _ -> LineState.Default, ValueNone
 
 
@@ -189,11 +200,11 @@ module Board =
       match tile.dir with
       | TileDir.Empty -> RouteState.Empty, Seq.empty
       | TileDir.Cross ->
-        let vState, vrl = routesDirs tile.id cdn Dir.Up Dir.Down
-        let hState, hrl = routesDirs tile.id cdn Dir.Right Dir.Left
-        RouteState.Cross(vState, hState), seq { yield vrl; yield hrl }
+        let hState, hrl = routesDirs tile cdn Dir.Right Dir.Left
+        let vState, vrl = routesDirs tile cdn Dir.Up Dir.Down
+        RouteState.Cross(hState, vState), seq { yield vrl; yield hrl }
       | TileDir.Single(a, b) ->
-        let state, rl = routesDirs tile.id cdn a b
+        let state, rl = routesDirs tile cdn a b
         RouteState.Single state, seq { yield rl }
       | x -> failwithf "Unexpected pattern: %A" x
 
@@ -281,8 +292,11 @@ module Board =
           cursor = Vector.zero
           tiles = tiles
           nextTiles = nextTiles
+          point = 0
 
           routesAndLoops = Set.empty
+          routesHistory = List.empty
+          loopsHistory = List.empty
         }
         |> routeTiles
 

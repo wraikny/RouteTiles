@@ -47,8 +47,6 @@ type Game() =
     this.AddChildNode(coroutineNode)
     this.AddChildNode(viewBaseNode)
 
-    this.BindingInput()
-
     let handler: Handler = {
 #if DEBUG
       rand = Random(0)
@@ -71,9 +69,12 @@ type Game() =
       Board.Update.update msg model
       |> Eff.handle handler
 
-    updater.Init(initModel, update)
+    updater.Init(initModel, update) |> ignore
 
-  member private __.BindingInput() =
+    this.BindingInput(initModel)
+    
+
+  member private __.BindingInput(initModel) =
     // let inputs = [|
     //   JoystickButtonType.LeftUp, Board.MoveCursor Dir.Up
     //   JoystickButtonType.LeftRight, Board.MoveCursor Dir.Right
@@ -97,6 +98,10 @@ type Game() =
     |]
 
     coroutineNode.Add(seq {
+      if not initModel.routesAndLoops.IsEmpty then
+        yield! Coroutine.sleep Consts.tilesVanishInterval
+        updater.Dispatch(Board.Msg.ApplyVanishment) |> ignore
+        
       while true do
         // Slide
         let input =
@@ -119,3 +124,12 @@ type Game() =
 
           yield()
     })
+
+#if DEBUG
+    coroutineNode.Add(seq {
+      while true do
+        if Engine.Keyboard.IsPushState Keys.Num0 then
+          printfn "%A" updater.Model
+        yield()
+    })
+#endif

@@ -42,6 +42,23 @@ module Array2D =
         yield arr.[x, y]
     }
 
+module Seq =
+  let inline filterMap f (xs: seq<'a>): seq<'b> =
+    seq {
+      for x in xs do
+        match f x with
+        | Some r -> yield r
+        | None -> ()
+    }
+
+  let inline filterMapV f (xs: seq<'a>): seq<'b> =
+    seq {
+      for x in xs do
+        match f x with
+        | ValueSome r -> yield r
+        | ValueNone -> ()
+    }
+
 [<Measure>] type sec
 [<Measure>] type millisec
 

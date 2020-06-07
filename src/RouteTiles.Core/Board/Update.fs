@@ -22,6 +22,16 @@ type Msg =
   | ApplyVanishment
 
 module Update =
+  let calculatePoint (routesAndLoops: Set<RouteOrLoop>) =
+    routesAndLoops
+    |> Seq.sumBy(function
+      | RouteOrLoop.Route tiles -> tiles.Count * tiles.Count * 3
+      | RouteOrLoop.Loop tiles -> tiles.Count * tiles.Count * 2
+    )
+    |> float32
+    |> ( * ) (1.0f + float32 routesAndLoops.Count / 5.0f)
+    |> int
+
   let sldieTiles (slideDir: Dir) (nextTile) (board: Board): Board =
     let tiles =
       let dirVec = Dir.toVector slideDir
@@ -61,9 +71,12 @@ module Update =
 
   let vanish board =
     let routesAndLoops = board.routesAndLoops
-    printfn "%A" routesAndLoops
+
+    let extractAndAppend f =
+      List.append(routesAndLoops |> Seq.filterMapV f |> Seq.map (Set.map snd) |> Seq.toList)
 
     { board with
+        point = board.point + calculatePoint routesAndLoops
         tiles =
           board.tiles
           |> Array2D.map(function
@@ -77,6 +90,9 @@ module Update =
             | x -> x
           )
         routesAndLoops = Set.empty
+
+        routesHistory = board.routesHistory |> extractAndAppend RouteOrLoop.getRoute
+        loopsHistory = board.routesHistory |> extractAndAppend RouteOrLoop.getLoop
     }
 
   open EffFs

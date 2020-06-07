@@ -146,17 +146,16 @@ type BoardNode(boardPosition) =
 
       tilesBackground.AddChildNode(node)
 
-  override this.OnAdded() =
-    this.AddChildNode(coroutineNode)
+  do
+    base.AddChildNode(coroutineNode)
 
-    this.AddChildNode(tilesBackground)
+    base.AddChildNode(tilesBackground)
     tilesBackground.AddChildNode(cursorX)
     tilesBackground.AddChildNode(cursorY)
     tilesBackground.AddChildNode(tilesPool)
 
-    this.AddChildNode(nextsBackground)
+    base.AddChildNode(nextsBackground)
     nextsBackground.AddChildNode(nextsPool)
-
 
   interface IObserver<Board> with
     member __.OnCompleted() = ()
