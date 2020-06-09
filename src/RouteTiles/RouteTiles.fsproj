@@ -22,14 +22,14 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup Condition=" ('$(OS)'=='OSX' And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='osx-x64' ">
+  <ItemGroup Condition=" ($([MSBuild]::IsOsPlatform('OSX'))  And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='osx-x64' ">
     <None Include="../../lib/Altseed2/libAltseed_core.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </None>
   </ItemGroup>
 
-  <ItemGroup Condition=" ('$(OS)'=='Linux' And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='linux-x64' ">
+  <ItemGroup Condition=" ($([MSBuild]::IsOsPlatform('Linux'))  And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='linux-x64' ">
     <None Include="../../lib/Altseed2/libAltseed_core">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
