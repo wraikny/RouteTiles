@@ -16,7 +16,7 @@ type BoardNode(boardPosition) =
   let createTile() =
     let node =
       SpriteNode(
-        Texture = Texture2D.Load(@"tiles.png"),
+        Texture = Texture2D.LoadStrict(@"tiles.png"),
         Src = RectF(Vector2F(), Consts.tileSize),
         ZOrder = ZOrder.Board.tiles
       )
@@ -159,7 +159,7 @@ type BoardNode(boardPosition) =
         node.Second <- Consts.tilesVanishAnimatinTime |> Helper.toSecond
         node.IsLooping <- false
 
-        node.Texture <- Texture2D.Load(@"tileVanishEffect.png")
+        node.Texture <- Texture2D.LoadStrict(@"tileVanishEffect.png")
         node.ZOrder <- ZOrder.Board.particles
 
         let size = (node.Texture.Size / node.Count).To2F()

@@ -62,6 +62,7 @@ Target.create "Resources" (fun _ ->
   Directory.create dir
   Directory.delete target |> ignore
   Shell.copyDir target resources (fun _ -> true)
+  // Shell.copyFile (sprintf "%s.pack" target) (sprintf "%s.pack" resources)
   Trace.trace "Finished Copying Resources for Debug"
 
   dotnet "fsi" "--exec pack.fsx"

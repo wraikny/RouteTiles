@@ -12,8 +12,7 @@ type GameInfoNode(centerPosition) =
 
   let coroutineNode = CoroutineNode()
 
-  let scoreFont = Font.LoadDynamicFont("mplus-1c-regular.ttf", 120)
-  let timeFont = Font.LoadDynamicFont("mplus-1c-regular.ttf", 120)
+  let font = Font.LoadDynamicFontStrict("mplus-1c-regular.ttf", 120)
 
   let separateLine =
     LineNode(
@@ -27,7 +26,7 @@ type GameInfoNode(centerPosition) =
 
   let scoreText =
     TextNode(
-      Font = scoreFont,
+      Font = font,
       Position = Vector2F(0.0f, -Consts.gameinfoMerginY),
       Color = Consts.gameInfoColor,
       ZOrder = ZOrder.GameInfo.text
@@ -35,7 +34,7 @@ type GameInfoNode(centerPosition) =
 
   let timeText =
     TextNode(
-      Font = timeFont,
+      Font = font,
       Position = Vector2F(0.0f, Consts.gameinfoMerginY),
       Color = Consts.gameInfoColor,
       ZOrder = ZOrder.GameInfo.text

@@ -42,12 +42,18 @@ let main _ =
   try
     init(config)
 
-    if not <| Engine.File.AddRootPackage(@"Resources.pack") then
-      failwithf "Failed to add root package"
+    try
 
-    Engine.AddNode(Game())
+      // Altseed2のバグでPackageから読み込めない……><
+      if not <| Engine.File.AddRootPackage(@"Resources.pack") then
+        failwithf "Failed to add root package"
 
-    loop()
+      Engine.AddNode(Game())
+
+      loop()
+    with e ->
+      Engine.Log.Error(LogCategory.User, sprintf "%A: %s" (e.GetType()) e.Message)
+      reraise()
 
     Engine.Terminate()
   with e ->
