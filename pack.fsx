@@ -7,7 +7,7 @@ let target = "Resources"
 
 if Engine.Initialize("Pack", 1, 1, Configuration(ConsoleLoggingEnabled=true)) then
 
-  Engine.File.Pack(target, target + ".pack")
+  Engine.File.Pack(target + "/", target + ".pack")
   |> printfn "Pack result: %A"
 
   Engine.Terminate()
