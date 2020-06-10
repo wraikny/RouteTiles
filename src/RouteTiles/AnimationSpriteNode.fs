@@ -9,15 +9,16 @@ type AnimationSpriteNode() =
 
   member __.Reset() = time <- 0.0f
 
+  member val IsUpdated = true with get, set
   member val Count = Vector2I(1, 1) with get, set
   member val IsLooping = true with get, set
   member val Second = 1.0f with get, set
 
   abstract OnAnimationFinished: unit -> unit
-  default x.OnAnimationFinished() = ()
+  default __.OnAnimationFinished() = ()
 
   override this.OnUpdate() =
-    if this.Texture <> null && (time < this.Second) then
+    if this.IsUpdated && this.Texture <> null && (time < this.Second) then
       let index = int (time / this.Second * float32 (this.Count.X * this.Count.Y))
 
       let cdn = Vector2I(index % this.Count.X, index / this.Count.X)
@@ -31,4 +32,47 @@ type AnimationSpriteNode() =
           time <- time % this.Second
 
         this.OnAnimationFinished()
+
+open System.Collections.Generic
+
+[<AbstractClass>]
+type EffectPool(initCount) =
+  inherit Node()
+
+  let mutable initCount = initCount
+
+  let stack = Stack<AnimationSpriteNode>()
+
+  let create() =
+    { new AnimationSpriteNode() with
+        member n.OnAnimationFinished() =
+          n.IsUpdated <- false
+          n.IsDrawn <- false
+          n.Reset()
+          stack.Push(n)
+      }
+
+  abstract InitEffect: AnimationSpriteNode -> unit
+
+  member this.AddEffect(f) =
+    let node = stack.TryPop() |> function
+      | true, node -> node
+      | _ ->
+        let node = create()
+        this.AddChildNode(node)
+        node
+
+    node.IsUpdated <- true
+    node.IsDrawn <- true
+
+    this.InitEffect(node)
+    f node
+
+  override this.OnAdded() =
+    while initCount > 0 do
+      let node = create()
+      node.IsUpdated <- false
+      node.IsDrawn <- false
+      this.InitEffect(node)
+      initCount <- initCount - 1
 

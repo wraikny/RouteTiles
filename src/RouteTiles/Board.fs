@@ -152,49 +152,28 @@ type BoardNode(boardPosition) =
 
       tilesBackground.AddChildNode(node)
 
-  let particlesStack = Stack<AnimationSpriteNode>()
+  let vanishmentEffectPool =
+    { new EffectPool((Consts.boardSize.x * Consts.boardSize.y) / 2) with
+      member x.InitEffect(node) =
+        node.Count <- Vector2I(5, 9)
+        node.Second <- Consts.tilesVanishAnimatinTime |> Helper.toSecond
+        node.IsLooping <- false
 
-  let createParticle() =
-    let node = { new AnimationSpriteNode() with
-      member n.OnAnimationFinished() =
-        n.IsDrawn <- false
-        n.Reset()
-        particlesStack.Push(n)
-        n.Parent.RemoveChildNode(n)
+        node.Texture <- Texture2D.Load(@"tileVanishEffect.png")
+        node.ZOrder <- ZOrder.Board.particles
+
+        let size = (node.Texture.Size / node.Count).To2F()
+        node.Src <- RectF(Vector2F(), size)
+        node.AdjustSize()
+        node.CenterPosition <- size * 0.5f
+        node.Scale <- Vector2F(1.0f, 1.0f) * 128.0f / size
     }
-    node.Texture <- Texture2D.Load(@"tileVanishEffect.png")
-    node.Count <- Vector2I(5, 9)
-    node.IsLooping <- false
-    node.Second <- Consts.tilesVanishAnimatinTime |> Helper.toSecond
-    node.ZOrder <- ZOrder.Board.particles
 
-    node
-
-  let addParticle(cdn, color) =
-    let node = particlesStack.TryPop() |> function
-      | true, node ->
-        node.IsDrawn <- true
-        node
-      | _ -> createParticle()
-
-    let size = (node.Texture.Size / node.Count).To2F()
-    node.Src <- RectF(Vector2F(), size)
-    node.AdjustSize()
-    node.CenterPosition <- size * 0.5f
-    node.Scale <- Vector2F(1.0f, 1.0f) * 128.0f / size
-
-    node.Position <- Helper.calcTilePosCenter(cdn)
-    node.Color <- color
-
-    tilesBackground.AddChildNode(node)
-
-  do
-    coroutineNode.Add(seq {
-      for _ in 1..(Consts.boardSize.x + Consts.boardSize.y)/2 do
-        createParticle() |> particlesStack.Push
-        yield()
-    })
-
+  let addVanishmentEffect(cdn, color) =
+    vanishmentEffectPool.AddEffect(fun node ->
+      node.Position <- Helper.calcTilePosCenter(cdn)
+      node.Color <- color
+    )
 
   do
     base.AddChildNode(coroutineNode)
@@ -203,6 +182,7 @@ type BoardNode(boardPosition) =
     tilesBackground.AddChildNode(cursorX)
     tilesBackground.AddChildNode(cursorY)
     tilesBackground.AddChildNode(tilesPool)
+    tilesBackground.AddChildNode(vanishmentEffectPool)
 
     base.AddChildNode(nextsBackground)
     nextsBackground.AddChildNode(nextsPool)
@@ -242,10 +222,10 @@ type BoardNode(boardPosition) =
           x |> function
           | RouteOrLoop.Route ps ->
             for (p, _) in ps do
-              addParticle(p, Consts.routeColor)
+              addVanishmentEffect(p, Consts.routeColor)
           | RouteOrLoop.Loop ps ->
             for (p, _) in ps do
-              addParticle(p, Consts.loopColor)
+              addVanishmentEffect(p, Consts.loopColor)
 
         yield()
       })
