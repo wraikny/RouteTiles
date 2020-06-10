@@ -42,6 +42,7 @@
     <Compile Include="AltseedExtension.fs" />
     <Compile Include="Coroutine.fs" />
     <Compile Include="NodePool.fs" />
+    <Compile Include="AnimationSpriteNode.fs" />
     <Compile Include="ViewParams.fs" />
     <Compile Include="GameInfo.fs" />
     <Compile Include="Board.fs" />

@@ -3,6 +3,7 @@ namespace RouteTiles.App
 open RouteTiles.Core
 open RouteTiles.Core.Board.Model
 open System
+open System.Collections.Generic
 open System.Threading.Tasks
 open Affogato
 open Altseed
@@ -51,8 +52,8 @@ type BoardNode(boardPosition) =
         node.Src <- src
         
         // Consts.tilesVanishInterval
-        // 消去
-        // Effect追加
+        // æ¶ˆåŽ»
+        // Effectè¿½åŠ 
 
         yield()
       })
@@ -151,6 +152,50 @@ type BoardNode(boardPosition) =
 
       tilesBackground.AddChildNode(node)
 
+  let particlesStack = Stack<AnimationSpriteNode>()
+
+  let createParticle() =
+    let node = { new AnimationSpriteNode() with
+      member n.OnAnimationFinished() =
+        n.IsDrawn <- false
+        n.Reset()
+        particlesStack.Push(n)
+        n.Parent.RemoveChildNode(n)
+    }
+    node.Texture <- Texture2D.Load(@"tileVanishEffect.png")
+    node.Count <- Vector2I(5, 9)
+    node.IsLooping <- false
+    node.Second <- Consts.tilesVanishAnimatinTime |> Helper.toSecond
+    node.ZOrder <- ZOrder.Board.particles
+
+    node
+
+  let addParticle(cdn, color) =
+    let node = particlesStack.TryPop() |> function
+      | true, node ->
+        node.IsDrawn <- true
+        node
+      | _ -> createParticle()
+
+    let size = (node.Texture.Size / node.Count).To2F()
+    node.Src <- RectF(Vector2F(), size)
+    node.AdjustSize()
+    node.CenterPosition <- size * 0.5f
+    node.Scale <- Vector2F(1.0f, 1.0f) * 128.0f / size
+
+    node.Position <- Helper.calcTilePosCenter(cdn)
+    node.Color <- color
+
+    tilesBackground.AddChildNode(node)
+
+  do
+    coroutineNode.Add(seq {
+      for _ in 1..(Consts.boardSize.x + Consts.boardSize.y)/2 do
+        createParticle() |> particlesStack.Push
+        yield()
+    })
+
+
   do
     base.AddChildNode(coroutineNode)
 
@@ -189,3 +234,18 @@ type BoardNode(boardPosition) =
         let cursorXPos, cursorYPos = Helper.cursorPos board.cursor
         cursorX.Position <- cursorXPos
         cursorY.Position <- cursorYPos
+
+      coroutineNode.Add(seq {
+        yield! Coroutine.sleep Consts.inputInterval
+
+        for x in board.routesAndLoops do
+          x |> function
+          | RouteOrLoop.Route ps ->
+            for (p, _) in ps do
+              addParticle(p, Consts.routeColor)
+          | RouteOrLoop.Loop ps ->
+            for (p, _) in ps do
+              addParticle(p, Consts.loopColor)
+
+        yield()
+      })

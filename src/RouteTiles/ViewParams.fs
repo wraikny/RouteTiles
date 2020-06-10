@@ -30,6 +30,10 @@ module Consts =
 
   let clearColor = Color(200, 200, 200, 255)
   let boardBackGroundColor = Color(100, 100, 100, 255)
+
+  let routeColor = Color(255, 255, 100, 255)
+  let loopColor = Color(100, 100, 255, 255)
+
   let cursorColor = Color(105, 255, 220, 255)
   let cursorColorMin = 0.25f
 
@@ -38,6 +42,7 @@ module Consts =
   let cursorColorFlashingPeriod = 600<millisec>
   let tileSlideInterval = 120<millisec>
   let tilesVanishInterval = 120<millisec>
+  let tilesVanishAnimatinTime = 750<millisec>
   let inputInterval = 120<millisec>
 
 module Binding =
@@ -86,6 +91,8 @@ module Binding =
 
 
 module Helper =
+  let inline toSecond (x: int<millisec>) = float32 x / 1000.0f
+
   let lerpColor (x: Color) (y: Color) (t: float32) =
     let inline f a b =
       float32 a * (1.0f - t) + float32 b * t
@@ -137,6 +144,7 @@ module ZOrder =
     let background = offset 0
     let cursor = offset 1
     let tiles = offset 2
+    let particles = offset 3
 
   module GameInfo =
     let offset = (|||) (20 <<< 16)
