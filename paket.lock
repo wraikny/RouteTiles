@@ -109,6 +109,10 @@ NUGET
     Fake.IO.FileSystem (5.20)
       Fake.Core.String (>= 5.20) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.7.1) - restriction: >= netstandard2.0
+    FAKE.IO.Zip (5.20)
+      Fake.Core.String (>= 5.20) - restriction: >= netstandard2.0
+      Fake.IO.FileSystem (>= 5.20) - restriction: >= netstandard2.0
+      FSharp.Core (>= 4.7.1) - restriction: >= netstandard2.0
     Fake.Net.Http (5.20) - restriction: >= netstandard2.0
       Fake.Core.Trace (>= 5.20) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.7.1) - restriction: >= netstandard2.0

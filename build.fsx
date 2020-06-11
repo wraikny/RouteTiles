@@ -54,6 +54,9 @@ Target.create "Resources" (fun _ ->
   let resources = "Resources"
   // let password = Some "password"
 
+  !!(sprintf "%s/**" resources)
+  |> Zip.zip resources (sprintf "%s.zip" resources)
+
   let outDir x = sprintf "src/%s/bin/%s/netcoreapp3.1" targetProject x
 
   // for Debug

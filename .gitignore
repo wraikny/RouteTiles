@@ -358,5 +358,6 @@ MigrationBackup/
 /Resources/**
 
 Resources.pack
+Resources.zip
 
 !/**/.gitkeep

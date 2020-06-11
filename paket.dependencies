@@ -18,3 +18,4 @@ nuget FAKE
     nuget Fake.Core.ReleaseNotes
     nuget Fake.DotNet.AssemblyInfoFile
     nuget Fake.DotNet.Testing.Expecto
+    nuget FAKE.IO.Zip
