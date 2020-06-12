@@ -19,12 +19,12 @@ module Array =
         yield! array.[0..array.Length-2]
       |], Array.last array
 
-  let inline mapOfIndex (index: int) (f: 'a -> 'a) (array: 'a[]): 'a[] =
-    [|
-      yield! array.[0..index-1]
-      yield f array.[index]
-      yield! array.[index+1..array.Length-1]
-    |]
+  // let inline mapOfIndex (index: int) (f: 'a -> 'a) (array: 'a[]): 'a[] =
+  //   [|
+  //     yield! array.[0..index-1]
+  //     yield f array.[index]
+  //     yield! array.[index+1..array.Length-1]
+  //   |]
 
 module Array2D =
   let inline tryGet x y (arr: 'a[,]) =

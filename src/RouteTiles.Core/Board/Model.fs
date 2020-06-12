@@ -208,9 +208,11 @@ module Board =
         RouteState.Single state, seq { yield rl }
       | x -> failwithf "Unexpected pattern: %A" x
 
-    let routesAndLoops = ResizeArray()
 
-    let tiles =
+    let tiles, routesAndLoops =
+      // todo
+      let routesAndLoops = ResizeArray()
+
       board.tiles
       |> Array2D.mapi (fun x y ->
         ValueOption.map(fun tile ->
@@ -218,9 +220,9 @@ module Board =
           rls |> Seq.iter(ValueOption.iter(routesAndLoops.Add))
           { tile with routeState = state }
         )
-      )
+      ), Set.ofSeq routesAndLoops
 
-    { board with tiles = tiles; routesAndLoops = Set.ofSeq routesAndLoops }
+    { board with tiles = tiles; routesAndLoops = routesAndLoops }
 
   let nextDirsToTiles offset =
     Seq.mapi (fun i d ->
