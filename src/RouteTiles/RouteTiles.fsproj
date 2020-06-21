@@ -16,21 +16,21 @@
   </ItemGroup>
 
   <ItemGroup Condition="(('$(OS)'=='Windows' Or '$(OS)'=='Windows_NT') And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='win-x64'">
-    <None Include="../../lib/Altseed2/Altseed_core.dll">
+    <None Include="../../lib/Altseed2/Altseed2_core.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </None>
   </ItemGroup>
 
   <ItemGroup Condition=" ($([MSBuild]::IsOsPlatform('OSX'))  And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='osx-x64' ">
-    <None Include="../../lib/Altseed2/libAltseed_core.dylib">
+    <None Include="../../lib/Altseed2/libAltseed2_core.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </None>
   </ItemGroup>
 
   <ItemGroup Condition=" ($([MSBuild]::IsOsPlatform('Linux'))  And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='linux-x64' ">
-    <None Include="../../lib/Altseed2/libAltseed_core">
+    <None Include="../../lib/Altseed2/libAltseed2_core">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </None>

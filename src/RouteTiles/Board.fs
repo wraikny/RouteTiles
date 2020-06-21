@@ -6,7 +6,7 @@ open System
 open System.Collections.Generic
 open System.Threading.Tasks
 open Affogato
-open Altseed
+open Altseed2
 
 type BoardNode(boardPosition) =
   inherit Node()

@@ -2,7 +2,7 @@ namespace RouteTiles.App
 
 open RouteTiles.Core.Utils
 
-open Altseed
+open Altseed2
 open Affogato
 
 module Consts =

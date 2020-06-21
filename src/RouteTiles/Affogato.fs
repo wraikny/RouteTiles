@@ -1,7 +1,7 @@
 module RouteTiles.App.Affogato
 
 open Affogato
-open Altseed
+open Altseed2
 
 type Translater =
   static member inline ToAffogato(v: Vector2F) = Vector2.init v.X v.Y

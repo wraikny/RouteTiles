@@ -1,7 +1,7 @@
 namespace RouteTiles.App
 
 open System.Collections.Generic
-open Altseed
+open Altseed2
 
 [<AbstractClass>]
 type NodePool<'key, 'node, 'arg when 'key : equality and 'node :> Node>() =

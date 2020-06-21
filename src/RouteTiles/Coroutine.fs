@@ -4,7 +4,7 @@ open RouteTiles.Core.Utils
 
 open System
 open System.Collections.Generic
-open Altseed
+open Altseed2
 
 module Coroutine =
   let milliseconds (ms: int<millisec>) =

@@ -5,7 +5,7 @@ open RouteTiles.Core.Board.Model
 open System
 open System.Threading.Tasks
 open Affogato
-open Altseed
+open Altseed2
 
 type GameInfoNode(centerPosition) =
   inherit Node()

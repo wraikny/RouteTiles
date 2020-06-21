@@ -1,7 +1,7 @@
 #r "netstandard"
 #r "./lib/Altseed2/Altseed2.dll"
 
-open Altseed
+open Altseed2
 
 let target = "Resources"
 

@@ -1,7 +1,7 @@
 [<AutoOpen>]
-module RouteTiles.App.AltseedExtension
+module RouteTiles.App.Altseed2Extension
 
-open Altseed
+open Altseed2
 
 type Keyboard with
   member inline x.IsFreeState(key) = x.GetKeyState(key) = ButtonState.Free

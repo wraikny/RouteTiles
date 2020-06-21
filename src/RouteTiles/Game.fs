@@ -5,7 +5,7 @@ open RouteTiles.Core.Effects
 
 open System
 open Affogato
-open Altseed
+open Altseed2
 open EffFs
 
 type Handler = {

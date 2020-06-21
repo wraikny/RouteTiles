@@ -1,6 +1,6 @@
 namespace RouteTiles.App
 
-open Altseed
+open Altseed2
 
 type AnimationSpriteNode() =
   inherit SpriteNode()

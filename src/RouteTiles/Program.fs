@@ -1,17 +1,15 @@
 ﻿module RouteTiles.App.Program
 
-open Altseed
+open Altseed2
 
 
 [<EntryPoint>]
 let main _ =
   let inline init(config) =
     if not <| Engine.Initialize("RouteTiles", Consts.windowSize.X, Consts.windowSize.Y, config) then
-      failwith "Failed to initialize the Altseed"
+      failwith "Failed to initialize the Altseed2"
 
     Engine.ClearColor <- Consts.clearColor
-
-    Engine.Joystick.RefreshConnectedState()
 
   let rec loop() =
     if Engine.DoEvents() then
