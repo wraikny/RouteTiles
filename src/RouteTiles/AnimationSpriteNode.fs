@@ -56,23 +56,25 @@ type EffectPool(initCount) =
 
   member this.AddEffect(f) =
     let node = stack.TryPop() |> function
-      | true, node -> node
+      | true, node ->
+        node
       | _ ->
         let node = create()
+        this.InitEffect(node)
         this.AddChildNode(node)
         node
 
+    f node
     node.IsUpdated <- true
     node.IsDrawn <- true
 
-    this.InitEffect(node)
-    f node
+  override this.OnUpdate() =
+    if initCount > 0 then
+      initCount <- initCount - 1
 
-  override this.OnAdded() =
-    while initCount > 0 do
       let node = create()
       node.IsUpdated <- false
       node.IsDrawn <- false
       this.InitEffect(node)
-      initCount <- initCount - 1
-
+      stack.Push(node)
+      this.AddChildNode(node)
