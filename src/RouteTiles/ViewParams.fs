@@ -26,7 +26,7 @@ module Consts =
   let nextsBoardMergin = 200.0f
 
   let gameinfoMerginY = 0.0f
-  let gameinfoSeparateLineLength = 300.0f
+  let gameinfoSeparateLineLength = 400.0f
 
   let clearColor = Color(200, 200, 200, 255)
   let boardBackGroundColor = Color(100, 100, 100, 255)

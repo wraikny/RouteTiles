@@ -47,6 +47,14 @@ type Game() =
     )
     |> ignore
 
+    let mutable time = 0.0f
+    coroutineNode.Add(seq {
+      while true do
+        time <- time + Engine.DeltaSecond
+        gameInfo.SetTime(time)
+        yield()
+    })
+
   override this.OnAdded() =
 
     let handler: Handler = {

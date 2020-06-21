@@ -40,30 +40,21 @@ type GameInfoNode(centerPosition) =
       ZOrder = ZOrder.GameInfo.text
     )
 
-  let updateScoreText text =
+  let setScoreText text =
     if scoreText.Text <> text then
       scoreText.Text <- text
       scoreText.AdjustSize()
       scoreText.CenterPosition <- Vector2F(scoreText.Size.X * 0.5f, scoreText.Size.Y)
 
-  let updateTimeText text =
+  let setTimeText text =
     if timeText.Text <> text then
       timeText.Text <- text
       timeText.AdjustSize()
       timeText.CenterPosition <- Vector2F(timeText.Size.X * 0.5f, 0.0f)
 
   do
-    updateScoreText "0"
-    updateTimeText "00:00"
-
-    coroutineNode.Add(seq {
-      let mutable t = 0.0f
-      while true do
-        t <- t + Engine.DeltaSecond
-        updateTimeText <| sprintf "%02i:%02i" (t / 60.0f |> int) (t % 60.0f |> int)
-        
-        yield()
-    })
+    setScoreText "0"
+    setTimeText "00:00:00"
 
     base.AddChildNode(coroutineNode)
     base.AddChildNode(separateLine)
@@ -71,5 +62,7 @@ type GameInfoNode(centerPosition) =
     separateLine.AddChildNode(timeText)
 
   member __.OnNext(board) =
-    updateScoreText <| sprintf "%d" board.point
-    ()
+    setScoreText <| sprintf "%d" board.point
+
+  member __.SetTime(time) =
+    setTimeText <| sprintf "%02i:%02i:%02i" (time / 60.0f |> int) (time % 60.0f |> int) ((time % 1.0f) * 100.0f |> int)
