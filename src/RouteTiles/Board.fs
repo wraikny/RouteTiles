@@ -8,10 +8,8 @@ open System.Threading.Tasks
 open Affogato
 open Altseed2
 
-type BoardNode(boardPosition) =
+type BoardNode(boardPosition, addCoroutine) =
   inherit Node()
-
-  let coroutineNode = CoroutineNode()
 
   let createTile() =
     let node =
@@ -36,13 +34,13 @@ type BoardNode(boardPosition) =
       node.Angle <- Binding.tileTextureAngle tile.dir
       node.Src <- src
 
-      coroutineNode.Add (seq {
+      addCoroutine (seq {
         for _ in Coroutine.milliseconds Consts.tileSlideInterval -> ()
         node.IsDrawn <- true
         yield()
       })
     else
-      coroutineNode.Add (seq {
+      addCoroutine (seq {
         let firstPos = node.Position
         for t in Coroutine.milliseconds Consts.tileSlideInterval do
           node.Position <- Easing.GetEasing(EasingType.InQuad, t) * (pos - firstPos) + firstPos
@@ -94,7 +92,7 @@ type BoardNode(boardPosition) =
     cursorTime <- 0.0f
 
   do
-    coroutineNode.Add(seq {
+    addCoroutine(seq {
       while true do
         cursorTime <- cursorTime + Engine.DeltaSecond
 
@@ -176,8 +174,6 @@ type BoardNode(boardPosition) =
     )
 
   do
-    base.AddChildNode(coroutineNode)
-
     base.AddChildNode(tilesBackground)
     tilesBackground.AddChildNode(cursorX)
     tilesBackground.AddChildNode(cursorY)
@@ -212,7 +208,7 @@ type BoardNode(boardPosition) =
       cursorX.Position <- cursorXPos
       cursorY.Position <- cursorYPos
 
-    coroutineNode.Add(seq {
+    addCoroutine(seq {
       yield! Coroutine.sleep Consts.inputInterval
 
       for x in board.routesAndLoops do

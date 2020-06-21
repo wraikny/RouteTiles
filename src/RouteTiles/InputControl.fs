@@ -49,3 +49,10 @@ module Board =
 
   let getKeyboardInput = getKeyboardInput keyboardMapping
   let getJoystickInput = getJoystickInput joystickMapping
+
+module Pause =
+  // open RouteTiles.Core.Pause
+
+  let keyboardMapping = [|
+    // [|Keys.Escape, ButtonState.Push|], Msg.Resume
+  |]

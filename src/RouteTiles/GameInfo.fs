@@ -10,8 +10,6 @@ open Altseed2
 type GameInfoNode(centerPosition) =
   inherit Node()
 
-  let coroutineNode = CoroutineNode()
-
   let font = Font.LoadDynamicFontStrict("mplus-1c-regular.ttf", 120)
 
   let separateLine =
@@ -56,7 +54,6 @@ type GameInfoNode(centerPosition) =
     setScoreText "0"
     setTimeText "00:00:00"
 
-    base.AddChildNode(coroutineNode)
     base.AddChildNode(separateLine)
     separateLine.AddChildNode(scoreText)
     separateLine.AddChildNode(timeText)

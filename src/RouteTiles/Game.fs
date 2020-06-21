@@ -24,17 +24,18 @@ type Handler = {
       k res
     )
 
-type Game() =
+type Game(gameMode, controller) =
   inherit Node()
 
   let updater = Updater<SoloGame.Model, _>()
 
   let coroutineNode = CoroutineNode()
 
+  /// Binding Children
   do
     base.AddChildNode(coroutineNode)
 
-    let board = BoardNode(Helper.boardViewPos)
+    let board = BoardNode(Helper.boardViewPos, coroutineNode.Add)
     base.AddChildNode(board)
 
     let gameInfo = GameInfoNode(Helper.gameInfoCenterPos)
@@ -55,8 +56,44 @@ type Game() =
         yield()
     })
 
-  override this.OnAdded() =
+  /// Binding Input
+  do
+    coroutineNode.Add(seq {
+      while true do
+#if DEBUG
+        if Engine.Keyboard.IsPushState Keys.Num0 then
+          printfn "%A" updater.Model
+#endif
 
+        match updater.Model with
+        | ValueNone -> yield()
+        | ValueSome model ->
+          let input = model.controller |> function
+            | Controller.Keyboard ->
+              InputControl.Board.getKeyboardInput()
+            | Controller.Joystick (_, index) when Engine.Joystick.IsPresent index ->
+              InputControl.Board.getJoystickInput index
+            | Controller.Joystick (_, _) ->
+              // start ControllerSelect
+              // coroutineNode.IsUpdated <- false
+              None
+
+          match input with
+          | None ->
+            yield ()
+
+          | Some msg ->
+            let m = updater.Dispatch(lift msg) |> ValueOption.get
+
+            yield! Coroutine.sleep Consts.inputInterval
+
+            if not m.board.routesAndLoops.IsEmpty then
+              yield! Coroutine.sleep Consts.tilesVanishInterval
+              updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
+              yield()
+    })
+
+  override __.OnAdded() =
     let handler: Handler = {
 #if DEBUG
       rand = Random(0)
@@ -73,8 +110,8 @@ type Game() =
 
       SoloGame.init
         config
-        SoloGame.Mode.TimeAttack
-        Controller.Keyboard
+        gameMode
+        controller
       
       |> Eff.handle handler
 
@@ -87,39 +124,3 @@ type Game() =
 
     updater.Init(initModel, update) |> ignore
 
-    this.BindingInput()
-    
-
-  member private __.BindingInput() =
-    coroutineNode.Add(seq {
-      while true do
-        let input = updater.Model.Value.controller |> function
-          | Controller.Keyboard ->
-            InputControl.Board.getKeyboardInput()
-          | Controller.Joystick (_, index) when Engine.Joystick.IsPresent index ->
-            InputControl.Board.getJoystickInput index
-          | Controller.Joystick (_, _) -> None
-
-        match input with
-        | None ->
-          yield ()
-
-        | Some msg ->
-          let m = updater.Dispatch(lift msg) |> ValueOption.get
-
-          yield! Coroutine.sleep Consts.inputInterval
-
-          if not m.board.routesAndLoops.IsEmpty then
-            yield! Coroutine.sleep Consts.tilesVanishInterval
-            updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
-            yield()
-    })
-
-#if DEBUG
-    coroutineNode.Add(seq {
-      while true do
-        if Engine.Keyboard.IsPushState Keys.Num0 then
-          printfn "%A" updater.Model
-        yield()
-    })
-#endif

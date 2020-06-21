@@ -39,11 +39,17 @@ module Consts =
 
   let gameInfoColor = Color(30, 30, 30, 255)
 
+  module Color =
+    let pauseBackground = Color(0, 0, 0, 30)
+
+  
   let cursorColorFlashingPeriod = 600<millisec>
   let tileSlideInterval = 120<millisec>
   let tilesVanishInterval = 120<millisec>
   let tilesVanishAnimatinTime = 750<millisec>
   let inputInterval = 120<millisec>
+
+  
 
 module Binding =
   open RouteTiles.Core.Board.Model
@@ -149,3 +155,9 @@ module ZOrder =
   module GameInfo =
     let offset = (|||) (20 <<< 16)
     let text = offset 0
+
+  module Pause =
+    let offset = (|||) (50 <<< 16)
+    let background = offset 0
+    let elementBackground = offset 1
+    let text = offset 100
