@@ -47,6 +47,7 @@
     <Compile Include="GameInfo.fs" />
     <Compile Include="Board.fs" />
     <Compile Include="Game.fs" />
+    <Compile Include="../../ResourcesPassword.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

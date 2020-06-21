@@ -361,3 +361,5 @@ Resources.pack
 Resources.zip
 
 !/**/.gitkeep
+
+/ResourcesPassword.fs

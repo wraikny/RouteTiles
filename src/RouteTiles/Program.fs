@@ -43,7 +43,7 @@ let main _ =
     try
 
       // Altseed2のバグでPackageから読み込めない……><
-      if not <| Engine.File.AddRootPackage(@"Resources.pack") then
+      if not <| Engine.File.AddRootPackageWithPassword(@"Resources.pack", ResourcesPassword.password) then
         failwithf "Failed to add root package"
 
       Engine.AddNode(Game())

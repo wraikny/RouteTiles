@@ -114,6 +114,9 @@ Target.create "All" ignore
   ==> "Build"
   ==> "All"
 
+"Publish"
+  ==> "Resources"
+
 "Tool"
 
 Target.runOrDefault "All"
