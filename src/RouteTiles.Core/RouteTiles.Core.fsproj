@@ -16,6 +16,7 @@
     <Compile Include="Common.fs" />
     <Compile Include="Board/Model.fs" />
     <Compile Include="Board/Update.fs" />
+    <Compile Include="SoloGame.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

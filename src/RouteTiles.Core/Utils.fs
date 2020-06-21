@@ -10,6 +10,8 @@ let inline clamp minVal maxVal x =
   elif maxVal < x then maxVal
   else x
 
+let inline lift (x: ^a): ^b = ((^a or ^b): (static member Lift:_->_) x)
+
 module Array =
   let inline pushFrontPopBack (item: 'a) (array: 'a []): 'a[] * 'a =
     if Array.isEmpty array then Array.empty, item
