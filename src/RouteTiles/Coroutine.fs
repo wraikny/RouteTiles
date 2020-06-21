@@ -25,37 +25,33 @@ module Coroutine =
 type CoroutineNode(?capacity) =
   inherit Node()
 
-  let capacity = defaultArg capacity 0
+  let coroutines = List<IEnumerator<unit>>(defaultArg capacity 0)
+  let tmp = List<IEnumerator<unit>>()
 
-  let coroutines1 = List<IEnumerator<unit>>(capacity)
-  let coroutines2 = List<IEnumerator<unit>>(capacity)
-
-  let mutable oneIsSource = true
   let mutable isInsideCoroutine = false
 
-  let getSrcDst() =
-    if oneIsSource then
-      (coroutines1, coroutines2)
-    else
-      (coroutines2, coroutines1)
+  member val IsUpdated = true with get, set
 
   member __.Add(coroutine: seq<unit>) =
-    let src, dst = getSrcDst()
-
     if isInsideCoroutine then
-      dst.Add(coroutine.GetEnumerator())
+      tmp.Add(coroutine.GetEnumerator())
     else
-      src.Add(coroutine.GetEnumerator())
+      coroutines.Add(coroutine.GetEnumerator())
 
-  override __.OnUpdate() =
-    let src, dst = getSrcDst()
+  override this.OnUpdate() =
+    if this.IsUpdated then
+      if tmp.Count > 0 then
+        coroutines.AddRange(tmp)
+        tmp.Clear()
 
-    isInsideCoroutine <- true
-    for e in src do
-      if e.MoveNext() then
-        dst.Add(e)
-    isInsideCoroutine <- false
+      isInsideCoroutine <- true
+      let mutable index = 0
+      for i in 0..coroutines.Count-1 do
+        let e = coroutines.[i]
+        if e.MoveNext() then
+          coroutines.[index] <- e
+          index <- index + 1
+      isInsideCoroutine <- false
 
-    src.Clear()
-
-    oneIsSource <- not oneIsSource
+      if coroutines.Count > index then
+        coroutines.RemoveRange(index, coroutines.Count - index)
