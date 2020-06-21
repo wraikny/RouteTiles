@@ -27,27 +27,25 @@ type Handler = {
 type Game() =
   inherit Node()
 
-  let updater = Updater<Board.Model.Board, _>()
+  let updater = Updater<SoloGame.Model, _>()
 
   let coroutineNode = CoroutineNode()
 
-  let viewBaseNode = Node()
-  let observerUnregisterers = ResizeArray<_>()
-
-  let registerViewNode(viewNode) =
-    let observableUpdater = updater :> IObservable<_>
-    observableUpdater.Subscribe(viewNode) |> observerUnregisterers.Add
-    viewBaseNode.AddChildNode(viewNode)
-
   do
     base.AddChildNode(coroutineNode)
-    base.AddChildNode(viewBaseNode)
 
-    BoardNode(Helper.boardViewPos)
-    |> registerViewNode
+    let board = BoardNode(Helper.boardViewPos)
+    base.AddChildNode(board)
 
-    GameInfoNode(Helper.gameInfoCenterPos)
-    |> registerViewNode
+    let gameInfo = GameInfoNode(Helper.gameInfoCenterPos)
+    base.AddChildNode(gameInfo)
+
+    updater :> IObservable<_>
+    |> Observable.subscribe(fun model ->
+      board.OnNext(model.board)
+      gameInfo.OnNext(model.board)
+    )
+    |> ignore
 
   override this.OnAdded() =
 
@@ -60,73 +58,53 @@ type Game() =
     }
 
     let initModel =
-      Board.Model.Board.init {
+      let config: Board.Model.BoardConfig = {
         nextCounts = Consts.nextsCount
         size = Consts.boardSize
       }
+
+      SoloGame.init
+        config
+        SoloGame.Mode.TimeAttack
+        Controller.Keyboard
+      
       |> Eff.handle handler
 
     let update msg model =
 #if DEBUG
       printfn "Msg: %A" msg
 #endif
-      Board.Update.update msg model
+      SoloGame.update msg model
       |> Eff.handle handler
 
     updater.Init(initModel, update) |> ignore
 
-    this.BindingInput(initModel)
+    this.BindingInput()
     
 
-  member private __.BindingInput(initModel) =
-    // let inputs = [|
-    //   JoystickButtonType.LeftUp, Board.MoveCursor Dir.Up
-    //   JoystickButtonType.LeftRight, Board.MoveCursor Dir.Right
-    //   JoystickButtonType.LeftDown, Board.MoveCursor Dir.Down
-    //   JoystickButtonType.LeftLeft, Board.MoveCursor Dir.Left
-    //   JoystickButtonType.RightUp, Board.Slide Dir.Up
-    //   JoystickButtonType.RightRight, Board.Slide Dir.Right
-    //   JoystickButtonType.RightDown, Board.Slide Dir.Down
-    //   JoystickButtonType.RightLeft, Board.Slide Dir.Left
-    // |]
-
-    let inputs = [|
-      Keys.W, Board.MoveCursor Dir.Up
-      Keys.D, Board.MoveCursor Dir.Right
-      Keys.S, Board.MoveCursor Dir.Down
-      Keys.A, Board.MoveCursor Dir.Left
-      Keys.I, Board.Slide Dir.Up
-      Keys.L, Board.Slide Dir.Right
-      Keys.K, Board.Slide Dir.Down
-      Keys.J, Board.Slide Dir.Left
-    |]
-
+  member private __.BindingInput() =
     coroutineNode.Add(seq {
-      if not initModel.routesAndLoops.IsEmpty then
-        yield! Coroutine.sleep Consts.tilesVanishInterval
-        updater.Dispatch(Board.Msg.ApplyVanishment) |> ignore
-        
       while true do
-        // Slide
-        let input =
-          // inputs
-          // |> Seq.tryFind(fun (button, _) ->
-          //   Engine.Joystick.IsPushState(0, button)
-          // )
-          inputs |> Seq.tryFind (fst >> Engine.Keyboard.IsPushState)
+        let input = updater.Model.Value.controller |> function
+          | Controller.Keyboard ->
+            InputControl.Board.getKeyboardInput()
+          | Controller.Joystick (_, index) when Engine.Joystick.IsPresent index ->
+            InputControl.Board.getJoystickInput index
+          | Controller.Joystick (_, _) -> None
 
         match input with
-        | None -> yield ()
-        | Some (_, msg) ->
-          let m = updater.Dispatch(msg) |> ValueOption.get
+        | None ->
+          yield ()
+
+        | Some msg ->
+          let m = updater.Dispatch(lift msg) |> ValueOption.get
 
           yield! Coroutine.sleep Consts.inputInterval
 
-          if not m.routesAndLoops.IsEmpty then
+          if not m.board.routesAndLoops.IsEmpty then
             yield! Coroutine.sleep Consts.tilesVanishInterval
-            updater.Dispatch(Board.Msg.ApplyVanishment) |> ignore
-
-          yield()
+            updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
+            yield()
     })
 
 #if DEBUG
