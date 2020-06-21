@@ -70,9 +70,6 @@ type GameInfoNode(centerPosition) =
     separateLine.AddChildNode(scoreText)
     separateLine.AddChildNode(timeText)
 
-  interface IObserver<Board> with
-    member __.OnCompleted() = ()
-    member __.OnError(_) = ()
-    member __.OnNext(board) =
-      updateScoreText <| sprintf "%d" board.point
-      ()
+  member __.OnNext(board) =
+    updateScoreText <| sprintf "%d" board.point
+    ()

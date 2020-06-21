@@ -187,45 +187,42 @@ type BoardNode(boardPosition) =
     base.AddChildNode(nextsBackground)
     nextsBackground.AddChildNode(nextsPool)
 
-  interface IObserver<Board> with
-    member __.OnCompleted() = ()
-    member __.OnError(_) = ()
-    member __.OnNext(board) =
-      tilesPool.Update(seq {
-        for (cdn, t) in Board.getTiles board -> (t.id, (cdn, t))
-      })
+  member __.OnNext(board) =
+    tilesPool.Update(seq {
+      for (cdn, t) in Board.getTiles board -> (t.id, (cdn, t))
+    })
 
-      nextsPool.Update(
-        seq {
-          let n1, n2 = board.nextTiles
-          yield! n1
-          yield! n2
-        }
-        |> Seq.indexed
-        |> Seq.map(fun (i, t) -> (t.id, (i, t)))
-        |> Seq.take Consts.nextsCountToShow
-      )
+    nextsPool.Update(
+      seq {
+        let n1, n2 = board.nextTiles
+        yield! n1
+        yield! n2
+      }
+      |> Seq.indexed
+      |> Seq.map(fun (i, t) -> (t.id, (i, t)))
+      |> Seq.take Consts.nextsCountToShow
+    )
 
-      cursorMemo |> function
-      | ValueSome(c) when c = board.cursor -> ()
-      | _ ->
-        setCusorMemo board.cursor
+    cursorMemo |> function
+    | ValueSome(c) when c = board.cursor -> ()
+    | _ ->
+      setCusorMemo board.cursor
 
-        let cursorXPos, cursorYPos = Helper.cursorPos board.cursor
-        cursorX.Position <- cursorXPos
-        cursorY.Position <- cursorYPos
+      let cursorXPos, cursorYPos = Helper.cursorPos board.cursor
+      cursorX.Position <- cursorXPos
+      cursorY.Position <- cursorYPos
 
-      coroutineNode.Add(seq {
-        yield! Coroutine.sleep Consts.inputInterval
+    coroutineNode.Add(seq {
+      yield! Coroutine.sleep Consts.inputInterval
 
-        for x in board.routesAndLoops do
-          x |> function
-          | RouteOrLoop.Route ps ->
-            for (p, _) in ps do
-              addVanishmentEffect(p, Consts.routeColor)
-          | RouteOrLoop.Loop ps ->
-            for (p, _) in ps do
-              addVanishmentEffect(p, Consts.loopColor)
+      for x in board.routesAndLoops do
+        x |> function
+        | RouteOrLoop.Route ps ->
+          for (p, _) in ps do
+            addVanishmentEffect(p, Consts.routeColor)
+        | RouteOrLoop.Loop ps ->
+          for (p, _) in ps do
+            addVanishmentEffect(p, Consts.loopColor)
 
-        yield()
-      })
+      yield()
+    })

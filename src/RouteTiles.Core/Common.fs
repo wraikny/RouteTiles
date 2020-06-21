@@ -41,3 +41,8 @@ with
       x |> function
       | SetOf2(a, b) ->
         hash a ||| hash b
+
+[<Struct; RequireQualifiedAccess>]
+type Controller =
+  | Keyboard
+  | Joystick of name:string * index:int
