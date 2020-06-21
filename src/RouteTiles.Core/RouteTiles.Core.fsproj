@@ -17,6 +17,7 @@
     <Compile Include="Board/Model.fs" />
     <Compile Include="Board/Update.fs" />
     <Compile Include="SoloGame.fs" />
+    <Compile Include="Pause.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
