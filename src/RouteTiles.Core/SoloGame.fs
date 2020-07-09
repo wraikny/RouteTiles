@@ -2,7 +2,7 @@ module RouteTiles.Core.SoloGame
 
 open RouteTiles.Core
 
-[<RequireQualifiedAccess>]
+[<Struct; RequireQualifiedAccess>]
 type Mode =
   | TimeAttack
   | ScoreAttack
@@ -13,12 +13,12 @@ type Model = {
   board: Board.Model.Board
 }
 
-[<RequireQualifiedAccess>]
+[<Struct; RequireQualifiedAccess>]
 type Msg =
-  | Board of Board.Msg
-  | SetController of Controller
+  | Board of board:Board.Msg
+  | SetController of controller:Controller
 with
-  static member Lift(msg) = Msg.Board msg
+  static member inline Lift(msg) = Msg.Board msg
 
 open EffFs
 
