@@ -55,4 +55,4 @@ module Pause =
 
   let keyboardMapping = [|
     // [|Keys.Escape, ButtonState.Push|], Msg.Resume
-  |]
+    |]
