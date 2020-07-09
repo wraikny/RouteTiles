@@ -25,8 +25,8 @@ module Dir =
 
   let isVertical = function | Dir.Up | Dir.Down -> true | _ -> false
 
-[<CustomEquality; NoComparison>]
-type SetOf2<'a when 'a : equality> = SetOf2 of 'a * 'a
+[<Struct; CustomEquality; NoComparison>]
+type SetOf2<'a when 'a : equality> = private | SetOf2 of 'a * 'a
 
 with
   override x.Equals(yobj) = 
@@ -41,6 +41,10 @@ with
       x |> function
       | SetOf2(a, b) ->
         hash a ||| hash b
+
+    interface System.IEquatable<SetOf2<'a>> with
+      member this.Equals(that : SetOf2<'a>) =
+          this.Equals(that)
 
 [<Struct; RequireQualifiedAccess>]
 type Controller =

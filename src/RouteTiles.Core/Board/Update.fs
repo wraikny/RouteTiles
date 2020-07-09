@@ -15,10 +15,10 @@ Msg.Slide
 -> ...
 
 *)
-
+[<Struct>]
 type Msg =
-  | MoveCursor of Dir
-  | Slide of Dir
+  | MoveCursor of moveCursor:Dir
+  | Slide of slide:Dir
   | ApplyVanishment
 
 module Update =

@@ -32,10 +32,10 @@ type RouteState =
   | Cross of horizontal:LineState * vertical:LineState
   | Empty
 
-[<RequireQualifiedAccess>]
+[<Struct; RequireQualifiedAccess>]
 type RouteOrLoop =
-  | Route of Set<int Vector2 * int<TileId>>
-  | Loop of Set<int Vector2 * int<TileId>>
+  | Route of route:Set<int Vector2 * int<TileId>>
+  | Loop of loop:Set<int Vector2 * int<TileId>>
 
 [<Struct>]
 type Tile = {

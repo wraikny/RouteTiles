@@ -2,6 +2,7 @@ namespace RouteTiles.Core.Effects
 
 [<RequireQualifiedAccess>]
 module Random =
+  [<Struct>]
   type 'a Generator = Generator of (System.Random -> 'a)
 
   let inline private gf (Generator f) = f
