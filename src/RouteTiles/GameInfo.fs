@@ -1,7 +1,7 @@
 namespace RouteTiles.App
 
 open RouteTiles.Core
-open RouteTiles.Core.Board.Model
+open RouteTiles.Core.Types.Board
 open System
 open System.Threading.Tasks
 open Affogato

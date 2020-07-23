@@ -1,7 +1,9 @@
 namespace RouteTiles.App
 
 open RouteTiles.Core
-open RouteTiles.Core.Board.Model
+open RouteTiles.Core.Types
+open RouteTiles.Core.Types.Board
+open RouteTiles.Core.Board
 open System
 open System.Collections.Generic
 open System.Threading.Tasks
@@ -65,23 +67,23 @@ type BoardNode(boardPosition, addCoroutine) =
 
   let tilesBackground =
     RectangleNode(
-      Color    = Consts.boardBackGroundColor,
+      Color = Consts.boardBackGroundColor,
       Position = boardPosition,
-      Size     = Helper.boardViewSize,
-      ZOrder   = ZOrder.Board.background
+      RectangleSize = Helper.boardViewSize,
+      ZOrder = ZOrder.Board.background
     )
 
   let cursorX =
     RectangleNode(
       Color = Consts.cursorColor,
-      Size = Helper.cursorXSize,
+      RectangleSize = Helper.cursorXSize,
       ZOrder = ZOrder.Board.cursor
     )
 
   let cursorY =
     RectangleNode(
       Color = Consts.cursorColor,
-      Size = Helper.cursorYSize,
+      RectangleSize = Helper.cursorYSize,
       ZOrder = ZOrder.Board.cursor
     )
 
@@ -117,11 +119,11 @@ type BoardNode(boardPosition, addCoroutine) =
 
   let nextsBackground =
     RectangleNode(
-      Color    = Consts.boardBackGroundColor,
+      Color = Consts.boardBackGroundColor,
       Position = boardPosition + Helper.nextsViewPos,
       Scale = Vector2F(1.0f, 1.0f) * Consts.nextsScale,
-      Size     = Helper.nextsViewSize,
-      ZOrder   = ZOrder.Board.background
+      RectangleSize = Helper.nextsViewSize,
+      ZOrder = ZOrder.Board.background
     )
 
   do
@@ -139,7 +141,7 @@ type BoardNode(boardPosition, addCoroutine) =
       let node =
         RectangleNode(
           Position = 20.0f * -offset + Helper.calcTilePosCenter (Vector2.init x y),
-          Size = Vector2F(1.0f, 1.0f) * 20.0f,
+          RectangleSize = Vector2F(1.0f, 1.0f) * 20.0f,
           Color = Color(255, 255, 100, 255),
           Angle = 45.0f,
           ZOrder = ZOrder.Board.tiles
@@ -183,9 +185,19 @@ type BoardNode(boardPosition, addCoroutine) =
     base.AddChildNode(nextsBackground)
     nextsBackground.AddChildNode(nextsPool)
 
+  member __.EmitVanishmentParticle(particleSet) =
+    for x in particleSet do
+      x |> function
+      | RouteOrLoop.Route ps ->
+        for (p, _) in ps do
+          addVanishmentEffect(p, Consts.routeColor)
+      | RouteOrLoop.Loop ps ->
+        for (p, _) in ps do
+          addVanishmentEffect(p, Consts.loopColor)
+
   member __.OnNext(board) =
     tilesPool.Update(seq {
-      for (cdn, t) in Board.getTiles board -> (t.id, (cdn, t))
+      for (cdn, t) in Model.getTiles board -> (t.id, (cdn, t))
     })
 
     nextsPool.Update(
@@ -207,18 +219,3 @@ type BoardNode(boardPosition, addCoroutine) =
       let cursorXPos, cursorYPos = Helper.cursorPos board.cursor
       cursorX.Position <- cursorXPos
       cursorY.Position <- cursorYPos
-
-    addCoroutine(seq {
-      yield! Coroutine.sleep Consts.inputInterval
-
-      for x in board.routesAndLoops do
-        x |> function
-        | RouteOrLoop.Route ps ->
-          for (p, _) in ps do
-            addVanishmentEffect(p, Consts.routeColor)
-        | RouteOrLoop.Loop ps ->
-          for (p, _) in ps do
-            addVanishmentEffect(p, Consts.loopColor)
-
-      yield()
-    })

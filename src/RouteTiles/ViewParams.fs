@@ -40,7 +40,7 @@ module Consts =
   let gameInfoColor = Color(30, 30, 30, 255)
 
   module Color =
-    let pauseBackground = Color(0, 0, 0, 30)
+    let pauseBackground = Color(0, 0, 0, 100)
 
   
   let cursorColorFlashingPeriod = 600<millisec>
@@ -49,10 +49,12 @@ module Consts =
   let tilesVanishAnimatinTime = 750<millisec>
   let inputInterval = 120<millisec>
 
+  let waitingInputIntervalOnOpeningPause = 20<millisec>
+
   
 
 module Binding =
-  open RouteTiles.Core.Board.Model
+  open RouteTiles.Core.Types.Board
 
   let routeStateDelta routeState =
     routeState

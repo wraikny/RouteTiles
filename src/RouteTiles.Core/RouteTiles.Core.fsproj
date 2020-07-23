@@ -10,14 +10,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../paket-files/wraikny/EffFs/src/EffFs/EffFs.fs" />
+    <Compile Include="Utils.fs" />
+    <Compile Include="Types/Common.fs" />
+    <Compile Include="Types/Board.fs" />
+    <Compile Include="Types/Pause.fs" />
+    <Compile Include="Types/SoloGame.fs" />
     <Compile Include="Effects/Random.fs" />
     <Compile Include="Effects/Effect.fs" />
-    <Compile Include="Utils.fs" />
-    <Compile Include="Common.fs" />
-    <Compile Include="Board/Model.fs" />
-    <Compile Include="Board/Update.fs" />
-    <Compile Include="SoloGame.fs" />
+    <Compile Include="Board.fs" />
     <Compile Include="Pause.fs" />
+    <Compile Include="SoloGame.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
