@@ -1,6 +1,8 @@
 ﻿module RouteTiles.App.Program
 
 open Altseed2
+open RouteTiles.Core
+open RouteTiles.Core.Types
 
 
 [<EntryPoint>]
@@ -30,7 +32,19 @@ let main _ =
   if not <| Engine.File.AddRootDirectory(@"Resources") then
     failwithf "Failed to add root directory"
 
-  Engine.AddNode(Game())
+  let controller =
+    Engine.Joystick.GetJoystickInfo(0)
+    |> function
+    | info when isNull info -> Controller.Keyboard
+    | info ->
+      let name = if info.IsGamepad then info.GamepadName else info.Name
+      Controller.Joystick(name, 0)
+
+  (
+    let node = Game(SoloGame.Mode.TimeAttack, controller)
+    Engine.AddNode(node)
+  )
+
 
   loop()
 
@@ -46,7 +60,10 @@ let main _ =
       if not <| Engine.File.AddRootPackageWithPassword(@"Resources.pack", ResourcesPassword.password) then
         failwithf "Failed to add root package"
 
-      Engine.AddNode(Game())
+      (
+        let node = Game(SoloGame.Mode.TimeAttack, Controller.Keyboard)
+        Engine.AddNode(node)
+      )
 
       loop()
     with e ->

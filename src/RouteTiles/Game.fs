@@ -1,6 +1,7 @@
 namespace RouteTiles.App
 
 open RouteTiles.Core
+open RouteTiles.Core.Types
 open RouteTiles.Core.Effects
 
 open System
@@ -10,71 +11,68 @@ open EffFs
 
 type Handler = {
   rand: Random
+  setIsPaused: bool -> unit
+  emitVanishmentParticle: Set<Board.RouteOrLoop> -> unit
 } with
   static member Handle(x) = x
 
   static member Handle(RandomEffect (Random.Generator f), k) =
+    Eff.capture(fun h -> f h.rand |> k)
+
+  static member Handle(LogEffect s, k) =
+    Engine.Log.Warn(LogCategory.User, s)
+    k ()
+
+  static member Handle(effect, k) =
     Eff.capture(fun h ->
-      let res = f h.rand
+      match effect with
+      | ControlEffect.SetIsPaused t -> h.setIsPaused t
+      | ControlEffect.Restart -> ()
+      | ControlEffect.Quit -> ()
 
-#if DEBUG
-      printfn "RandomEffect(%A)" res
-#endif
-
-      k res
+      k()
     )
 
-type Game() =
+  static member Handle(EmitVanishParticleEffect particleSet, k) =
+    Eff.capture(fun h ->
+      h.emitVanishmentParticle particleSet
+      k()
+    )
+
+type Game(gameMode, controller) =
   inherit Node()
 
+  let mutable lastModel: SoloGame.Model voption = ValueNone
   let updater = Updater<SoloGame.Model, _>()
 
   let coroutineNode = CoroutineNode()
+  let pauseNode = PauseNode(lift >> updater.Dispatch >> ignore)
+  let boardNode = BoardNode(Helper.boardViewPos, coroutineNode.Add)
+  let gameInfoNode = GameInfoNode(Helper.gameInfoCenterPos)
 
-  do
-    base.AddChildNode(coroutineNode)
-
-    let board = BoardNode(Helper.boardViewPos)
-    base.AddChildNode(board)
-
-    let gameInfo = GameInfoNode(Helper.gameInfoCenterPos)
-    base.AddChildNode(gameInfo)
-
-    updater :> IObservable<_>
-    |> Observable.subscribe(fun model ->
-      board.OnNext(model.board)
-      gameInfo.OnNext(model.board)
-    )
-    |> ignore
-
-    let mutable time = 0.0f
-    coroutineNode.Add(seq {
-      while true do
-        time <- time + Engine.DeltaSecond
-        gameInfo.SetTime(time)
-        yield()
-    })
-
-  override this.OnAdded() =
-
+  let initialize() =
     let handler: Handler = {
 #if DEBUG
       rand = Random(0)
 #else
       rand = Random()
 #endif
+      setIsPaused = fun t ->
+        coroutineNode.IsUpdated <- not t
+
+      emitVanishmentParticle = boardNode.EmitVanishmentParticle
     }
 
     let initModel =
-      let config: Board.Model.BoardConfig = {
+      let config: Board.BoardConfig = {
         nextCounts = Consts.nextsCount
         size = Consts.boardSize
       }
 
       SoloGame.init
         config
-        SoloGame.Mode.TimeAttack
-        Controller.Keyboard
+        gameMode
+        controller
       
       |> Eff.handle handler
 
@@ -87,39 +85,87 @@ type Game() =
 
     updater.Init(initModel, update) |> ignore
 
-    this.BindingInput()
-    
 
-  member private __.BindingInput() =
+  /// Binding Children
+  do
+    base.AddChildNode(coroutineNode)
+
+    base.AddChildNode(boardNode)
+
+    base.AddChildNode(gameInfoNode)
+
+    base.AddChildNode(pauseNode)
+
+    updater :> IObservable<_>
+    |> Observable.subscribe(fun model ->
+      if model.pause = Pause.Model.NotPaused then
+        boardNode.OnNext(model.board)
+        gameInfoNode.OnNext(model.board)
+      
+      pauseNode.OnNext(model)
+    )
+    |> ignore
+
+    updater :> IObservable<_>
+    |> Observable.subscribe(fun model ->
+      match lastModel with
+      | ValueNone -> ()
+      | ValueSome m ->
+        match Pause.isPauseActivated m.pause model.pause with
+        | ValueSome t -> coroutineNode.IsUpdated <- not t
+        | _ -> ()
+
+      lastModel <- ValueSome model
+    )
+    |> ignore
+
+    let mutable time = 0.0f
     coroutineNode.Add(seq {
       while true do
-        let input = updater.Model.Value.controller |> function
-          | Controller.Keyboard ->
-            InputControl.Board.getKeyboardInput()
-          | Controller.Joystick (_, index) when Engine.Joystick.IsPresent index ->
-            InputControl.Board.getJoystickInput index
-          | Controller.Joystick (_, _) -> None
-
-        match input with
-        | None ->
-          yield ()
-
-        | Some msg ->
-          let m = updater.Dispatch(lift msg) |> ValueOption.get
-
-          yield! Coroutine.sleep Consts.inputInterval
-
-          if not m.board.routesAndLoops.IsEmpty then
-            yield! Coroutine.sleep Consts.tilesVanishInterval
-            updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
-            yield()
-    })
-
-#if DEBUG
-    coroutineNode.Add(seq {
-      while true do
-        if Engine.Keyboard.IsPushState Keys.Num0 then
-          printfn "%A" updater.Model
+        time <- time + Engine.DeltaSecond
+        gameInfoNode.SetTime(time)
         yield()
     })
+
+  /// Binding Input
+  do
+    coroutineNode.Add(seq {
+      while true do
+#if DEBUG
+        if Engine.Keyboard.IsPushState Keys.Num0 then
+          printfn "%A" lastModel
 #endif
+
+        match lastModel with
+        | ValueNone -> yield()
+        | ValueSome model ->
+          let input =
+            model.controller |> function
+            | Controller.Keyboard ->
+              InputControl.SoloGame.getKeyboardInput()
+            | Controller.Joystick (_, ValidJoystickIndex index) ->
+              InputControl.SoloGame.getJoystickInput index
+            | Controller.Joystick (name, index) ->
+              let s = sprintf "joystick '%s' is not present at %d" name index
+              Engine.Log.Warn(LogCategory.User, s)
+              None
+
+          match input with
+          | None -> ()
+
+          | Some (SoloGame.Msg.Board _ as msg) ->
+            let m = updater.Dispatch(msg) |> ValueOption.get
+
+            yield! Coroutine.sleep Consts.inputInterval
+
+            if not m.board.routesAndLoops.IsEmpty then
+              yield! Coroutine.sleep Consts.tilesVanishInterval
+              updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
+
+          | Some msg ->
+            updater.Dispatch(msg) |> ignore
+
+          yield()
+    })
+
+  override __.OnAdded() = initialize()

@@ -1,7 +1,7 @@
 namespace RouteTiles.App
 
 open RouteTiles.Core
-open RouteTiles.Core.Board.Model
+open RouteTiles.Core.Types.Board
 open System
 open System.Threading.Tasks
 open Affogato
@@ -9,8 +9,6 @@ open Altseed2
 
 type GameInfoNode(centerPosition) =
   inherit Node()
-
-  let coroutineNode = CoroutineNode()
 
   let font = Font.LoadDynamicFontStrict("mplus-1c-regular.ttf", 120)
 
@@ -56,7 +54,6 @@ type GameInfoNode(centerPosition) =
     setScoreText "0"
     setTimeText "00:00:00"
 
-    base.AddChildNode(coroutineNode)
     base.AddChildNode(separateLine)
     separateLine.AddChildNode(scoreText)
     separateLine.AddChildNode(timeText)

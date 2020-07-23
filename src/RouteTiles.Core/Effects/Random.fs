@@ -59,3 +59,6 @@ module Random =
     member __.Return(x) = Generator.Return(x)
     member __.Bind(x,f) = Generator.(>>=)(x,f)
 
+[<AutoOpen>]
+module RandomBuilder =
+  let random = Random.RandomBuilder()

@@ -1,10 +1,6 @@
 [<AutoOpen>]
 module RouteTiles.Core.Utils
 
-open RouteTiles.Core.Effects
-
-let random = Random.RandomBuilder()
-
 let inline clamp minVal maxVal x =
   if x < minVal then minVal
   elif maxVal < x then maxVal
@@ -64,3 +60,23 @@ module Seq =
 [<Measure>] type sec
 [<Measure>] type millisec
 
+[<Struct; CustomEquality; NoComparison>]
+type SetOf2<'a when 'a : equality> = private | SetOf2 of 'a * 'a
+
+with
+  override x.Equals(yobj) = 
+    match yobj with
+    | :? SetOf2<'a> as y ->
+      match x, y with
+      | SetOf2(xa, xb), SetOf2(ya, yb) when (xa = ya && xb = yb) || (xa = yb && xb = ya) -> true
+      | _ -> false
+    | _ -> false
+
+    override x.GetHashCode() =
+      x |> function
+      | SetOf2(a, b) ->
+        hash a ||| hash b
+
+    interface System.IEquatable<SetOf2<'a>> with
+      member this.Equals(that : SetOf2<'a>) =
+          this.Equals(that)

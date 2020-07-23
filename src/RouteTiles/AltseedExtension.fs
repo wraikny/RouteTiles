@@ -14,3 +14,9 @@ type Joystick with
   member inline x.IsPushState(index, button: JoystickButtonType) = x.GetButtonState(index, button) = ButtonState.Push
   member inline x.IsHoldState(index, button: JoystickButtonType) = x.GetButtonState(index, button) = ButtonState.Hold
   member inline x.IsReleaseState(index, button: JoystickButtonType) = x.GetButtonState(index, button) = ButtonState.Release
+
+let (|ValidJoystickIndex|_|) index =
+  if Engine.Joystick.IsPresent index then
+    Some (ValidJoystickIndex index)
+  else
+    None

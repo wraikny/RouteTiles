@@ -5,7 +5,7 @@ source https://www.nuget.org/api/v2
 nuget FSharp.Core
 nuget Affogato
 
-github wraikny/EffFs:1ac4202ff820ad8394b7fc0c7a9494b57317cdc3 src/EffFs/EffFs.fs
+github wraikny/EffFs:85a9b0b316a9d98fc9f88b7f620fc9e2420e3b22 src/EffFs/EffFs.fs
 
 // [ FAKE GROUP ]
 group Build
