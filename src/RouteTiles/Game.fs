@@ -47,7 +47,8 @@ type Game(gameMode, controller) =
 
   let coroutineNode = CoroutineNode()
   let pauseNode = PauseNode(lift >> updater.Dispatch >> ignore)
-  let boardNode = BoardNode(Helper.Board.boardViewPos, coroutineNode.Add)
+  let boardNode = BoardNode(Helper.SoloGame.boardViewPos, coroutineNode.Add)
+  let nextTilesNode = NextTilesNode(Helper.SoloGame.nextsViewPos, coroutineNode.Add)
   let gameInfoNode = GameInfoNode(Helper.SoloGame.gameInfoCenterPos)
 
   let initialize() =
@@ -91,7 +92,7 @@ type Game(gameMode, controller) =
     base.AddChildNode(coroutineNode)
 
     base.AddChildNode(boardNode)
-
+    base.AddChildNode(nextTilesNode)
     base.AddChildNode(gameInfoNode)
 
     base.AddChildNode(pauseNode)
@@ -100,6 +101,7 @@ type Game(gameMode, controller) =
     |> Observable.subscribe(fun model ->
       if model.pause = Pause.Model.NotPaused then
         boardNode.OnNext(model.board)
+        nextTilesNode.OnNext(model.board)
         gameInfoNode.OnNext(model.board)
       
       pauseNode.OnNext(model)

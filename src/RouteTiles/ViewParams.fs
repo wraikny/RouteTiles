@@ -8,7 +8,7 @@ open Affogato
 module Consts =
   // -- Core --
   module Core =
-    let nextsCount = 5
+    let [<Literal>] nextsCount = 5
     let boardSize = Vector2.init 4 5
 
   // -- View --
@@ -17,7 +17,7 @@ module Consts =
     let clearColor = Color(200, 200, 200, 255)
 
   module Board =
-    let nextsCountToShow = 5
+    let [<Literal>] nextsCountToShow = 5
 
     // let nextsPos = Vector2F(550.0f, 50.0f)
     let nextsScale = 0.6f
@@ -25,7 +25,6 @@ module Consts =
     // let boardViewPos = Vector2F(100.f, 120.0f)
     let tileSize = Vector2F(100.0f, 100.0f)
     let tileMergin = Vector2F(10.0f, 10.0f)
-    let nextsBoardMergin = 200.0f
 
     let boardBackGroundColor = Color(100, 100, 100, 255)
 
@@ -33,23 +32,29 @@ module Consts =
     let loopColor = Color(100, 100, 255, 255)
 
     let cursorColor = Color(105, 255, 220, 255)
-    let cursorColorMin = 0.25f
+    let [<Literal>] cursorColorMin = 0.25f
 
+    let [<Literal>] tileTexturePath = @"tiles.png"
 
-    let cursorColorFlashingPeriod = 600<millisec>
-    let tileSlideInterval = 120<millisec>
-    let tilesVanishInterval = 120<millisec>
-    let tilesVanishAnimatinTime = 750<millisec>
+    let [<Literal>] tileVanishmentEffectTexturePath = @"tileVanishEffect.png"
+
+    let [<Literal>] cursorColorFlashingPeriod = 600<millisec>
+    let [<Literal>] tileSlideInterval = 120<millisec>
+    let [<Literal>] tilesVanishInterval = 120<millisec>
+    let [<Literal>] tilesVanishAnimatinTime = 750<millisec>
 
   module GameCommon =
     let pauseBackground = Color(0, 0, 0, 100)
-    let inputInterval = 120<millisec>
-    let waitingInputIntervalOnOpeningPause = 20<millisec>
+    let [<Literal>] inputInterval = 120<millisec>
+    let [<Literal>] waitingInputIntervalOnOpeningPause = 20<millisec>
 
   module GameInfo =
     let gameInfoColor = Color(30, 30, 30, 255)
-    let gameinfoMerginY = 0.0f
-    let gameinfoSeparateLineLength = 400.0f
+    let [<Literal>] gameinfoMerginY = 0.0f
+    let [<Literal>] gameinfoSeparateLineLength = 400.0f
+
+  module SoloGame =
+    let [<Literal>] nextsBoardMergin = 200.0f
 
 module Binding =
   module Board =
@@ -130,12 +135,6 @@ module Helper =
       |> flipNexts
       |> calcTilePos
 
-    let nextsViewPos = Vector2F(nextsBoardMergin + boardViewSize.X, 0.0f)
-
-    let boardViewPos =
-      let p = (windowSize.To2F() - boardViewSize) * 0.5f
-      Vector2F(150.0f, p.Y)
-
     let cursorXSize = calcTilePos { boardSize with x = 1 }
     let cursorYSize = calcTilePos { boardSize with y = 1 }
 
@@ -145,8 +144,18 @@ module Helper =
 
   module SoloGame =
     open Board
+    open Consts.ViewCommon
     open Consts.Board
+    open Consts.SoloGame
 
+    let boardViewPos =
+      let p = (windowSize.To2F() - boardViewSize) * 0.5f
+      Vector2F(150.0f, p.Y)
+
+    let nextsViewPos =
+      boardViewPos
+      + Vector2F(nextsBoardMergin + boardViewSize.X, 0.0f)
+    
     let gameInfoCenterPos =
       let x = boardViewPos.X + nextsViewPos.X + nextsViewSize.X * 0.5f * nextsScale
       let y = boardViewPos.Y + boardViewSize.Y * 0.5f
