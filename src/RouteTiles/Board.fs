@@ -65,7 +65,7 @@ type BoardNode(boardPosition, addCoroutine) =
   
   let tilesBackground =
     RectangleNode(
-      Color = Consts.Board.boardBackGroundColor,
+      Color = Consts.Board.backGroundColor,
       RectangleSize = Helper.Board.boardViewSize,
       ZOrder = ZOrder.Board.background
     )
@@ -105,7 +105,7 @@ type BoardNode(boardPosition, addCoroutine) =
         let t = cursorTime / (float32 Consts.Board.cursorColorFlashingPeriod / 1000.0f)
         let col =
           Helper.lerpColor
-            Consts.Board.boardBackGroundColor
+            Consts.Board.backGroundColor
             Consts.Board.cursorColor
             (Consts.Board.cursorColorMin + (1.0f - Consts.Board.cursorColorMin) * (cos t * cos t))
         cursorX.Color <- col

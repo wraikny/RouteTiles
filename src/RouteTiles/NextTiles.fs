@@ -30,7 +30,7 @@ type NextTilesNode(position, addCoroutine) =
 
   let nextsBackground =
     RectangleNode(
-      Color = Consts.Board.boardBackGroundColor,
+      Color = Consts.Board.backGroundColor,
       RectangleSize = Helper.Board.nextsViewSize,
       ZOrder = ZOrder.Board.background
     )

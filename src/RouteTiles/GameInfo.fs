@@ -18,11 +18,11 @@ type GameInfoNode(centerPosition) =
     ) :> TransformNode
 
   let separateLine =
-    let size = Vector2F(Consts.GameInfo.gameinfoSeparateLineLength, Consts.GameInfo.lineLength)
+    let size = Vector2F(Consts.GameInfo.lineLength, Consts.GameInfo.lineWidth)
     RectangleNode(
       Pivot = Vector2F(0.5f, 0.5f),
       RectangleSize = size,
-      Color = Consts.GameInfo.gameInfoColor,
+      Color = Consts.GameInfo.color,
       ZOrder = ZOrder.GameInfo.text
     )
   do
@@ -31,16 +31,16 @@ type GameInfoNode(centerPosition) =
   let scoreText =
     TextNode(
       Font = font,
-      Position = Vector2F(0.0f, -Consts.GameInfo.gameinfoMerginY),
-      Color = Consts.GameInfo.gameInfoColor,
+      Position = Vector2F(0.0f, -Consts.GameInfo.merginY),
+      Color = Consts.GameInfo.color,
       ZOrder = ZOrder.GameInfo.text
     )
 
   let timeText =
     TextNode(
       Font = font,
-      Position = Vector2F(0.0f, Consts.GameInfo.gameinfoMerginY),
-      Color = Consts.GameInfo.gameInfoColor,
+      Position = Vector2F(0.0f, Consts.GameInfo.merginY),
+      Color = Consts.GameInfo.color,
       ZOrder = ZOrder.GameInfo.text
     )
 

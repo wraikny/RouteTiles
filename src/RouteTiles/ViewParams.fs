@@ -26,7 +26,7 @@ module Consts =
     let tileSize = Vector2F(100.0f, 100.0f)
     let tileMergin = Vector2F(10.0f, 10.0f)
 
-    let boardBackGroundColor = Color(100, 100, 100, 255)
+    let backGroundColor = Color(100, 100, 100, 255)
 
     let routeColor = Color(255, 255, 100, 255)
     let loopColor = Color(100, 100, 255, 255)
@@ -49,10 +49,10 @@ module Consts =
     let [<Literal>] waitingInputIntervalOnOpeningPause = 20<millisec>
 
   module GameInfo =
-    let gameInfoColor = Color(30, 30, 30, 255)
-    let [<Literal>] gameinfoMerginY = 0.0f
-    let [<Literal>] gameinfoSeparateLineLength = 400.0f
-    let [<Literal>] lineLength = 5.0f
+    let color = Color(30, 30, 30, 255)
+    let [<Literal>] merginY = 0.0f
+    let [<Literal>] lineLength = 400.0f
+    let [<Literal>] lineWidth = 5.0f
 
   module SoloGame =
     let [<Literal>] nextsBoardMergin = 200.0f
