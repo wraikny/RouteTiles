@@ -20,8 +20,8 @@ type PauseNode(dispatch) =
 
     base.AddChildNode(
       RectangleNode(
-        RectangleSize = Consts.windowSize.To2F(),
-        Color = Consts.Color.pauseBackground,
+        RectangleSize = Consts.ViewCommon.windowSize.To2F(),
+        Color = Consts.GameCommon.pauseBackground,
         ZOrder = ZOrder.Pause.background,
         IsDrawn = false
       )
@@ -65,7 +65,7 @@ type PauseNode(dispatch) =
   member private this.SetPause(isPaused) =
     if isPaused then
       coroutineNode.Add(seq {
-        yield! Coroutine.sleep Consts.waitingInputIntervalOnOpeningPause
+        yield! Coroutine.sleep Consts.GameCommon.waitingInputIntervalOnOpeningPause
         isInputEnabled <- true
         yield()
       })

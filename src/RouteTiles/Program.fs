@@ -4,14 +4,15 @@ open Altseed2
 open RouteTiles.Core
 open RouteTiles.Core.Types
 
+open RouteTiles.App.Consts.ViewCommon
 
 [<EntryPoint>]
 let main _ =
   let inline init(config) =
-    if not <| Engine.Initialize("RouteTiles", Consts.windowSize.X, Consts.windowSize.Y, config) then
+    if not <| Engine.Initialize("RouteTiles", windowSize.X, windowSize.Y, config) then
       failwith "Failed to initialize the Altseed2"
 
-    Engine.ClearColor <- Consts.clearColor
+    Engine.ClearColor <- clearColor
 
   let rec loop() =
     if Engine.DoEvents() then

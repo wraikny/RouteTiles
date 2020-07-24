@@ -17,41 +17,41 @@ type BoardNode(boardPosition, addCoroutine) =
     let node =
       SpriteNode(
         Texture = Texture2D.LoadStrict(@"tiles.png"),
-        Src = RectF(Vector2F(), Consts.tileSize),
+        Src = RectF(Vector2F(), Consts.Board.tileSize),
         ZOrder = ZOrder.Board.tiles
       )
 
     node.AdjustSize()
-    node.CenterPosition <- Consts.tileSize / 2.0f
+    node.CenterPosition <- Consts.Board.tileSize / 2.0f
 
     node
 
   let updateTile (node: SpriteNode, (cdn, tile), isNewTile) =
-    let pos = Helper.calcTilePosCenter cdn
-    let src = Binding.tileTextureSrc tile.dir tile.routeState
+    let pos = Helper.Board.calcTilePosCenter cdn
+    let src = Binding.Board.tileTextureSrc tile.dir tile.routeState
 
     if isNewTile then
       node.IsDrawn <- false
       node.Position <- pos
-      node.Angle <- Binding.tileTextureAngle tile.dir
+      node.Angle <- Binding.Board.tileTextureAngle tile.dir
       node.Src <- src
 
       addCoroutine (seq {
-        for _ in Coroutine.milliseconds Consts.tileSlideInterval -> ()
+        for _ in Coroutine.milliseconds Consts.Board.tileSlideInterval -> ()
         node.IsDrawn <- true
         yield()
       })
     else
       addCoroutine (seq {
         let firstPos = node.Position
-        for t in Coroutine.milliseconds Consts.tileSlideInterval do
+        for t in Coroutine.milliseconds Consts.Board.tileSlideInterval do
           node.Position <- Easing.GetEasing(EasingType.InQuad, t) * (pos - firstPos) + firstPos
           yield()
 
         node.Position <- pos
         node.Src <- src
         
-        // Consts.tilesVanishInterval
+        // Consts.Board.tilesVanishInterval
         // æ¶ˆåŽ»
         // Effectè¿½åŠ 
 
@@ -67,23 +67,23 @@ type BoardNode(boardPosition, addCoroutine) =
 
   let tilesBackground =
     RectangleNode(
-      Color = Consts.boardBackGroundColor,
+      Color = Consts.Board.boardBackGroundColor,
       Position = boardPosition,
-      RectangleSize = Helper.boardViewSize,
+      RectangleSize = Helper.Board.boardViewSize,
       ZOrder = ZOrder.Board.background
     )
 
   let cursorX =
     RectangleNode(
-      Color = Consts.cursorColor,
-      RectangleSize = Helper.cursorXSize,
+      Color = Consts.Board.cursorColor,
+      RectangleSize = Helper.Board.cursorXSize,
       ZOrder = ZOrder.Board.cursor
     )
 
   let cursorY =
     RectangleNode(
-      Color = Consts.cursorColor,
-      RectangleSize = Helper.cursorYSize,
+      Color = Consts.Board.cursorColor,
+      RectangleSize = Helper.Board.cursorYSize,
       ZOrder = ZOrder.Board.cursor
     )
 
@@ -98,12 +98,12 @@ type BoardNode(boardPosition, addCoroutine) =
       while true do
         cursorTime <- cursorTime + Engine.DeltaSecond
 
-        let t = cursorTime / (float32 Consts.cursorColorFlashingPeriod / 1000.0f)
+        let t = cursorTime / (float32 Consts.Board.cursorColorFlashingPeriod / 1000.0f)
         let col =
           Helper.lerpColor
-            Consts.boardBackGroundColor
-            Consts.cursorColor
-            (Consts.cursorColorMin + (1.0f - Consts.cursorColorMin) * (cos t * cos t))
+            Consts.Board.boardBackGroundColor
+            Consts.Board.cursorColor
+            (Consts.Board.cursorColorMin + (1.0f - Consts.Board.cursorColorMin) * (cos t * cos t))
         cursorX.Color <- col
         cursorY.Color <- col
 
@@ -114,25 +114,25 @@ type BoardNode(boardPosition, addCoroutine) =
     { new NodePool<int<TileId>, _, _>() with
         member __.Create() = createTile()
         member __.Update(node, (index: int, tile: Tile), isNewTile) =
-          updateTile(node, (Helper.nextsIndexToCoordinate index, tile), isNewTile)
+          updateTile(node, (Helper.Board.nextsIndexToCoordinate index, tile), isNewTile)
     }
 
   let nextsBackground =
     RectangleNode(
-      Color = Consts.boardBackGroundColor,
-      Position = boardPosition + Helper.nextsViewPos,
-      Scale = Vector2F(1.0f, 1.0f) * Consts.nextsScale,
-      RectangleSize = Helper.nextsViewSize,
+      Color = Consts.Board.boardBackGroundColor,
+      Position = boardPosition + Helper.Board.nextsViewPos,
+      Scale = Vector2F(1.0f, 1.0f) * Consts.Board.nextsScale,
+      RectangleSize = Helper.Board.nextsViewSize,
       ZOrder = ZOrder.Board.background
     )
 
   do
     let markers = [|
-      for x in [-1; Consts.boardSize.x] do
+      for x in [-1; Consts.Core.boardSize.x] do
       for y in 1..3 do
         yield (x, y, Vector2F(float32 <| sign x, 0.0f))
 
-      for y in [-1; Consts.boardSize.y] do
+      for y in [-1; Consts.Core.boardSize.y] do
       for x in 1..2 do
         yield (x, y, Vector2F(0.0f, float32 <| sign y))
     |]
@@ -140,7 +140,7 @@ type BoardNode(boardPosition, addCoroutine) =
     for (x, y, offset) in markers do
       let node =
         RectangleNode(
-          Position = 20.0f * -offset + Helper.calcTilePosCenter (Vector2.init x y),
+          Position = 20.0f * -offset + Helper.Board.calcTilePosCenter (Vector2.init x y),
           RectangleSize = Vector2F(1.0f, 1.0f) * 20.0f,
           Color = Color(255, 255, 100, 255),
           Angle = 45.0f,
@@ -153,10 +153,10 @@ type BoardNode(boardPosition, addCoroutine) =
       tilesBackground.AddChildNode(node)
 
   let vanishmentEffectPool =
-    { new EffectPool((Consts.boardSize.x * Consts.boardSize.y) / 2) with
+    { new EffectPool((Consts.Core.boardSize.x * Consts.Core.boardSize.y) / 2) with
       member x.InitEffect(node) =
         node.Count <- Vector2I(5, 9)
-        node.Second <- Consts.tilesVanishAnimatinTime |> Helper.toSecond
+        node.Second <- Consts.Board.tilesVanishAnimatinTime |> Helper.toSecond
         node.IsLooping <- false
 
         node.Texture <- Texture2D.LoadStrict(@"tileVanishEffect.png")
@@ -171,7 +171,7 @@ type BoardNode(boardPosition, addCoroutine) =
 
   let addVanishmentEffect(cdn, color) =
     vanishmentEffectPool.AddEffect(fun node ->
-      node.Position <- Helper.calcTilePosCenter(cdn)
+      node.Position <- Helper.Board.calcTilePosCenter(cdn)
       node.Color <- color
     )
 
@@ -190,10 +190,10 @@ type BoardNode(boardPosition, addCoroutine) =
       x |> function
       | RouteOrLoop.Route ps ->
         for (p, _) in ps do
-          addVanishmentEffect(p, Consts.routeColor)
+          addVanishmentEffect(p, Consts.Board.routeColor)
       | RouteOrLoop.Loop ps ->
         for (p, _) in ps do
-          addVanishmentEffect(p, Consts.loopColor)
+          addVanishmentEffect(p, Consts.Board.loopColor)
 
   member __.OnNext(board) =
     tilesPool.Update(seq {
@@ -208,7 +208,7 @@ type BoardNode(boardPosition, addCoroutine) =
       }
       |> Seq.indexed
       |> Seq.map(fun (i, t) -> (t.id, (i, t)))
-      |> Seq.take Consts.nextsCountToShow
+      |> Seq.take Consts.Board.nextsCountToShow
     )
 
     cursorMemo |> function
@@ -216,6 +216,6 @@ type BoardNode(boardPosition, addCoroutine) =
     | _ ->
       setCusorMemo board.cursor
 
-      let cursorXPos, cursorYPos = Helper.cursorPos board.cursor
+      let cursorXPos, cursorYPos = Helper.Board.cursorPos board.cursor
       cursorX.Position <- cursorXPos
       cursorY.Position <- cursorYPos

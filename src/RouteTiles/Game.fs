@@ -47,8 +47,8 @@ type Game(gameMode, controller) =
 
   let coroutineNode = CoroutineNode()
   let pauseNode = PauseNode(lift >> updater.Dispatch >> ignore)
-  let boardNode = BoardNode(Helper.boardViewPos, coroutineNode.Add)
-  let gameInfoNode = GameInfoNode(Helper.gameInfoCenterPos)
+  let boardNode = BoardNode(Helper.Board.boardViewPos, coroutineNode.Add)
+  let gameInfoNode = GameInfoNode(Helper.SoloGame.gameInfoCenterPos)
 
   let initialize() =
     let handler: Handler = {
@@ -65,8 +65,8 @@ type Game(gameMode, controller) =
 
     let initModel =
       let config: Board.BoardConfig = {
-        nextCounts = Consts.nextsCount
-        size = Consts.boardSize
+        nextCounts = Consts.Core.nextsCount
+        size = Consts.Core.boardSize
       }
 
       SoloGame.init
@@ -156,10 +156,10 @@ type Game(gameMode, controller) =
           | Some (SoloGame.Msg.Board _ as msg) ->
             let m = updater.Dispatch(msg) |> ValueOption.get
 
-            yield! Coroutine.sleep Consts.inputInterval
+            yield! Coroutine.sleep Consts.GameCommon.inputInterval
 
             if not m.board.routesAndLoops.IsEmpty then
-              yield! Coroutine.sleep Consts.tilesVanishInterval
+              yield! Coroutine.sleep Consts.Board.tilesVanishInterval
               updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
 
           | Some msg ->
