@@ -12,15 +12,21 @@ type GameInfoNode(centerPosition) =
 
   let font = Font.LoadDynamicFontStrict("mplus-1c-regular.ttf", 120)
 
+  let transform =
+    RectangleNode(
+      Position = centerPosition
+    ) :> TransformNode
+
   let separateLine =
-    LineNode(
-      Position = centerPosition,
-      Thickness = 5.0f,
-      Point1 = Vector2F(-Consts.GameInfo.gameinfoSeparateLineLength * 0.5f, 0.0f),
-      Point2 = Vector2F(Consts.GameInfo.gameinfoSeparateLineLength * 0.5f, 0.0f),
+    let size = Vector2F(Consts.GameInfo.gameinfoSeparateLineLength, Consts.GameInfo.lineLength)
+    RectangleNode(
+      Pivot = Vector2F(0.5f, 0.5f),
+      RectangleSize = size,
       Color = Consts.GameInfo.gameInfoColor,
       ZOrder = ZOrder.GameInfo.text
     )
+  do
+    separateLine.AdjustSize()
 
   let scoreText =
     TextNode(
@@ -54,9 +60,10 @@ type GameInfoNode(centerPosition) =
     setScoreText "0"
     setTimeText "00:00:00"
 
-    base.AddChildNode(separateLine)
-    separateLine.AddChildNode(scoreText)
-    separateLine.AddChildNode(timeText)
+    base.AddChildNode(transform)
+    transform.AddChildNode(separateLine)
+    transform.AddChildNode(scoreText)
+    transform.AddChildNode(timeText)
 
   member __.OnNext(board) =
     setScoreText <| sprintf "%d" board.point

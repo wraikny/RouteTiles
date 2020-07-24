@@ -61,20 +61,21 @@ type BoardNode(boardPosition, addCoroutine) =
 
   let updateTile = BoardHelper.updateTile >> addCoroutine
 
+  let transform = RectangleNode(Position = boardPosition) :> TransformNode
+  
+  let tilesBackground =
+    RectangleNode(
+      Color = Consts.Board.boardBackGroundColor,
+      RectangleSize = Helper.Board.boardViewSize,
+      ZOrder = ZOrder.Board.background
+    )
+
   let tilesPool =
     { new NodePool<int<TileId>, _, _>() with
         member __.Create() = BoardHelper.createTile()
         member __.Update(node, (cdn: int Vector2, tile: Tile), isNewTile) =
           updateTile(node, (cdn, tile), isNewTile)
     }
-
-  let tilesBackground =
-    RectangleNode(
-      Color = Consts.Board.boardBackGroundColor,
-      Position = boardPosition,
-      RectangleSize = Helper.Board.boardViewSize,
-      ZOrder = ZOrder.Board.background
-    )
 
   let cursorX =
     RectangleNode(
@@ -163,11 +164,12 @@ type BoardNode(boardPosition, addCoroutine) =
     )
 
   do
-    base.AddChildNode(tilesBackground)
-    tilesBackground.AddChildNode(cursorX)
-    tilesBackground.AddChildNode(cursorY)
-    tilesBackground.AddChildNode(tilesPool)
-    tilesBackground.AddChildNode(vanishmentEffectPool)
+    base.AddChildNode(transform)
+    transform.AddChildNode(tilesBackground)
+    transform.AddChildNode(cursorX)
+    transform.AddChildNode(cursorY)
+    transform.AddChildNode(tilesPool)
+    transform.AddChildNode(vanishmentEffectPool)
 
   member __.EmitVanishmentParticle(particleSet) =
     for x in particleSet do

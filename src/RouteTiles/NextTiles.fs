@@ -15,6 +15,12 @@ type NextTilesNode(position, addCoroutine) =
 
   let updateTile = BoardHelper.updateTile >> addCoroutine
 
+  let transform =
+    RectangleNode(
+      Position = position,
+      Scale = Vector2F(1.0f, 1.0f) * Consts.Board.nextsScale
+    ) :> TransformNode
+
   let nextsPool =
     { new NodePool<int<TileId>, _, _>() with
         member __.Create() = BoardHelper.createTile()
@@ -25,15 +31,14 @@ type NextTilesNode(position, addCoroutine) =
   let nextsBackground =
     RectangleNode(
       Color = Consts.Board.boardBackGroundColor,
-      Position = position,
-      Scale = Vector2F(1.0f, 1.0f) * Consts.Board.nextsScale,
       RectangleSize = Helper.Board.nextsViewSize,
       ZOrder = ZOrder.Board.background
     )
 
   do
-    base.AddChildNode(nextsBackground)
-    nextsBackground.AddChildNode(nextsPool)
+    base.AddChildNode(transform)
+    transform.AddChildNode(nextsBackground)
+    transform.AddChildNode(nextsPool)
 
   
   member __.OnNext(board) =

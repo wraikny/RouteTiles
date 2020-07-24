@@ -52,6 +52,7 @@ module Consts =
     let gameInfoColor = Color(30, 30, 30, 255)
     let [<Literal>] gameinfoMerginY = 0.0f
     let [<Literal>] gameinfoSeparateLineLength = 400.0f
+    let [<Literal>] lineLength = 5.0f
 
   module SoloGame =
     let [<Literal>] nextsBoardMergin = 200.0f
@@ -157,7 +158,7 @@ module Helper =
       + Vector2F(nextsBoardMergin + boardViewSize.X, 0.0f)
     
     let gameInfoCenterPos =
-      let x = boardViewPos.X + nextsViewPos.X + nextsViewSize.X * 0.5f * nextsScale
+      let x = nextsViewPos.X + nextsViewSize.X * 0.5f * nextsScale
       let y = boardViewPos.Y + boardViewSize.Y * 0.5f
       Vector2F(x, y)
 
