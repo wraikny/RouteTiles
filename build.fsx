@@ -96,12 +96,16 @@ Target.create "Publish" (fun _ ->
     "src/RouteTiles/RouteTiles.fsproj"
     |> DotNet.publish (fun p ->
       { p with
-          Common =
-            { DotNet.Options.Create() with
-                CustomParams = Some "-p:PublishSingleFile=true -p:PublishTrimmed=true" }
           Runtime = Some target
           Configuration = DotNet.BuildConfiguration.Release
           SelfContained = Some true
+          MSBuildParams = {
+            p.MSBuildParams with
+              Properties =
+                ("PublishSingleFile", "true")
+                :: ("PublishTrimmed", "true")
+                :: p.MSBuildParams.Properties
+          }
           OutputPath = publishOutput target |> Some
       }
     )
