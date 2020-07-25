@@ -3,6 +3,8 @@
 #r "netstandard"
 #endif
 
+open System
+
 open Fake.Core
 open Fake.DotNet
 open Fake.DotNet.Testing
@@ -10,6 +12,9 @@ open Fake.IO
 open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open Fake.Core.TargetOperators
+open Fake.Net
+
+open FSharp.Json
 
 let testProjects = []
 
@@ -103,9 +108,58 @@ Target.create "Publish" (fun _ ->
   )
 )
 
-Target.create "CI" (fun _ ->
-  "src/RouteTiles.Core/RouteTiles.Core.fsproj"
-  |> DotNet.build id
+
+Target.create "Download" (fun _ ->
+  let commitId = "a2e055a968256ceec08c687acda809ab476db79a"
+
+  let username = "wraikny"
+  let token = Environment.GetEnvironmentVariable("GITHUB_TOKEN")
+  let url = @"https://api.github.com/repos/altseed/altseed2-csharp/actions/artifacts"
+
+  let outputPath = @"lib/Altseed2"
+
+  let addUserAget (h: Net.Http.Headers.HttpRequestHeaders) = h.UserAgent.ParseAdd("wraikny.RouteTiles")
+
+  let artifacts =
+    url
+    |> Http.getWithHeaders username token addUserAget
+    |> snd
+    |> Json.deserialize<
+      {|
+        artifacts :
+          {|
+            name: string;
+            archive_download_url: string;
+            created_at: System.DateTime;
+          |} []
+      |}>
+
+  let downloadName = sprintf "Altseed2-%s" commitId
+  
+  let downloadTarget =
+    artifacts.artifacts
+    |> Seq.find(fun x -> x.name = downloadName)
+  
+  use client = new Net.Http.HttpClient()
+  let byteArray = Text.Encoding.ASCII.GetBytes(sprintf "%s:%s" username token)
+  client.DefaultRequestHeaders.Authorization <-
+    new Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray))
+  client.DefaultRequestHeaders |> addUserAget
+
+  let outputFilePath = sprintf "%s.zip" outputPath
+
+  async {
+    let! res =
+      client.GetAsync(downloadTarget.archive_download_url, Net.Http.HttpCompletionOption.ResponseHeadersRead)
+      |> Async.AwaitTask
+
+    use fileStream = IO.File.Create(outputFilePath)
+    use! httpStream = res.Content.ReadAsStreamAsync() |> Async.AwaitTask
+    do! httpStream.CopyToAsync(fileStream) |> Async.AwaitTask
+    do! fileStream.FlushAsync() |> Async.AwaitTask
+  } |> Async.RunSynchronously
+
+  Zip.unzip outputPath outputFilePath
 )
 
 Target.create "All" ignore
