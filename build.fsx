@@ -133,24 +133,28 @@ Target.create "Download" (fun _ ->
 
     let artifacts =
       data
-      |> Json.deserialize<{| artifacts: {| name: string; archive_download_url: string |} [] |}>
+      |> Json.deserialize<{| artifacts: {| name: string; archive_download_url: string; expired: bool |} [] |}>
 
     if artifacts.artifacts |> Array.isEmpty then
-      failwithf "'%s' is not found in artifacts list" downloadName
+      failwithf "'%s' is not found in the artifacts list" downloadName
     
     match
       artifacts.artifacts
-      |> Seq.tryFind(fun x -> x.name = downloadName)
-      |> Option.map(fun x -> x.archive_download_url) with
-    | Some x -> return x
+      |> Seq.tryFind(fun x -> x.name = downloadName) with
+    | Some x when x.expired -> return ValueNone
+    | Some x -> return ValueSome x.archive_download_url
     | None -> return! getArchiveUrl (page + 1)
   }
-
-  let archiveUrl = getArchiveUrl 1 |> Async.RunSynchronously
 
   let outputFilePath = sprintf "%s.zip" outputPath
 
   async {
+    let! archiveUrl = getArchiveUrl 1
+
+    match archiveUrl with
+    | ValueNone -> failwithf "'%s' is expired" downloadName
+    | ValueSome archiveUrl ->
+
     let! res =
       client.GetAsync(archiveUrl, Net.Http.HttpCompletionOption.ResponseHeadersRead)
       |> Async.AwaitTask
