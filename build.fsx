@@ -121,10 +121,10 @@ Target.create "Download" (fun _ ->
     h.UserAgent.ParseAdd("wraikny.RouteTiles")
     h.Authorization <- Net.Http.Headers.AuthenticationHeaderValue("Bearer", token)
 
+  let data = url |> Http.getWithHeaders null null setHeader |> snd
+
   let artifacts =
-    url
-    |> Http.getWithHeaders null null setHeader
-    |> snd
+    data
     |> Json.deserialize<
       {|
         artifacts :
@@ -139,7 +139,9 @@ Target.create "Download" (fun _ ->
   let downloadTarget =
     artifacts.artifacts
     |> Seq.tryFind(fun x -> x.name = downloadName)
-    |> Option.defaultWith(fun() -> failwithf "'%s' is not found in artifacts" downloadName)
+    |> Option.defaultWith(fun() ->
+      failwithf "'%s' is not found in artifacts list: \n%s" downloadName data
+    )
 
   use client = new Net.Http.HttpClient()
   client.DefaultRequestHeaders |> setHeader
