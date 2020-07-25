@@ -110,7 +110,7 @@ Target.create "Publish" (fun _ ->
 
 
 Target.create "Download" (fun _ ->
-  let commitId = "a2e055a968256ceec08c687acda809ab476db79a"
+  let commitId = "c05605fffaaed70b81c8a09c2ac108b8a57c9452"
 
   let token = Environment.GetEnvironmentVariable("GITHUB_TOKEN")
   let url = @"https://api.github.com/repos/altseed/altseed2-csharp/actions/artifacts"
@@ -161,9 +161,12 @@ Target.create "Download" (fun _ ->
 )
 
 Target.create "CISetting" (fun _ ->
+  let password = "fakepassword"
+
   sprintf """module ResourcesPassword
-  [<Literal>] let password = "fake password"
+  [<Literal>] let password = "%s"
 """
+    password
   |> File.writeString false "ResourcesPassword.fs"
 )
 
