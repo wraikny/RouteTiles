@@ -3,6 +3,8 @@
 #r "netstandard"
 #endif
 
+open System
+
 open Fake.Core
 open Fake.DotNet
 open Fake.DotNet.Testing
@@ -10,6 +12,9 @@ open Fake.IO
 open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open Fake.Core.TargetOperators
+open Fake.Net
+
+open FSharp.Json
 
 let testProjects = []
 
@@ -103,9 +108,66 @@ Target.create "Publish" (fun _ ->
   )
 )
 
-Target.create "CI" (fun _ ->
-  "src/RouteTiles.Core/RouteTiles.Core.fsproj"
-  |> DotNet.build id
+
+Target.create "Download" (fun _ ->
+  let commitId = "c05605fffaaed70b81c8a09c2ac108b8a57c9452"
+
+  let token = Environment.GetEnvironmentVariable("GITHUB_TOKEN")
+  let url = @"https://api.github.com/repos/altseed/altseed2-csharp/actions/artifacts"
+
+  let outputPath = @"lib/Altseed2"
+
+  use client = new Net.Http.HttpClient()
+  client.DefaultRequestHeaders.UserAgent.ParseAdd("wraikny.RouteTiles")
+  client.DefaultRequestHeaders.Authorization <- Net.Http.Headers.AuthenticationHeaderValue("Bearer", token)
+
+  let downloadName = sprintf "Altseed2-%s" commitId
+
+  let rec getArchiveUrl page = async {
+    Trace.tracefn "page %d" page
+    let! data = client.GetStringAsync(sprintf "%s?page=%d" url page) |> Async.AwaitTask
+
+    let artifacts =
+      data
+      |> Json.deserialize<{| artifacts: {| name: string; archive_download_url: string |} [] |}>
+
+    if artifacts.artifacts |> Array.isEmpty then
+      failwithf "'%s' is not found in artifacts list" downloadName
+    
+    match
+      artifacts.artifacts
+      |> Seq.tryFind(fun x -> x.name = downloadName)
+      |> Option.map(fun x -> x.archive_download_url) with
+    | Some x -> return x
+    | None -> return! getArchiveUrl (page + 1)
+  }
+
+  let archiveUrl = getArchiveUrl 1 |> Async.RunSynchronously
+
+  let outputFilePath = sprintf "%s.zip" outputPath
+
+  async {
+    let! res =
+      client.GetAsync(archiveUrl, Net.Http.HttpCompletionOption.ResponseHeadersRead)
+      |> Async.AwaitTask
+
+    use fileStream = IO.File.Create(outputFilePath)
+    use! httpStream = res.Content.ReadAsStreamAsync() |> Async.AwaitTask
+    do! httpStream.CopyToAsync(fileStream) |> Async.AwaitTask
+    do! fileStream.FlushAsync() |> Async.AwaitTask
+  } |> Async.RunSynchronously
+
+  Zip.unzip outputPath outputFilePath
+)
+
+Target.create "CISetting" (fun _ ->
+  let password = "fakepassword"
+
+  sprintf """module ResourcesPassword
+  [<Literal>] let password = "%s"
+"""
+    password
+  |> File.writeString false "ResourcesPassword.fs"
 )
 
 Target.create "All" ignore
