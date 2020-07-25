@@ -117,40 +117,38 @@ Target.create "Download" (fun _ ->
 
   let outputPath = @"lib/Altseed2"
 
-  let setHeader (h: Net.Http.Headers.HttpRequestHeaders) =
-    h.UserAgent.ParseAdd("wraikny.RouteTiles")
-    h.Authorization <- Net.Http.Headers.AuthenticationHeaderValue("Bearer", token)
-
-  let data = url |> Http.getWithHeaders null null setHeader |> snd
-
-  let artifacts =
-    data
-    |> Json.deserialize<
-      {|
-        artifacts :
-          {|
-            name: string;
-            archive_download_url: string;
-          |} []
-      |}>
+  use client = new Net.Http.HttpClient()
+  client.DefaultRequestHeaders.UserAgent.ParseAdd("wraikny.RouteTiles")
+  client.DefaultRequestHeaders.Authorization <- Net.Http.Headers.AuthenticationHeaderValue("Bearer", token)
 
   let downloadName = sprintf "Altseed2-%s" commitId
 
-  let downloadTarget =
-    artifacts.artifacts
-    |> Seq.tryFind(fun x -> x.name = downloadName)
-    |> Option.defaultWith(fun() ->
-      failwithf "'%s' is not found in artifacts list: \n%A" downloadName artifacts
-    )
+  let rec getArchiveUrl page = async {
+    Trace.tracefn "page %d" page
+    let! data = client.GetStringAsync(sprintf "%s?page=%d" url page) |> Async.AwaitTask
 
-  use client = new Net.Http.HttpClient()
-  client.DefaultRequestHeaders |> setHeader
+    let artifacts =
+      data
+      |> Json.deserialize<{| artifacts: {| name: string; archive_download_url: string |} [] |}>
+
+    if artifacts.artifacts |> Array.isEmpty then
+      failwithf "'%s' is not found in artifacts list" downloadName
+    
+    match
+      artifacts.artifacts
+      |> Seq.tryFind(fun x -> x.name = downloadName)
+      |> Option.map(fun x -> x.archive_download_url) with
+    | Some x -> return x
+    | None -> return! getArchiveUrl (page + 1)
+  }
+
+  let archiveUrl = getArchiveUrl 1 |> Async.RunSynchronously
 
   let outputFilePath = sprintf "%s.zip" outputPath
 
   async {
     let! res =
-      client.GetAsync(downloadTarget.archive_download_url, Net.Http.HttpCompletionOption.ResponseHeadersRead)
+      client.GetAsync(archiveUrl, Net.Http.HttpCompletionOption.ResponseHeadersRead)
       |> Async.AwaitTask
 
     use fileStream = IO.File.Create(outputFilePath)
