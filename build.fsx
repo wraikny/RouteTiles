@@ -110,7 +110,8 @@ Target.create "Publish" (fun _ ->
 
 
 Target.create "Download" (fun _ ->
-  let commitId = "c05605fffaaed70b81c8a09c2ac108b8a57c9452"
+  let actionsUrl = "https://github.com/altseed/Altseed2-csharp/runs/902675767"
+  // let commitId = "c05605fffaaed70b81c8a09c2ac108b8a57c9452"
 
   let token = Environment.GetEnvironmentVariable("GITHUB_TOKEN")
   let url = @"https://api.github.com/repos/altseed/altseed2-csharp/actions/artifacts"
@@ -130,16 +131,17 @@ Target.create "Download" (fun _ ->
         artifacts :
           {|
             name: string;
+            url: string;
             archive_download_url: string;
-            created_at: DateTime;
           |} []
       |}>
 
-  let downloadName = sprintf "Altseed2-%s" commitId
+  // let downloadName = sprintf "Altseed2-%s" commitId
   
   let downloadTarget =
     artifacts.artifacts
-    |> Seq.find(fun x -> x.name = downloadName)
+    |> Seq.tryFind(fun x -> x.url = actionsUrl)
+    |> Option.defaultWith(fun() -> failwithf "'%s' is not found in artifacts" actionsUrl)
   
   use client = new Net.Http.HttpClient()
   client.DefaultRequestHeaders |> setHeader
