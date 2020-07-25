@@ -19,3 +19,5 @@ nuget FAKE
     nuget Fake.DotNet.AssemblyInfoFile
     nuget Fake.DotNet.Testing.Expecto
     nuget FAKE.IO.Zip
+    nuget FAKE.Net.Http
+    nuget FSharp.Json
