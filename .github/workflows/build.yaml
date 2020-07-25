@@ -37,7 +37,9 @@ jobs:
         GITHUB_TOKEN: ${ secrets.GITHUB_TOKEN }
 
     - name: Build
-      run: dotnet fake build -t Build
+      run: |
+        dotnet fake build -t CISetting
+        dotnet fake build -t Build
       env:
         CI: true
 

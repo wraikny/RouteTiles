@@ -112,17 +112,18 @@ Target.create "Publish" (fun _ ->
 Target.create "Download" (fun _ ->
   let commitId = "a2e055a968256ceec08c687acda809ab476db79a"
 
-  let username = "wraikny"
   let token = Environment.GetEnvironmentVariable("GITHUB_TOKEN")
   let url = @"https://api.github.com/repos/altseed/altseed2-csharp/actions/artifacts"
 
   let outputPath = @"lib/Altseed2"
 
-  let addUserAget (h: Net.Http.Headers.HttpRequestHeaders) = h.UserAgent.ParseAdd("wraikny.RouteTiles")
+  let setHeader (h: Net.Http.Headers.HttpRequestHeaders) =
+    h.UserAgent.ParseAdd("wraikny.RouteTiles")
+    h.Authorization <- Net.Http.Headers.AuthenticationHeaderValue("Bearer", token)
 
   let artifacts =
     url
-    |> Http.getWithHeaders username token addUserAget
+    |> Http.getWithHeaders null null setHeader
     |> snd
     |> Json.deserialize<
       {|
@@ -130,7 +131,7 @@ Target.create "Download" (fun _ ->
           {|
             name: string;
             archive_download_url: string;
-            created_at: System.DateTime;
+            created_at: DateTime;
           |} []
       |}>
 
@@ -141,10 +142,7 @@ Target.create "Download" (fun _ ->
     |> Seq.find(fun x -> x.name = downloadName)
   
   use client = new Net.Http.HttpClient()
-  let byteArray = Text.Encoding.ASCII.GetBytes(sprintf "%s:%s" username token)
-  client.DefaultRequestHeaders.Authorization <-
-    new Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray))
-  client.DefaultRequestHeaders |> addUserAget
+  client.DefaultRequestHeaders |> setHeader
 
   let outputFilePath = sprintf "%s.zip" outputPath
 
@@ -160,6 +158,13 @@ Target.create "Download" (fun _ ->
   } |> Async.RunSynchronously
 
   Zip.unzip outputPath outputFilePath
+)
+
+Target.create "CISetting" (fun _ ->
+  sprintf """module ResourcesPassword
+  [<Literal>] let password = "fake password"
+"""
+  |> File.writeString false "ResourcesPassword.fs"
 )
 
 Target.create "All" ignore
