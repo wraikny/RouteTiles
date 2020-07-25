@@ -140,7 +140,7 @@ Target.create "Download" (fun _ ->
     artifacts.artifacts
     |> Seq.tryFind(fun x -> x.name = downloadName)
     |> Option.defaultWith(fun() ->
-      failwithf "'%s' is not found in artifacts list: \n%s" downloadName data
+      failwithf "'%s' is not found in artifacts list: \n%A" downloadName data
     )
 
   use client = new Net.Http.HttpClient()
