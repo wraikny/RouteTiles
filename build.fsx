@@ -136,13 +136,13 @@ Target.create "Download" (fun _ ->
       |> Json.deserialize<{| artifacts: {| name: string; archive_download_url: string; expired: bool |} [] |}>
 
     if artifacts.artifacts |> Array.isEmpty then
-      failwithf "'%s' is not found in the artifacts list" downloadName
+      failwithf "'%s' is not found" downloadName
     
     match
       artifacts.artifacts
       |> Seq.tryFind(fun x -> x.name = downloadName) with
-    | Some x when x.expired -> return ValueNone
-    | Some x -> return ValueSome x.archive_download_url
+    | Some x when x.expired -> return failwithf "'%s' is expired" downloadName
+    | Some x -> return x.archive_download_url
     | None -> return! getArchiveUrl (page + 1)
   }
 
@@ -150,10 +150,6 @@ Target.create "Download" (fun _ ->
 
   async {
     let! archiveUrl = getArchiveUrl 1
-
-    match archiveUrl with
-    | ValueNone -> failwithf "'%s' is expired" downloadName
-    | ValueSome archiveUrl ->
 
     let! res =
       client.GetAsync(archiveUrl, Net.Http.HttpCompletionOption.ResponseHeadersRead)
