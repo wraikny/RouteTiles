@@ -85,6 +85,7 @@ Target.create "Resources" (fun _ ->
       )
     yield outDir "Release"
   ] |> Seq.iter(fun target ->
+    Directory.ensure target
     packedResources
     |> Shell.copyFile target
   )
@@ -114,7 +115,7 @@ Target.create "Publish" (fun _ ->
 
 
 Target.create "Download" (fun _ ->
-  let commitId = "c05605fffaaed70b81c8a09c2ac108b8a57c9452"
+  let commitId = "bfac25b210f7e8042543e3bb8f0aa97d3995d2e3"
 
   let token = Environment.GetEnvironmentVariable("GITHUB_TOKEN")
   let url = @"https://api.github.com/repos/altseed/altseed2-csharp/actions/artifacts"
@@ -137,7 +138,7 @@ Target.create "Download" (fun _ ->
 
     if artifacts.artifacts |> Array.isEmpty then
       failwithf "'%s' is not found" downloadName
-    
+
     match
       artifacts.artifacts
       |> Seq.tryFind(fun x -> x.name = downloadName) with
@@ -150,7 +151,7 @@ Target.create "Download" (fun _ ->
 
   async {
     let! archiveUrl = getArchiveUrl 1
-
+    
     let! res =
       client.GetAsync(archiveUrl, Net.Http.HttpCompletionOption.ResponseHeadersRead)
       |> Async.AwaitTask
@@ -179,9 +180,6 @@ Target.create "All" ignore
 "Clean"
   ==> "Build"
   ==> "All"
-
-"Publish"
-  ==> "Resources"
 
 "Tool"
 

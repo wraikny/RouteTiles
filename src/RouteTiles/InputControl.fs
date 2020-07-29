@@ -12,7 +12,7 @@ let getKeyboardInput (inputs) () : 'msg option =
   |> Option.map snd
 
 let getJoystickInput (inputs) (index): 'msg option =
-  inputs |> Array.tryFind(fun ((button: JoystickButtonType, state), _) ->
+  inputs |> Array.tryFind(fun ((button: JoystickButton, state), _) ->
     Engine.Joystick.GetButtonState(index, button) = state
   )
   |> Option.map snd
@@ -25,27 +25,27 @@ module Board =
 
   let keyboardMapping =
     let pairs = seq {
-      Keys.W, Dir.Up
-      Keys.D, Dir.Right
-      Keys.S, Dir.Down
-      Keys.A, Dir.Left
+      Key.W, Dir.Up
+      Key.D, Dir.Right
+      Key.S, Dir.Down
+      Key.A, Dir.Left
     }
     
     [|
       for (key, dir) in pairs do
-        yield [|Keys.RightShift, ButtonState.Hold; key, ButtonState.Push|], Msg.Slide dir
+        yield [|Key.RightShift, ButtonState.Hold; key, ButtonState.Push|], Msg.Slide dir
         yield [|key, ButtonState.Push|], Msg.MoveCursor dir
     |]
 
   let joystickMapping = [|
-    (JoystickButtonType.DPadUp, ButtonState.Push), Msg.MoveCursor Dir.Up
-    (JoystickButtonType.DPadRight, ButtonState.Push), Msg.MoveCursor Dir.Right
-    (JoystickButtonType.DPadDown, ButtonState.Push), Msg.MoveCursor Dir.Down
-    (JoystickButtonType.DPadLeft, ButtonState.Push), Msg.MoveCursor Dir.Left
-    (JoystickButtonType.RightUp, ButtonState.Push), Msg.Slide Dir.Up
-    (JoystickButtonType.RightRight, ButtonState.Push), Msg.Slide Dir.Right
-    (JoystickButtonType.RightDown, ButtonState.Push), Msg.Slide Dir.Down
-    (JoystickButtonType.RightLeft, ButtonState.Push), Msg.Slide Dir.Left
+    (JoystickButton.DPadUp, ButtonState.Push), Msg.MoveCursor Dir.Up
+    (JoystickButton.DPadRight, ButtonState.Push), Msg.MoveCursor Dir.Right
+    (JoystickButton.DPadDown, ButtonState.Push), Msg.MoveCursor Dir.Down
+    (JoystickButton.DPadLeft, ButtonState.Push), Msg.MoveCursor Dir.Left
+    (JoystickButton.RightUp, ButtonState.Push), Msg.Slide Dir.Up
+    (JoystickButton.RightRight, ButtonState.Push), Msg.Slide Dir.Right
+    (JoystickButton.RightDown, ButtonState.Push), Msg.Slide Dir.Down
+    (JoystickButton.RightLeft, ButtonState.Push), Msg.Slide Dir.Left
   |]
 
 module Pause =
@@ -53,22 +53,22 @@ module Pause =
   open RouteTiles.Core.Pause
 
   let keyboard = [|
-    [|Keys.Escape, ButtonState.Push|], Msg.QuitPause
-    [|Keys.W, ButtonState.Push|], Msg.Decr
-    [|Keys.Up, ButtonState.Push|], Msg.Decr
-    [|Keys.S, ButtonState.Push|], Msg.Incr
-    [|Keys.Down, ButtonState.Push|], Msg.Incr
-    [|Keys.Space, ButtonState.Push|], Msg.Select
-    [|Keys.Enter, ButtonState.Push|], Msg.Select
+    [|Key.Escape, ButtonState.Push|], Msg.QuitPause
+    [|Key.W, ButtonState.Push|], Msg.Decr
+    [|Key.Up, ButtonState.Push|], Msg.Decr
+    [|Key.S, ButtonState.Push|], Msg.Incr
+    [|Key.Down, ButtonState.Push|], Msg.Incr
+    [|Key.Space, ButtonState.Push|], Msg.Select
+    [|Key.Enter, ButtonState.Push|], Msg.Select
   |]
 
   let joystick = [|
     yield!
-      seq { JoystickButtonType.Start; JoystickButtonType.Guide }
+      seq { JoystickButton.Start; JoystickButton.Guide }
       |> Seq.map(fun a -> (a, ButtonState.Push), Msg.QuitPause)
-    (JoystickButtonType.DPadUp, ButtonState.Push), Msg.Decr
-    (JoystickButtonType.DPadDown, ButtonState.Push), Msg.Incr
-    (JoystickButtonType.RightRight, ButtonState.Push), Msg.Select
+    (JoystickButton.DPadUp, ButtonState.Push), Msg.Decr
+    (JoystickButton.DPadDown, ButtonState.Push), Msg.Incr
+    (JoystickButton.RightRight, ButtonState.Push), Msg.Select
   |]
 
   let getKeyboardInput = getKeyboardInput keyboard
@@ -79,14 +79,14 @@ module SoloGame =
   open RouteTiles.Core.SoloGame
 
   let keyboard = [|
-    yield [|Keys.Escape, ButtonState.Push|], Msg.PauseMsg Pause.Msg.OpenPause
+    yield [|Key.Escape, ButtonState.Push|], Msg.PauseMsg Pause.Msg.OpenPause
     for (button, msg) in Board.keyboardMapping do
       yield (button, Msg.Board msg)
   |]
 
   let joystick = [|
     yield!
-      seq { JoystickButtonType.Start; JoystickButtonType.Guide }
+      seq { JoystickButton.Start; JoystickButton.Guide }
       |> Seq.map(fun a -> (a, ButtonState.Push), Msg.PauseMsg Pause.Msg.OpenPause)
     yield! Board.joystickMapping |> Seq.map(fun (a, b) -> (a, Msg.Board b))
   |]

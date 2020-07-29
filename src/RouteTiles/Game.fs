@@ -134,7 +134,7 @@ type Game(gameMode, controller) =
     coroutineNode.Add(seq {
       while true do
 #if DEBUG
-        if Engine.Keyboard.IsPushState Keys.Num0 then
+        if Engine.Keyboard.IsPushState Key.Num0 then
           printfn "%A" lastModel
 #endif
 
