@@ -1,4 +1,4 @@
-[![](https://github.com/wraikny/FsTemplate/workflows/CI/badge.svg)](https://github.com/wraikny/RouteTiles/actions?workflow=CI)
+[![](https://github.com/wraikny/RouteTiles/workflows/CI/badge.svg)](https://github.com/wraikny/RouteTiles/actions?workflow=CI)
 
 # RouteTiles
 distributed under [MIT License](/LICENSE)
