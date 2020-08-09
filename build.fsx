@@ -55,8 +55,8 @@ let runtimes = [ "linux-x64"; "win-x64"; "osx-x64" ]
 let publishOutput = sprintf "publish/RouteTiles.%s"
 
 Target.create "Resources" (fun _ ->
-  let targetProject = "RouteTiles"
   let resources = "Resources"
+  let targetProject = "RouteTiles"
   // let password = Some "password"
 
   !!(sprintf "%s/**" resources)
@@ -67,7 +67,7 @@ Target.create "Resources" (fun _ ->
   // for Debug
   let dir = outDir "Debug"
   let target = sprintf "%s/%s" dir resources
-  Directory.create dir
+  Directory.ensure dir
   Directory.delete target |> ignore
   Shell.copyDir target resources (fun _ -> true)
   // Shell.copyFile (sprintf "%s.pack" target) (sprintf "%s.pack" resources)
