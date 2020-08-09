@@ -6,7 +6,7 @@ open RouteTiles.Core.Types
 
 open RouteTiles.App.Consts.ViewCommon
 
-[<EntryPoint>]
+[<EntryPoint; System.STAThread>]
 let main _ =
   let inline init(config) =
     if not <| Engine.Initialize("RouteTiles", windowSize.X, windowSize.Y, config) then
