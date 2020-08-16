@@ -19,6 +19,8 @@ module MenuParams =
     let iconColor = Nullable <| Color(50uy, 50uy, 50uy, 255uy)
     let iconSelected = Color(255uy, 255uy, 0uy, 0uy)
 
+    let text = Nullable <| Color(0uy, 0uy, 0uy)
+
   module Texture =
     let timeAttack = @"menu/stopwatch.png"
     let scoreAttack = @"menu/hourglass.png"
@@ -37,7 +39,7 @@ module MenuParams =
     let iconSelected = offset 22
 
     let sideMenuBackground = offset 31
-    let sideButtonText = offset 32
+    let sideMenuText = offset 32
 
 module MenuElement =
   open Altseed2.BoxUI.Elements
@@ -71,25 +73,30 @@ module MenuElement =
     [|for (path, mode) in modeButtons ->
         let texture = Texture2D.LoadStrict path
 
-        Rectangle.Create(color = Color.iconBack, zOrder = ZOrder.iconBackground)
-        |> BoxUI.withChildren [|
-            yield
-              Sprite.Create(
-                keepAspect = true,
-                zOrder = ZOrder.icon,
-                texture = texture,
-                color = Color.iconColor
-              )
-              |> BoxUI.margin (LengthScale.RelativeMin, 0.1f)
-              :> Element
+        let buttonIcon = 
+          Rectangle.Create(color = Color.iconBack, zOrder = ZOrder.iconBackground)
+          |> BoxUI.withChild(
+            Sprite.Create(
+              aspect = Aspect.Keep,
+              zOrder = ZOrder.icon,
+              texture = texture,
+              color = Color.iconColor
+            )
+            |> BoxUI.margin (LengthScale.RelativeMin, 0.1f)
+            :> Element
+          )
 
-            if mode = model.cursor then
-              selectedTime <- 0.0f
-              yield
-                Rectangle.Create(zOrder = ZOrder.iconSelected)
-                |> BoxUI.onUpdate (selectedSpriteOnUpdate)
-                :> Element
-        |]
+        if mode = model.cursor then
+          selectedTime <- 0.0f
+          buttonIcon.AddChild(
+            Rectangle.Create(zOrder = ZOrder.iconSelected)
+            |> BoxUI.onUpdate (selectedSpriteOnUpdate)
+            :> Element
+          )
+
+          buttonIcon.SetMargin(LengthScale.RelativeMin, -0.05f) |> ignore
+
+        buttonIcon
     |]
 
   let private mainMenu (model: Model) =
@@ -100,17 +107,76 @@ module MenuElement =
       |> BoxUI.marginX (LengthScale.Relative, 0.1f)
       |> BoxUI.marginTop (LengthScale.Relative, 0.08f)
       |> BoxUI.withChildren [|
-        Grid.Create(200.0f) :> Element
+        Grid.Create(180.0f) :> Element
         |> BoxUI.withChildren (mainButtons model)
-        Rectangle.Create(zOrder = ZOrder.footer) :> Element
-        |> BoxUI.marginTop (LengthScale.Relative, 0.8f)
+        // Rectangle.Create(zOrder = ZOrder.footer) :> Element
+        // |> BoxUI.marginTop (LengthScale.Relative, 0.8f)
       |]
     |]
     :> Element
 
+  let modeTexts = dict <| seq {
+    ( Mode.TimeAttack
+      , {|
+        name = "タイムアタック"
+        desc = "目標スコアまでの時間を\n競うモードです。"
+      |})
+    ( Mode.ScoreAttack
+      , {|
+        name = "スコアアタック"
+        desc = "制限時間内のスコアを\n競うモードです。"
+      |})
+    ( Mode.VS
+      , {|
+        name = "？？？"
+        desc = "未実装の機能です。"
+      |})
+    ( Mode.Ranking
+      , {|
+        name = "ランキング"
+        desc = "オンラインランキングを\nチェックしよう！"
+      |})
+    ( Mode.Achievement
+      , {|
+        name = "実績"
+        desc = "開放した実績を確認します。"
+      |})
+    ( Mode.Setting
+      , {|
+        name = "設定"
+        desc = "各種設定を行います。"
+      |})
+  }
+
+  let fontName = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 60)
+  let fontDesc = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 40)
+
   let private sideBar (model: Model) =
+
+    let modeText = modeTexts.[model.cursor]
+
     Rectangle.Create(color = Color.sideBarColor, zOrder = ZOrder.sideMenuBackground)
     |> BoxUI.marginLeft (LengthScale.Relative, mainMenuRatio)
+    |> BoxUI.withChild (
+      ItemList.Create(itemMargin = 10.0f)
+      |> BoxUI.marginXY (LengthScale.Relative, 0.05f, 0.06f)
+      |> BoxUI.withChildren [|
+        Text.Create(
+          aspect = Aspect.Fixed,
+          text = modeText.name,
+          font = fontName,
+          zOrder = ZOrder.sideMenuText,
+          color = Color.text
+        ) :> Element
+        Text.Create(
+          aspect = Aspect.Fixed,
+          text = modeText.desc,
+          font = fontDesc,
+          zOrder = ZOrder.sideMenuText,
+          color = Color.text
+        ) :> Element
+      |]
+    )
     :> Element
 
   let menu (model: Model) =
@@ -154,27 +220,24 @@ type Menu() =
       uiRoot.SetElement <| MenuElement.menu model
     ) |> ignore
 
-  do
-    let getKeyboardInput = InputControl.getKeyboardInput MenuInput.keyboard
-    let getJoystickInput = InputControl.getJoystickInput MenuInput.joystick
+  let getKeyboardInput = InputControl.getKeyboardInput MenuInput.keyboard
+  let getJoystickInput = InputControl.getJoystickInput MenuInput.joystick
 
-    coroutine.Add(seq {
-      while true do
-        getKeyboardInput ()
-        |> Option.alt(fun () ->
-          let count = Engine.Joystick.ConnectedJoystickCount
-          seq {
-            for i in 0..count-1 do
-              match getJoystickInput i with
-              | Some x -> yield x
-              | _ -> ()
-          }
-          |> Seq.tryHead
-        )
-        |> Option.iter (updater.Dispatch >> ignore)
-
-        yield()
-    })
+  override __.OnUpdate() =
+    getKeyboardInput ()
+    |> Option.alt(fun () ->
+      let count = Engine.Joystick.ConnectedJoystickCount
+      seq {
+        for i in 0..count-1 do
+          let info = Engine.Joystick.GetJoystickInfo(i)
+          if info.IsGamepad then
+            match getJoystickInput i with
+            | Some x -> yield x
+            | _ -> ()
+      }
+      |> Seq.tryHead
+    )
+    |> Option.iter (updater.Dispatch >> ignore)
 
   override __.OnAdded() =
     updater.Init(MenuCore.initModel, MenuCore.update) |> ignore

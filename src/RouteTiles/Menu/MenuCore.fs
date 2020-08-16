@@ -3,7 +3,7 @@ open RouteTiles.Core.Types.Common
 
 open Affogato
 
-[<Struct>]
+[<Struct; RequireQualifiedAccess>]
 type Mode =
   | TimeAttack
   | ScoreAttack
@@ -11,11 +11,6 @@ type Mode =
   | Ranking
   | Achievement
   | Setting
-
-type ModeDescr = {
-  name: string
-  description: string
-}
 
 type Model = {
   cursor: Mode
@@ -33,12 +28,12 @@ let initModel = {
 module Mode =
   let toVec mode =
     let (x, y) = mode |> function
-      | TimeAttack -> (0, 0)
-      | ScoreAttack -> (1, 0)
-      | VS -> (2, 0)
-      | Ranking -> (0, 1)
-      | Achievement -> (1, 1)
-      | Setting -> (2, 1)
+      | Mode.TimeAttack -> (0, 0)
+      | Mode.ScoreAttack -> (1, 0)
+      | Mode.VS -> (2, 0)
+      | Mode.Ranking -> (0, 1)
+      | Mode.Achievement -> (1, 1)
+      | Mode.Setting -> (2, 1)
     Vector2.init x y
 
   let fromVec (v: int Vector2) =
@@ -46,12 +41,12 @@ module Mode =
     let y = (v.y + 2) % 2
 
     (x, y) |> function
-    | (0, 0) -> TimeAttack
-    | (1, 0) -> ScoreAttack
-    | (2, 0) -> VS
-    | (0, 1) -> Ranking
-    | (1, 1) -> Achievement
-    | (2, 1) -> Setting
+    | (0, 0) -> Mode.TimeAttack
+    | (1, 0) -> Mode.ScoreAttack
+    | (2, 0) -> Mode.VS
+    | (0, 1) -> Mode.Ranking
+    | (1, 1) -> Mode.Achievement
+    | (2, 1) -> Mode.Setting
     | a -> failwithf "invalid input: %A" a
 
 let update msg model =

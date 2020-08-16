@@ -16,6 +16,8 @@ module Consts =
     let windowSize = Vector2I(1280, 720)
     let clearColor = Color(200, 200, 200, 255)
 
+    let font = @"mplus-1c-regular.ttf"
+
   module Board =
     let [<Literal>] nextsCountToShow = 5
 

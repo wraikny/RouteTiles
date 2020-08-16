@@ -1,5 +1,8 @@
 namespace RouteTiles.App.BoxUIElements
 
+open System
+open System.Runtime.InteropServices
+
 open RouteTiles.App
 
 open Altseed2
@@ -10,27 +13,60 @@ module private Ops =
   let inline (|?) a b =
     if isNull a then b else a
 
-[<AllowNullLiteral>]
-type Empty private () =
+[<AllowNullLiteral; Sealed; AutoSerializable(true)>]
+type FixedHeight private () =
   inherit Element()
 
-  static member Create() =
-    BoxUISystem.RentOrNull<Empty>() |? Empty()
+  member val private Height = Unchecked.defaultof<_> with get, set
+
+  static member Create(height: float32) =
+    let elem = BoxUISystem.RentOrNull<FixedHeight>() |? FixedHeight()
+    elem.Height <- height
+    elem
 
   override this.ReturnSelf() =
     BoxUISystem.Return(this)
 
-  override __.CalcSize(size) = size
+  override this.CalcSize(size) = new Vector2F(size.X, this.Height)
 
   override this.OnResize(area) =
-    for child in this.Children do child.Resize(area)
+    let area = RectF(area.Position, new Vector2F(area.Width, this.Height))
+
+    for child in this.Children do
+      child.Resize(area)
+
+[<AllowNullLiteral; Sealed; AutoSerializable(true)>]
+type ItemList private() =
+  inherit Element()
+
+  member val private ItemHeight = Unchecked.defaultof<_> with get, set
+  member val private ItemMargin = Unchecked.defaultof<_> with get, set
+
+  static member Create(?itemHeight, ?itemMargin) =
+    let elem = BoxUISystem.RentOrNull<ItemList>() |? ItemList()
+    elem.ItemHeight <- itemHeight
+    elem.ItemMargin <- defaultArg itemMargin 0.0f
+    elem
+
+  override this.ReturnSelf() =
+    BoxUISystem.Return(this)
+
+  override this.CalcSize(size) = size
+
+  override this.OnResize(area) =
+    let itemSize = Vector2F(area.Width, defaultArg this.ItemHeight area.Width)
+    let mutable pos = area.Position
+    for child in this.Children do
+      let size = child.GetSize(itemSize)
+      child.Resize(RectF(pos, itemSize))
+      pos.Y <- pos.Y + size.Y + this.ItemMargin
 
 
-[<AllowNullLiteral>]
+[<AllowNullLiteral; Sealed; AutoSerializable(true)>]
 type Grid private() =
   inherit Element()
 
-  member val ItemSize = Unchecked.defaultof<_> with get, set
+  member val private ItemSize = Unchecked.defaultof<_> with get, set
 
   static member Create(itemSize: float32) =
     if itemSize <= 0.0f then

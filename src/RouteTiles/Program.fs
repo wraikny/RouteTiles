@@ -16,6 +16,7 @@ let main _ =
 
   let rec loop() =
     if Engine.DoEvents() then
+      printfn "%f" Engine.DeltaSecond
       BoxUI.BoxUISystem.Update()
       Engine.Update() |> ignore
       loop()
@@ -68,8 +69,13 @@ let main _ =
       if not <| Engine.File.AddRootPackageWithPassword(@"Resources.pack", ResourcesPassword.password) then
         failwithf "Failed to add root package"
 
+      // (
+      //   let node = Game(SoloGame.Mode.TimeAttack, Controller.Keyboard)
+      //   Engine.AddNode(node)
+      // )
+
       (
-        let node = Game(SoloGame.Mode.TimeAttack, Controller.Keyboard)
+        let node = Menu()
         Engine.AddNode(node)
       )
 
