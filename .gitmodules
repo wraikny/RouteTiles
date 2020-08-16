@@ -1,0 +1,3 @@
+[submodule "lib/Altseed2.BoxUI"]
+	path = lib/Altseed2.BoxUI
+	url = https://github.com/wraikny/Altseed2.BoxUI.git
