@@ -41,6 +41,8 @@ Target.create "Clean" (fun _ ->
   ++ "src/**/obj"
   ++ "tests/**/bin"
   ++ "tests/**/obj"
+  ++ "lib/**/bin"
+  ++ "lib/**/obj"
   ++ "publish"
   |> Shell.cleanDirs
 )
@@ -48,6 +50,7 @@ Target.create "Clean" (fun _ ->
 Target.create "Build" (fun _ ->
   !! "src/**/*.*proj"
   ++ "tests/**/*.*proj"
+  ++ "lib/**/*.*proj"
   |> Seq.iter (DotNet.build id)
 )
 
@@ -113,14 +116,22 @@ Target.create "Publish" (fun _ ->
   )
 )
 
+let altseed2Dir = @"lib/Altseed2"
+
+Target.create "CopyLib" (fun _ ->
+  let outputDirs = [
+    @"lib/Altseed2.BoxUI/lib/Altseed2"
+  ]
+  outputDirs |> Seq.iter (fun dir ->
+    Shell.copyDir dir altseed2Dir (fun _ -> true)
+  )
+)
 
 Target.create "Download" (fun _ ->
   let commitId = "febf00ee6bb92002a0de6132b26fc0a699f9923f"
 
   let token = Environment.GetEnvironmentVariable("GITHUB_TOKEN")
   let url = @"https://api.github.com/repos/altseed/altseed2-csharp/actions/artifacts"
-
-  let outputPath = @"lib/Altseed2"
 
   use client = new Net.Http.HttpClient()
   client.DefaultRequestHeaders.UserAgent.ParseAdd("wraikny.RouteTiles")
@@ -147,11 +158,11 @@ Target.create "Download" (fun _ ->
     | None -> return! getArchiveUrl (page + 1)
   }
 
-  let outputFilePath = sprintf "%s.zip" outputPath
+  let outputFilePath = sprintf "%s.zip" altseed2Dir
 
   async {
     let! archiveUrl = getArchiveUrl 1
-    
+
     let! res =
       client.GetAsync(archiveUrl, Net.Http.HttpCompletionOption.ResponseHeadersRead)
       |> Async.AwaitTask
@@ -162,7 +173,7 @@ Target.create "Download" (fun _ ->
     do! fileStream.FlushAsync() |> Async.AwaitTask
   } |> Async.RunSynchronously
 
-  Zip.unzip outputPath outputFilePath
+  Zip.unzip altseed2Dir outputFilePath
 )
 
 Target.create "CISetting" (fun _ ->
@@ -180,7 +191,5 @@ Target.create "All" ignore
 "Clean"
   ==> "Build"
   ==> "All"
-
-"Tool"
 
 Target.runOrDefault "All"

@@ -38,7 +38,9 @@ jobs:
         dotnet paket restore
 
     - name: Download
-      run: dotnet fake build -t Download
+      run: |
+        dotnet fake build -t Download
+        dotnet fake build -t CopyLib
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
