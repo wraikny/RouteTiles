@@ -13,6 +13,7 @@
     <ProjectReference Include="..\RouteTiles.Core\RouteTiles.Core.fsproj">
       <Name>RouteTiles.Core.fsproj</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\lib\Altseed2.BoxUI\src\Altseed2.BoxUI\Altseed2.BoxUI.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="(('$(OS)'=='Windows' Or '$(OS)'=='Windows_NT') And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='win-x64'">
@@ -45,11 +46,12 @@
     <Compile Include="AnimationSpriteNode.fs" />
     <Compile Include="ViewParams.fs" />
     <Compile Include="InputControl.fs" />
-    <Compile Include="GameInfo.fs" />
-    <Compile Include="Board.fs" />
-    <Compile Include="NextTiles.fs" />
-    <Compile Include="PauseNode.fs" />
-    <Compile Include="Game.fs" />
+    <Compile Include="GameView/GameInfo.fs" />
+    <Compile Include="GameView/Board.fs" />
+    <Compile Include="GameView/NextTiles.fs" />
+    <Compile Include="GameView/PauseNode.fs" />
+    <Compile Include="GameView/Game.fs" />
+    <Compile Include="Menu/Menu.fs" />
     <Compile Include="../../ResourcesPassword.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
