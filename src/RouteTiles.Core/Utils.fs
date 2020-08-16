@@ -8,6 +8,18 @@ let inline clamp minVal maxVal x =
 
 let inline lift (x: ^a): ^b = ((^a or ^b): (static member Lift:_->_) x)
 
+module Option =
+  let inline alt (f: unit -> 'a option) (o: 'a option) =
+    o |> function
+    | None -> f()
+    | _ -> o
+
+module ValueOption =
+  let inline alt (f: unit -> 'a voption) (o: 'a voption) =
+    o |> function
+    | ValueNone -> f()
+    | _ -> o
+
 module Array =
   let inline pushFrontPopBack (item: 'a) (array: 'a []): 'a[] * 'a =
     if Array.isEmpty array then Array.empty, item

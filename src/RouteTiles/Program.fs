@@ -16,6 +16,7 @@ let main _ =
 
   let rec loop() =
     if Engine.DoEvents() then
+      BoxUI.BoxUISystem.Update()
       Engine.Update() |> ignore
       loop()
 
@@ -33,22 +34,28 @@ let main _ =
   if not <| Engine.File.AddRootDirectory(@"Resources") then
     failwithf "Failed to add root directory"
 
-  let controller =
-    Engine.Joystick.GetJoystickInfo(0)
-    |> function
-    | info when isNull info -> Controller.Keyboard
-    | info ->
-      let name = if info.IsGamepad then info.GamepadName else info.Name
-      Controller.Joystick(name, 0)
+  // let controller =
+  //   Engine.Joystick.GetJoystickInfo(0)
+  //   |> function
+  //   | info when isNull info -> Controller.Keyboard
+  //   | info ->
+  //     let name = if info.IsGamepad then info.GamepadName else info.Name
+  //     Controller.Joystick(name, 0)
+
+  // (
+  //   let node = Game(SoloGame.Mode.TimeAttack, controller)
+  //   Engine.AddNode(node)
+  // )
 
   (
-    let node = Game(SoloGame.Mode.TimeAttack, controller)
+    let node = Menu()
     Engine.AddNode(node)
   )
 
 
   loop()
 
+  BoxUI.BoxUISystem.Terminate()
   Engine.Terminate()
 #else
 
@@ -71,6 +78,7 @@ let main _ =
       Engine.Log.Error(LogCategory.User, sprintf "%A: %s" (e.GetType()) e.Message)
       reraise()
 
+    BoxUI.BoxUISystem.Terminate()
     Engine.Terminate()
   with e ->
     printfn "%A: %s" (e.GetType()) e.Message
