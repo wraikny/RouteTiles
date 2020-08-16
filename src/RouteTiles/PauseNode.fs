@@ -75,5 +75,7 @@ type PauseNode(dispatch) =
     coroutineNode.IsUpdated <- isPaused
     for child in this.Children do
       match child with
-      | :? DrawnNode as d -> d.IsDrawn <- isPaused
+      | :? SpriteNode as d -> d.IsDrawn <- isPaused
+      | :? TextNode as d -> d.IsDrawn <- isPaused
+      | :? ShapeNode as d -> d.IsDrawn <- isPaused
       | _ -> ()

@@ -20,13 +20,11 @@ type GameInfoNode(centerPosition) =
   let separateLine =
     let size = Vector2F(Consts.GameInfo.lineLength, Consts.GameInfo.lineWidth)
     RectangleNode(
-      Pivot = Vector2F(0.5f, 0.5f),
       RectangleSize = size,
+      CenterPosition = size * 0.5f,
       Color = Consts.GameInfo.color,
       ZOrder = ZOrder.GameInfo.text
     )
-  do
-    separateLine.AdjustSize()
 
   let scoreText =
     TextNode(
@@ -47,14 +45,14 @@ type GameInfoNode(centerPosition) =
   let setScoreText text =
     if scoreText.Text <> text then
       scoreText.Text <- text
-      scoreText.AdjustSize()
-      scoreText.CenterPosition <- Vector2F(scoreText.Size.X * 0.5f, scoreText.Size.Y)
+      let size = scoreText.ContentSize
+      scoreText.CenterPosition <- Vector2F(size.X * 0.5f, size.Y)
 
   let setTimeText text =
     if timeText.Text <> text then
       timeText.Text <- text
-      timeText.AdjustSize()
-      timeText.CenterPosition <- Vector2F(timeText.Size.X * 0.5f, 0.0f)
+      let size = timeText.ContentSize
+      timeText.CenterPosition <- Vector2F(size.X * 0.5f, 0.0f)
 
   do
     setScoreText "0"

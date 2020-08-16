@@ -115,7 +115,7 @@ Target.create "Publish" (fun _ ->
 
 
 Target.create "Download" (fun _ ->
-  let commitId = "bfac25b210f7e8042543e3bb8f0aa97d3995d2e3"
+  let commitId = "febf00ee6bb92002a0de6132b26fc0a699f9923f"
 
   let token = Environment.GetEnvironmentVariable("GITHUB_TOKEN")
   let url = @"https://api.github.com/repos/altseed/altseed2-csharp/actions/artifacts"

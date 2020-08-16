@@ -19,7 +19,6 @@ module BoardHelper =
         ZOrder = ZOrder.Board.tiles
       )
 
-    node.AdjustSize()
     node.CenterPosition <- Consts.Board.tileSize / 2.0f
 
     node
@@ -136,7 +135,7 @@ type BoardNode(boardPosition, addCoroutine) =
         )
       
       // node.AdjustSize()
-      node.CenterPosition <- node.Size / 2.0f
+      node.CenterPosition <- node.ContentSize / 2.0f
 
       tilesBackground.AddChildNode(node)
 
@@ -152,7 +151,6 @@ type BoardNode(boardPosition, addCoroutine) =
 
         let size = (node.Texture.Size / node.Count).To2F()
         node.Src <- RectF(Vector2F(), size)
-        node.AdjustSize()
         node.CenterPosition <- size * 0.5f
         node.Scale <- Vector2F(1.0f, 1.0f) * 128.0f / size
     }
