@@ -42,6 +42,7 @@
     <Compile Include="Affogato.fs" />
     <Compile Include="AltseedExtension.fs" />
     <Compile Include="BoxUIExtension.fs" />
+    <Compile Include="BoxUIElements.fs" />
     <Compile Include="Coroutine.fs" />
     <Compile Include="NodePool.fs" />
     <Compile Include="AnimationSpriteNode.fs" />
@@ -53,7 +54,6 @@
     <Compile Include="GameView/PauseNode.fs" />
     <Compile Include="GameView/Game.fs" />
     <Compile Include="Menu/MenuCore.fs" />
-    <Compile Include="Menu/Elements.fs" />
     <Compile Include="Menu/Menu.fs" />
     <Compile Include="../../ResourcesPassword.fs" />
     <Compile Include="Program.fs" />

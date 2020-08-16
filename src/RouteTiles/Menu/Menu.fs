@@ -42,7 +42,7 @@ module MenuParams =
 module MenuElement =
   open Altseed2.BoxUI.Elements
   open Altseed2.BoxUI
-  open RouteTiles.App.Elements
+  open RouteTiles.App.BoxUIElements
   open MenuParams
   open MenuCore
 
@@ -127,22 +127,12 @@ module MenuInput =
   open MenuCore
 
   let keyboard =
-    let pairs = seq {
-      Key.W, Dir.Up
-      Key.D, Dir.Right
-      Key.S, Dir.Down
-      Key.A, Dir.Left
-    }
-    
     [|
-      for (key, dir) in pairs -> [|key, ButtonState.Push|], Msg.MoveMode dir
+      for (key, _, _, dir) in InputControl.dirPairs -> [|key, ButtonState.Push|], Msg.MoveMode dir
     |]
 
   let joystick = [|
-    (JoystickButton.DPadUp, ButtonState.Push), Msg.MoveMode Dir.Up
-    (JoystickButton.DPadRight, ButtonState.Push), Msg.MoveMode Dir.Right
-    (JoystickButton.DPadDown, ButtonState.Push), Msg.MoveMode Dir.Down
-    (JoystickButton.DPadLeft, ButtonState.Push), Msg.MoveMode Dir.Left
+    for (_, btnL, _, dir) in InputControl.dirPairs -> (btnL, ButtonState.Push), Msg.MoveMode dir
   |]
 
 open RouteTiles.Core.Utils

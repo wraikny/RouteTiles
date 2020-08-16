@@ -1,4 +1,4 @@
-namespace RouteTiles.App.Elements
+namespace RouteTiles.App.BoxUIElements
 
 open RouteTiles.App
 

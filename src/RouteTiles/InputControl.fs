@@ -19,33 +19,28 @@ let getJoystickInput (inputs) (index): 'msg option =
 
 open RouteTiles.Core.Types
 
+let dirPairs = [|
+  Key.W, JoystickButton.DPadUp, JoystickButton.RightUp, Dir.Up
+  Key.D, JoystickButton.DPadRight, JoystickButton.RightRight, Dir.Right
+  Key.S, JoystickButton.DPadDown, JoystickButton.RightDown, Dir.Down
+  Key.A, JoystickButton.DPadLeft, JoystickButton.RightLeft, Dir.Left
+|]
+
 module Board =
   open RouteTiles.Core.Types.Board
   open RouteTiles.Core.Board
 
   let keyboardMapping =
-    let pairs = seq {
-      Key.W, Dir.Up
-      Key.D, Dir.Right
-      Key.S, Dir.Down
-      Key.A, Dir.Left
-    }
-    
     [|
-      for (key, dir) in pairs do
+      for (key, _, _, dir) in dirPairs do
         yield [|Key.RightShift, ButtonState.Hold; key, ButtonState.Push|], Msg.Slide dir
         yield [|key, ButtonState.Push|], Msg.MoveCursor dir
     |]
 
   let joystickMapping = [|
-    (JoystickButton.DPadUp, ButtonState.Push), Msg.MoveCursor Dir.Up
-    (JoystickButton.DPadRight, ButtonState.Push), Msg.MoveCursor Dir.Right
-    (JoystickButton.DPadDown, ButtonState.Push), Msg.MoveCursor Dir.Down
-    (JoystickButton.DPadLeft, ButtonState.Push), Msg.MoveCursor Dir.Left
-    (JoystickButton.RightUp, ButtonState.Push), Msg.Slide Dir.Up
-    (JoystickButton.RightRight, ButtonState.Push), Msg.Slide Dir.Right
-    (JoystickButton.RightDown, ButtonState.Push), Msg.Slide Dir.Down
-    (JoystickButton.RightLeft, ButtonState.Push), Msg.Slide Dir.Left
+    for (_, btnL, btnR, dir) in dirPairs do
+    (btnL, ButtonState.Push), Msg.MoveCursor dir
+    (btnR, ButtonState.Push), Msg.Slide dir
   |]
 
 module Pause =
