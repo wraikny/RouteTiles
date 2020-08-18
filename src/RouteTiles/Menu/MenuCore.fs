@@ -28,6 +28,10 @@ let scoreAttackSecs = [|
   60.0f * 10.0f
 |]
 
+// GameModel union
+// Pause of GameModel
+// ControllerSelect
+
 type TimeAttackSettingState = {
   scoreIndex: int
   controller: Controller

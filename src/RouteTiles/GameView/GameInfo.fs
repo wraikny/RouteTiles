@@ -1,7 +1,7 @@
 namespace RouteTiles.App
 
 open RouteTiles.Core
-open RouteTiles.Core.Types.Board
+open RouteTiles.Core.Types
 open System
 open System.Threading.Tasks
 open Affogato
@@ -63,8 +63,14 @@ type GameInfoNode(centerPosition) =
     transform.AddChildNode(scoreText)
     transform.AddChildNode(timeText)
 
-  member __.OnNext(board) =
-    setScoreText <| sprintf "%d" board.point
+  member __.OnNext(model: SoloGame.Model) =
+    (model.mode |> function
+    | SoloGame.Mode.TimeAttack score ->
+      sprintf "%d/%d" model.board.point score
+    | SoloGame.Mode.ScoreAttack _ ->
+      sprintf "%d" model.board.point
+    ) |> setScoreText
 
   member __.SetTime(time) =
-    setTimeText <| sprintf "%02i:%02i:%02i" (time / 60.0f |> int) (time % 60.0f |> int) ((time % 1.0f) * 100.0f |> int)
+    sprintf "%02i:%02i:%02i" (time / 60.0f |> int) (time % 60.0f |> int) ((time % 1.0f) * 100.0f |> int)
+    |> setTimeText

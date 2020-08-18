@@ -102,7 +102,7 @@ type Game(gameMode, controller) =
       if model.pause = Pause.Model.NotPaused then
         boardNode.OnNext(model.board)
         nextTilesNode.OnNext(model.board)
-        gameInfoNode.OnNext(model.board)
+        gameInfoNode.OnNext(model)
       
       pauseNode.OnNext(model)
     )
@@ -122,12 +122,23 @@ type Game(gameMode, controller) =
     |> ignore
 
     let mutable time = 0.0f
-    coroutineNode.Add(seq {
-      while true do
-        time <- time + Engine.DeltaSecond
-        gameInfoNode.SetTime(time)
-        yield()
-    })
+    (gameMode |> function
+    | SoloGame.Mode.ScoreAttack sec ->
+      time <- sec
+      seq {
+        while true do
+          time <- time - Engine.DeltaSecond
+          gameInfoNode.SetTime(time)
+          yield()
+      }
+    | SoloGame.Mode.TimeAttack _ ->
+      seq {
+        while true do
+          time <- time + Engine.DeltaSecond
+          gameInfoNode.SetTime(time)
+          yield()
+      }
+    ) |> coroutineNode.Add
 
   /// Binding Input
   do
