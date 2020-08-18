@@ -17,7 +17,7 @@ let main _ =
     Engine.ClearColor <- clearColor
 
   let initResources() =
-    let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.25f)
+    let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.125f)
     let loading = Loading(loadingSize, 0, 1)
     loading.Position <- (Engine.WindowSize.To2F() - loadingSize) * 0.5f
 
@@ -51,7 +51,7 @@ let main _ =
 
   let rec loop() =
     if Engine.DoEvents() then
-      printfn "%f" Engine.DeltaSecond
+      // printfn "%f" Engine.DeltaSecond
       BoxUI.BoxUISystem.Update()
       Engine.Update() |> ignore
       loop()

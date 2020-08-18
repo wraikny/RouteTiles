@@ -11,17 +11,26 @@ type Mode =
   | Ranking
   | Achievement
   | Setting
+with
+  member this.IsEnabled = this |> function
+    | VS -> false
+    | _ -> true
 
 type Model = {
   cursor: Mode
+  selected: bool
 }
 
+[<Struct; RequireQualifiedAccess>]
 type Msg =
   | MoveMode of dir:Dir
+  | Select
+  | Back
 
 
 let initModel = {
   cursor = Mode.TimeAttack
+  selected = false
 }
 
 
@@ -49,11 +58,34 @@ module Mode =
     | (2, 1) -> Mode.Setting
     | a -> failwithf "invalid input: %A" a
 
-let update msg model =
-  msg |> function
-  | MoveMode dir ->
-    { model with
-        cursor =
-          (Dir.toVector dir) + (Mode.toVec model.cursor)
-          |> Mode.fromVec
-    }
+open EffFs
+
+type SoundInvalidEffect = SoundInvalidEffect with
+  static member Effect(_) = Eff.output<unit>
+
+let inline update msg model = eff {
+  match msg with
+  | Msg.MoveMode dir ->
+    return
+      { model with
+          cursor =
+            (Dir.toVector dir) + (Mode.toVec model.cursor)
+            |> Mode.fromVec
+      }
+
+  | Msg.Select ->
+    if model.selected then
+      return model
+    else
+      if model.cursor.IsEnabled then
+        return { model with selected = true }
+      else
+        do! SoundInvalidEffect
+        return model
+
+  | Msg.Back ->
+    if model.selected then
+      return { model with selected = false }
+    else
+      return model
+}

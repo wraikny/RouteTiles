@@ -135,46 +135,45 @@ module MenuElement =
     |]
     :> Element
 
+  type Description = { name: string; desc: string }
+
   let modeTexts = dict <| seq {
     ( Mode.TimeAttack
-      , {|
+      , {
         name = "タイムアタック"
         desc = "目標スコアまでの時間を\n競うモードです。"
-      |})
+      })
     ( Mode.ScoreAttack
-      , {|
+      , {
         name = "スコアアタック"
         desc = "制限時間内のスコアを\n競うモードです。"
-      |})
+      })
     ( Mode.VS
-      , {|
+      , {
         name = "？？？"
         desc = "未実装の機能です。"
-      |})
+      })
     ( Mode.Ranking
-      , {|
+      , {
         name = "ランキング"
         desc = "オンラインランキングを\nチェックしよう！"
-      |})
+      })
     ( Mode.Achievement
-      , {|
+      , {
         name = "実績"
         desc = "開放した実績を確認します。"
-      |})
+      })
     ( Mode.Setting
-      , {|
+      , {
         name = "設定"
         desc = "各種設定を行います。"
-      |})
+      })
   }
 
   let fontName() = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 60)
   let fontDesc() = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 40)
 
-  let private sideBar (model: Model) =
-
-    let modeText = modeTexts.[model.cursor]
-
+  let private sideBar (description: Description) =
     Rectangle.Create(color = Color.sideBarColor, zOrder = ZOrder.sideMenuBackground)
     |> BoxUI.marginLeft (LengthScale.Relative, mainMenuRatio)
     |> BoxUI.withChild (
@@ -183,14 +182,14 @@ module MenuElement =
       |> BoxUI.withChildren [|
         Text.Create(
           aspect = Aspect.Fixed,
-          text = modeText.name,
+          text = description.name,
           font = fontName(),
           zOrder = ZOrder.sideMenuText,
           color = Color.text
         ) :> Element
         Text.Create(
           aspect = Aspect.Fixed,
-          text = modeText.desc,
+          text = description.desc,
           font = fontDesc(),
           zOrder = ZOrder.sideMenuText,
           color = Color.text
@@ -200,12 +199,22 @@ module MenuElement =
     :> Element
 
   let menu (model: Model) =
+    let background = Rectangle.Create(color = Color.backgroundColor, zOrder = ZOrder.background) :> Element
+
     Window.Create()
-    |> BoxUI.withChildren [|
-      Rectangle.Create(color = Color.backgroundColor, zOrder = ZOrder.background) :> Element
-      mainMenu model
-      sideBar model
-    |]
+    |> BoxUI.withChildren (
+      if model.selected then
+        [|
+          background
+          sideBar <| modeTexts.[model.cursor]
+        |]
+      else
+        [|
+          background
+          mainMenu model
+          sideBar <| modeTexts.[model.cursor]
+        |]
+    )
 
   [<Literal>]
   let private Step = 3
@@ -255,13 +264,28 @@ module MenuInput =
   let keyboard =
     [|
       for (key, _, _, dir) in InputControl.dirPairs -> [|key, ButtonState.Push|], Msg.MoveMode dir
+      yield [|Key.Space, ButtonState.Push|], Msg.Select
+      yield [|Key.Enter, ButtonState.Push|], Msg.Select
+      yield [|Key.Escape, ButtonState.Push|], Msg.Back
+      yield [|Key.Backspace, ButtonState.Push|], Msg.Back
     |]
 
   let joystick = [|
     for (_, btnL, _, dir) in InputControl.dirPairs -> (btnL, ButtonState.Push), Msg.MoveMode dir
+    yield (JoystickButton.RightRight, ButtonState.Push), Msg.Select
+    yield (JoystickButton.RightDown, ButtonState.Push), Msg.Back
+    yield (JoystickButton.Guide, ButtonState.Push), Msg.Back
   |]
 
 open RouteTiles.Core.Utils
+
+open EffFs
+
+type MenuHandler = MenuHandler with
+  static member inline Handle(x) = x
+
+  static member inline Handle(SoundInvalidEffect, k) =
+    k()
 
 type Menu() =
   inherit Node()
@@ -300,4 +324,10 @@ type Menu() =
     |> Option.iter (updater.Dispatch >> ignore)
 
   override __.OnAdded() =
-    updater.Init(MenuCore.initModel, MenuCore.update) |> ignore
+    updater.Init(
+      MenuCore.initModel,
+      fun msg model ->
+        printfn "Msg: %A" msg
+        MenuCore.update msg model
+        |> Eff.handle MenuHandler
+    ) |> ignore
