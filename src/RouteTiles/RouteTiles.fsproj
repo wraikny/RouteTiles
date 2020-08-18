@@ -48,6 +48,7 @@
     <Compile Include="AnimationSpriteNode.fs" />
     <Compile Include="ViewParams.fs" />
     <Compile Include="InputControl.fs" />
+    <Compile Include="Loading.fs" />
     <Compile Include="GameView/GameInfo.fs" />
     <Compile Include="GameView/Board.fs" />
     <Compile Include="GameView/NextTiles.fs" />

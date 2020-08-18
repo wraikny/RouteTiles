@@ -1,5 +1,7 @@
 ﻿module RouteTiles.App.Program
 
+open System.Threading
+
 open Altseed2
 open RouteTiles.Core
 open RouteTiles.Core.Types
@@ -13,6 +15,39 @@ let main _ =
       failwith "Failed to initialize the Altseed2"
 
     Engine.ClearColor <- clearColor
+
+  let initResources() =
+    let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.25f)
+    let loading = Loading(loadingSize, 0, 1)
+    loading.Position <- (Engine.WindowSize.To2F() - loadingSize) * 0.5f
+
+    let (menuElementCount, initMenuElement) =
+      MenuElement.initialize loading.SetProgress
+
+    let (menuTexturesCount, initMenuTextures) =
+      MenuParams.Texture.initialize ((+) menuElementCount >>loading.SetProgress)
+
+    let progressSum =
+      menuElementCount
+      + menuTexturesCount
+
+    loading.Init(progressSum)
+
+    Engine.AddNode(loading)
+
+    async {
+      let ctx = SynchronizationContext.Current
+
+      do! initMenuElement
+      do! initMenuTextures
+
+      if SynchronizationContext.Current <> ctx then
+        do! Async.SwitchToContext ctx
+      let node = Menu()
+      Engine.RemoveNode(loading)
+      Engine.AddNode(node)
+    }
+    |> Async.StartImmediate
 
   let rec loop() =
     if Engine.DoEvents() then
@@ -35,6 +70,8 @@ let main _ =
   if not <| Engine.File.AddRootDirectory(@"Resources") then
     failwithf "Failed to add root directory"
 
+  initResources()
+
   // let controller =
   //   Engine.Joystick.GetJoystickInfo(0)
   //   |> function
@@ -47,12 +84,6 @@ let main _ =
   //   let node = Game(SoloGame.Mode.TimeAttack, controller)
   //   Engine.AddNode(node)
   // )
-
-  (
-    let node = Menu()
-    Engine.AddNode(node)
-  )
-
 
   loop()
 
@@ -69,15 +100,12 @@ let main _ =
       if not <| Engine.File.AddRootPackageWithPassword(@"Resources.pack", ResourcesPassword.password) then
         failwithf "Failed to add root package"
 
+      initResources()
+
       // (
       //   let node = Game(SoloGame.Mode.TimeAttack, Controller.Keyboard)
       //   Engine.AddNode(node)
       // )
-
-      (
-        let node = Menu()
-        Engine.AddNode(node)
-      )
 
       loop()
     with e ->

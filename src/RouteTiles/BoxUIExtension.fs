@@ -26,5 +26,5 @@ module BoxUI =
   let inline alignY y (e: #Element) = e.AlignY <- y; e
 
   let inline onUpdate f (e: ^e) =
-    (^e: (member add_OnUpdateEvent: System.Action<'n> -> unit) e, f)
+    (^e: (member add_OnUpdateEvent: System.Action<'n> -> unit) e, System.Action<_>(f))
     e

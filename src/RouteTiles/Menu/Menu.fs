@@ -1,8 +1,11 @@
 namespace RouteTiles.App
 
 open System
+open System.Threading
 open Altseed2
 open Altseed2.BoxUI
+
+open MenuCore
 
 module MenuParams =
   let mainMenuRatio = 10.0f / 16.0f
@@ -28,6 +31,29 @@ module MenuParams =
     let ranking = @"menu/crown.png"
     let achievement = @"menu/trophy.png"
     let setting = @"menu/gear.png"
+
+    let textures = [|
+      Mode.TimeAttack, timeAttack
+      Mode.ScoreAttack, scoreAttack
+      Mode.VS, question
+      Mode.Ranking, ranking
+      Mode.Achievement, achievement
+      Mode.Setting, setting
+    |]
+
+    let initialize (progress: int -> unit) =
+      textures.Length, async {
+        let ctx = SynchronizationContext.Current
+        do! Async.SwitchToThreadPool()
+
+        let mutable count = 0
+        for (_, path) in textures do
+          Texture2D.Load(path) |> ignore
+          count <- count + 1
+          progress(count)
+        
+        do! Async.SwitchToContext(ctx)
+      }
 
   module ZOrder =
     let offset = (|||) (100 <<< 16)
@@ -57,18 +83,6 @@ module MenuElement =
     Texture.setting, Mode.Setting
   |]
 
-  let mutable selectedTime = 0.0f
-
-  let selectedSpriteOnUpdate =
-    Action<RectangleNode>(
-      fun (node: RectangleNode) ->
-        let alpha = (1.0f + MathF.Sin(selectedTime *  2.0f * MathF.PI / selectedTimePeriod)) * 0.5f
-        let alpha = (alpha * 0.4f + 0.2f) * 255.0f |> byte
-        let color = Color (Color.iconSelected.R, Color.iconSelected.G, Color.iconSelected.B, alpha)
-        node.Color <- color
-        selectedTime <- selectedTime + Engine.DeltaSecond
-    )
-
   let private mainButtons (model: Model) =
     [|for (path, mode) in modeButtons ->
         let texture = Texture2D.LoadStrict path
@@ -87,14 +101,20 @@ module MenuElement =
           )
 
         if mode = model.cursor then
-          selectedTime <- 0.0f
+          let mutable selectedTime = 0.0f
           buttonIcon.AddChild(
             Rectangle.Create(zOrder = ZOrder.iconSelected)
-            |> BoxUI.onUpdate (selectedSpriteOnUpdate)
+            |> BoxUI.onUpdate (fun (node: RectangleNode) ->
+              let sinTime = MathF.Sin(selectedTime * 2.0f * MathF.PI / selectedTimePeriod)
+              buttonIcon.SetMargin(LengthScale.RelativeMin, -0.05f * sinTime) |> ignore
+              
+              let a = (1.0f + sinTime) * 0.5f
+              let alpha = (a * 0.4f + 0.2f) * 255.0f |> byte
+              let color = Color (Color.iconSelected.R, Color.iconSelected.G, Color.iconSelected.B, alpha)
+              node.Color <- color
+              selectedTime <- selectedTime + Engine.DeltaSecond)
             :> Element
           )
-
-          buttonIcon.SetMargin(LengthScale.RelativeMin, -0.05f) |> ignore
 
         buttonIcon
     |]
@@ -148,8 +168,8 @@ module MenuElement =
       |})
   }
 
-  let fontName = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 60)
-  let fontDesc = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 40)
+  let fontName() = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 60)
+  let fontDesc() = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 40)
 
   let private sideBar (model: Model) =
 
@@ -164,14 +184,14 @@ module MenuElement =
         Text.Create(
           aspect = Aspect.Fixed,
           text = modeText.name,
-          font = fontName,
+          font = fontName(),
           zOrder = ZOrder.sideMenuText,
           color = Color.text
         ) :> Element
         Text.Create(
           aspect = Aspect.Fixed,
           text = modeText.desc,
-          font = fontDesc,
+          font = fontDesc(),
           zOrder = ZOrder.sideMenuText,
           color = Color.text
         ) :> Element
@@ -186,6 +206,46 @@ module MenuElement =
       mainMenu model
       sideBar model
     |]
+
+  [<Literal>]
+  let private Step = 3
+
+  let initialize (progress: int -> unit) =
+
+    let texts = modeTexts |> Seq.skip 1 |> Seq.map(fun x -> x.Value) |> Seq.toArray
+
+    let progressSum =
+      texts
+      |> Seq.sumBy(fun x -> x.name.Length + x.desc.Length)
+      |> (+) 2
+
+    progressSum, async {
+      let ctx = SynchronizationContext.Current
+      do! Async.SwitchToThreadPool()
+
+      let fontName = fontName()
+      progress(1)
+      let fontDesc = fontDesc()
+      progress(2)
+
+      do! Async.SwitchToContext(ctx)
+
+      let mutable count = 0
+      for x in texts do
+        for c in x.name do
+          fontName.GetGlyph(int c) |> ignore
+          count <- count + 1
+          progress(count + 2)
+          if count % Step = 0 then
+            do! Async.Sleep 1
+
+        for c in x.desc do
+          fontDesc.GetGlyph(int c) |> ignore
+          count <- count + 1
+          progress(count + 2)
+          if count % Step = 0 then
+            do! Async.Sleep 1
+    }
 
 open RouteTiles.Core.Types.Common
 

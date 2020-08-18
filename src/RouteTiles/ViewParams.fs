@@ -14,7 +14,7 @@ module Consts =
   // -- View --
   module ViewCommon =
     let windowSize = Vector2I(1280, 720)
-    let clearColor = Color(200, 200, 200, 255)
+    let clearColor = Color(50, 50, 50, 255)
 
     let font = @"mplus-1c-regular.ttf"
 
