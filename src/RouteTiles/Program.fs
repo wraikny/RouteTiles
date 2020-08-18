@@ -16,20 +16,26 @@ let main _ =
 
     Engine.ClearColor <- clearColor
 
+  let initializers = [|
+    Consts.initialize
+    MenuElement.initialize
+    MenuParams.Texture.initialize
+  |]
+
   let initResources() =
     let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.125f)
     let loading = Loading(loadingSize, 0, 1)
     loading.Position <- (Engine.WindowSize.To2F() - loadingSize) * 0.5f
 
-    let (menuElementCount, initMenuElement) =
-      MenuElement.initialize loading.SetProgress
-
-    let (menuTexturesCount, initMenuTextures) =
-      MenuParams.Texture.initialize ((+) menuElementCount >>loading.SetProgress)
-
-    let progressSum =
-      menuElementCount
-      + menuTexturesCount
+    let progressSum, initializer =
+      initializers
+      |> Seq.fold (fun (count, init) initializer ->
+        let c, i = initializer ((+) count >> loading.SetProgress)
+        count + c, async {
+          do! init
+          do! i
+        }
+      ) (0, async { return () })
 
     loading.Init(progressSum)
 
@@ -38,8 +44,7 @@ let main _ =
     async {
       let ctx = SynchronizationContext.Current
 
-      do! initMenuElement
-      do! initMenuTextures
+      do! initializer
 
       if SynchronizationContext.Current <> ctx then
         do! Async.SwitchToContext ctx

@@ -10,7 +10,7 @@ open Altseed2
 type GameInfoNode(centerPosition) =
   inherit Node()
 
-  let font = Font.LoadDynamicFontStrict("mplus-1c-regular.ttf", 120)
+  let font = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, Consts.GameInfo.fontSize)
 
   let transform =
     RectangleNode(

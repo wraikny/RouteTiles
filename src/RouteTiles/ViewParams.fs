@@ -55,9 +55,46 @@ module Consts =
     let [<Literal>] merginY = 0.0f
     let [<Literal>] lineLength = 400.0f
     let [<Literal>] lineWidth = 5.0f
+    let [<Literal>] fontSize = 120
 
   module SoloGame =
     let [<Literal>] nextsBoardMergin = 200.0f
+
+  open System.Threading
+
+  let initialize (progress: int -> unit) =
+    let gameInfoChars = "0123456789:"
+
+    let pSum = 3 + gameInfoChars.Length
+
+    pSum, async {
+    let ctx = SynchronizationContext.Current
+    do! Async.SwitchToThreadPool()
+    [| Board.tileTexturePath
+       Board.tileVanishmentEffectTexturePath
+    |]
+    |> Seq.indexed
+    |> Seq.iter(fun (i, path) ->
+      path |> Texture2D.Load |> ignore
+      progress i
+    )
+
+    let gameInfoFont = Font.LoadDynamicFont(ViewCommon.font, GameInfo.fontSize)
+    progress 2
+
+    let Step = 3
+
+    let mutable count = 3
+    for c in gameInfoChars do
+      gameInfoFont.GetGlyph(int c) |> ignore
+      progress (count)
+      count <- count + 1
+      if count % Step = 0 then
+        do! Async.Sleep 1
+
+
+    do! Async.SwitchToContext ctx
+  }
 
 module Binding =
   module Board =

@@ -1,5 +1,5 @@
 module RouteTiles.App.MenuCore
-open RouteTiles.Core.Types.Common
+open RouteTiles.Core.Types
 
 open Affogato
 
@@ -16,10 +16,42 @@ with
     | VS -> false
     | _ -> true
 
-type Model = {
-  cursor: Mode
-  selected: bool
+let timeAttackScores = [|
+  10000
+  50000
+  100000
+|]
+
+let scoreAttackSecs = [|
+  60.0f * 3.0f
+  60.0f * 5.0f
+  60.0f * 10.0f
+|]
+
+type TimeAttackSettingState = {
+  scoreIndex: int
+  controller: Controller
+  controllers: Controller[]
 }
+
+type ScoreAttackSettingState = {
+  secIndex: int
+  controller: Controller
+  controllers: Controller[]
+}
+
+[<RequireQualifiedAccess>]
+type State =
+  | Menu
+  | TimeAttackSetting of timeAttack:TimeAttackSettingState
+  | ScoreAttackSetting of scoreAttack:ScoreAttackSettingState
+  | RankingTime of index:int
+  | RankingScore of index:int
+  | Achievement
+  | Setting
+
+
+type Model = { cursor: Mode; state: State }
 
 [<Struct; RequireQualifiedAccess>]
 type Msg =
@@ -27,12 +59,7 @@ type Msg =
   | Select
   | Back
 
-
-let initModel = {
-  cursor = Mode.TimeAttack
-  selected = false
-}
-
+let initModel = { cursor = Mode.TimeAttack; state = State.Menu }
 
 module Mode =
   let toVec mode =
@@ -60,32 +87,55 @@ module Mode =
 
 open EffFs
 
-type SoundInvalidEffect = SoundInvalidEffect with
+type CurrentControllers = CurrentControllers with
+  static member Effect(_) = Eff.output<Controller[]>
+
+type SelectSoundEffect = SelectSoundEffect of bool with
   static member Effect(_) = Eff.output<unit>
 
 let inline update msg model = eff {
-  match msg with
-  | Msg.MoveMode dir ->
+  match msg, model with
+  | Msg.Back, _ ->
+    return { model with state = State.Menu }
+
+  | Msg.MoveMode dir, { cursor = cursor; state = State.Menu } ->
     return
       { model with
           cursor =
-            (Dir.toVector dir) + (Mode.toVec model.cursor)
+            (Dir.toVector dir) + (Mode.toVec cursor)
             |> Mode.fromVec
       }
 
-  | Msg.Select ->
-    if model.selected then
-      return model
-    else
-      if model.cursor.IsEnabled then
-        return { model with selected = true }
-      else
-        do! SoundInvalidEffect
-        return model
+  | Msg.Select, { cursor = cursor; state = State.Menu } ->
 
-  | Msg.Back ->
-    if model.selected then
-      return { model with selected = false }
-    else
+    do! SelectSoundEffect (cursor.IsEnabled)
+
+    match cursor with
+    | Mode.TimeAttack ->
+      let! controllers = CurrentControllers
+      return
+        { model with
+            state = State.TimeAttackSetting { scoreIndex = 0; controller = Controller.Keyboard; controllers = controllers }
+        }
+
+    | Mode.ScoreAttack ->
+      let! controllers = CurrentControllers
+      return
+        { model with
+            state = State.ScoreAttackSetting { secIndex = 0; controller = Controller.Keyboard; controllers = controllers }
+        }
+
+    | Mode.Ranking ->
+      return { model with state = State.RankingTime 0 }
+
+    | Mode.Achievement ->
+      return { model with state = State.Achievement }
+
+    |  Mode.Setting ->
+      return { model with state = State.Setting }
+
+    | _ ->
       return model
+
+  | _ -> return model
 }

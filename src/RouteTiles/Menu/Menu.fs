@@ -119,21 +119,24 @@ module MenuElement =
         buttonIcon
     |]
 
-  let private mainMenu (model: Model) =
+  let private mainMenuArea(children) =
     Empty.Create()
     |> BoxUI.marginRight (LengthScale.Relative, 1.0f - mainMenuRatio)
     |> BoxUI.withChildren [|
       Empty.Create()
       |> BoxUI.marginX (LengthScale.Relative, 0.1f)
       |> BoxUI.marginTop (LengthScale.Relative, 0.08f)
-      |> BoxUI.withChildren [|
-        Grid.Create(180.0f) :> Element
-        |> BoxUI.withChildren (mainButtons model)
-        // Rectangle.Create(zOrder = ZOrder.footer) :> Element
-        // |> BoxUI.marginTop (LengthScale.Relative, 0.8f)
-      |]
+      |> BoxUI.withChildren children
     |]
     :> Element
+
+  let private mainMenu (model: Model) =
+    mainMenuArea [|
+      Grid.Create(180.0f) :> Element
+      |> BoxUI.withChildren (mainButtons model)
+      // Rectangle.Create(zOrder = ZOrder.footer) :> Element
+      // |> BoxUI.marginTop (LengthScale.Relative, 0.8f)
+    |]
 
   type Description = { name: string; desc: string }
 
@@ -203,15 +206,15 @@ module MenuElement =
 
     Window.Create()
     |> BoxUI.withChildren (
-      if model.selected then
+      if model.state = State.Menu then
         [|
           background
+          mainMenu model
           sideBar <| modeTexts.[model.cursor]
         |]
       else
         [|
           background
-          mainMenu model
           sideBar <| modeTexts.[model.cursor]
         |]
     )
@@ -239,19 +242,19 @@ module MenuElement =
 
       do! Async.SwitchToContext(ctx)
 
-      let mutable count = 0
+      let mutable count = 3
       for x in texts do
         for c in x.name do
           fontName.GetGlyph(int c) |> ignore
           count <- count + 1
-          progress(count + 2)
+          progress(count)
           if count % Step = 0 then
             do! Async.Sleep 1
 
         for c in x.desc do
           fontDesc.GetGlyph(int c) |> ignore
           count <- count + 1
-          progress(count + 2)
+          progress(count)
           if count % Step = 0 then
             do! Async.Sleep 1
     }
@@ -284,8 +287,17 @@ open EffFs
 type MenuHandler = MenuHandler with
   static member inline Handle(x) = x
 
-  static member inline Handle(SoundInvalidEffect, k) =
+  static member inline Handle(SelectSoundEffect t, k) =
     k()
+
+  static member inline Handle(CurrentControllers, k) =
+    [|
+      yield Controller.Keyboard
+      for i in 0..15 do
+        let info = Engine.Joystick.GetJoystickInfo i
+        if info <> null && info.IsGamepad then
+          yield Controller.Joystick(info.GamepadName, i)
+    |] |> k
 
 type Menu() =
   inherit Node()
