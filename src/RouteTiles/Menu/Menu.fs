@@ -302,6 +302,7 @@ type MenuHandler = MenuHandler with
 type Menu() =
   inherit Node()
 
+  let mutable prevModel = ValueNone
   let updater = Updater<MenuCore.Model, MenuCore.Msg>()
 
   let coroutine = CoroutineNode()
@@ -312,8 +313,15 @@ type Menu() =
     base.AddChildNode uiRoot
 
     updater.Subscribe(fun model ->
-      uiRoot.ClearElement()
-      uiRoot.SetElement <| MenuElement.menu model
+      prevModel
+      |> ValueOption.map((=) model)
+      |> ValueOption.defaultValue false
+      |> function
+      | true -> ()
+      | false ->
+        prevModel <- ValueSome model
+        uiRoot.ClearElement()
+        uiRoot.SetElement <| MenuElement.menu model
     ) |> ignore
 
   let getKeyboardInput = InputControl.getKeyboardInput MenuInput.keyboard
@@ -333,13 +341,18 @@ type Menu() =
       }
       |> Seq.tryHead
     )
-    |> Option.iter (updater.Dispatch >> ignore)
+    |> Option.iter (fun msg ->
+      updater.Dispatch msg
+      |> ignore
+    )
 
   override __.OnAdded() =
-    updater.Init(
-      MenuCore.initModel,
-      fun msg model ->
-        printfn "Msg: %A" msg
-        MenuCore.update msg model
-        |> Eff.handle MenuHandler
-    ) |> ignore
+    prevModel <-
+      ( initModel,
+        fun msg model ->
+          printfn "Msg: %A" msg
+          MenuCore.update msg model
+          |> Eff.handle MenuHandler
+      )
+      |> updater.Init
+      |> ValueSome
