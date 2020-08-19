@@ -8,7 +8,7 @@ type Dir = Up | Down | Right | Left
 [<Struct; RequireQualifiedAccess>]
 type Controller =
   | Keyboard
-  | Joystick of name:string * index:int
+  | Joystick of index:int * name:string * guid:string
 
 
 open Affogato

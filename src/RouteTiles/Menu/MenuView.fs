@@ -37,26 +37,30 @@ let private buttonIcon path =
     :> Element
   )
 
+let private highlighten (movement: float32) (color: Color) (button: Rectangle) =
+  let mutable selectedTime = 0.0f
+  button.AddChild(
+    Rectangle.Create(zOrder = ZOrder.Menu.iconSelected)
+    |> BoxUI.onUpdate (fun (node: RectangleNode) ->
+      let sinTime = MathF.Sin(selectedTime * 2.0f * MathF.PI / Consts.Menu.selectedTimePeriod)
+      if movement <> 0.0f then
+        button.SetMargin(LengthScale.RelativeMin, movement * sinTime) |> ignore
+      
+      let a = (1.0f + sinTime) * 0.5f
+      let (aMin, aMax) = Consts.Menu.cursorAlphaMinMax
+      let alpha = (a * (aMax - aMin) + aMin) * 255.0f |> byte
+      let color = Color (color.R, color.G, color.B, alpha)
+      node.Color <- color
+      selectedTime <- selectedTime + Engine.DeltaSecond)
+    :> Element
+  )
+
 let private mainButtons (model: Model) =
   [|for (path, mode) in modeButtons ->
       let buttonIcon = buttonIcon path
       if mode = model.cursor then
-        let mutable selectedTime = 0.0f
-        buttonIcon.AddChild(
-          Rectangle.Create(zOrder = ZOrder.Menu.iconSelected)
-          |> BoxUI.onUpdate (fun (node: RectangleNode) ->
-            let sinTime = MathF.Sin(selectedTime * 2.0f * MathF.PI / Consts.Menu.selectedTimePeriod)
-            buttonIcon.SetMargin(LengthScale.RelativeMin, -0.05f * sinTime) |> ignore
-            
-            let a = (1.0f + sinTime) * 0.5f
-            let (aMin, aMax) = Consts.Menu.selectedAlphaMinMax
-            let alpha = (a * (aMax - aMin) + aMin) * 255.0f |> byte
-            let color = Color (Consts.Menu.iconSelectedColor.R, Consts.Menu.iconSelectedColor.G, Consts.Menu.iconSelectedColor.B, alpha)
-            node.Color <- color
-            selectedTime <- selectedTime + Engine.DeltaSecond)
-          :> Element
-        )
-
+        buttonIcon
+        |> highlighten -0.05f (Consts.Menu.cursorColor)
       buttonIcon
   |]
 
@@ -72,29 +76,77 @@ let private mainMenuArea(children) =
 
 let private mainMenu (model: Model) =
   mainMenuArea [|
-    Grid.Create(180.0f) :> Element
+    Grid.Create(Vector2F(1.0f, 1.0f) * 180.0f) :> Element
     |> BoxUI.withChildren (mainButtons model)
     // Rectangle.Create(zOrder = ZOrder.Menu.footer) :> Element
     // |> BoxUI.marginTop (LengthScale.Relative, 0.8f)
   |]
 
-let controllerSelect (controllers: Controller[]) (current: int) =
-  mainMenuArea [|
-    ItemList.Create(itemHeight = 40.0f)
-    |> BoxUI.withChildren [|
-      for c in controllers do
-        let name = c |> function
-          | Controller.Keyboard -> "Keyboard"
-          | Controller.Joystick (name, _) -> name
-        
-        Rectangle.Create(color = Consts.Menu.elementBackground)
+let settingHeader (items: string[]) (current: int) =
+  Column.Create(ColumnDir.X)
+  |> BoxUI.withChildren [|
+    for (index, name) in items |> Seq.indexed do
+      let elem =
+        Rectangle.Create(color = Consts.Menu.elementBackground, zOrder = ZOrder.Menu.iconBackground)
+        |> BoxUI.margin (LengthScale.RelativeMin, 0.05f)
         |> BoxUI.withChild (
-          Text.Create(text = name, font = fontDesc())
+          Text.Create(text = name, font = fontDesc(), color = Consts.Menu.textColor, zOrder = ZOrder.Menu.icon)
+          |> BoxUI.alignCenter
         )
-    |]
+
+      if index = current then
+        highlighten 0.0f (Consts.Menu.cursorColor) elem
+
+      elem
   |]
+  :> Element
+
+let verticalSelecter (items: string[]) (cursor: int) (current: int) =
+  ItemList.Create(itemHeight = 40.0f, itemMargin = 10.0f)
+  |> BoxUI.withChildren [|
+    for (index, name) in items |> Seq.indexed do
+      let elem =
+        Rectangle.Create(color = Consts.Menu.elementBackground, zOrder = ZOrder.Menu.iconBackground)
+        |> BoxUI.withChild (
+          Text.Create(text = name, font = fontDesc(), color = Consts.Menu.textColor, zOrder = ZOrder.Menu.icon)
+          |> BoxUI.alignCenter
+        )
+
+      if index = current then
+        highlighten 0.0f (Color(50uy, 50uy, 200uy)) elem
+
+      if index = cursor then
+        highlighten -0.05f (Consts.Menu.cursorColor) elem
+
+      elem
+  |]
+  :> Element
 
 type Description = { name: string; desc: string }
+
+let private sideBar (description: Description) =
+  Rectangle.Create(color = Consts.Menu.elementBackground, zOrder = ZOrder.Menu.sideMenuBackground)
+  |> BoxUI.withChild (
+    ItemList.Create(itemMargin = 10.0f)
+    |> BoxUI.marginXY (LengthScale.Relative, 0.05f, 0.06f)
+    |> BoxUI.withChildren [|
+      Text.Create(
+        aspect = Aspect.Fixed,
+        text = description.name,
+        font = fontName(),
+        zOrder = ZOrder.Menu.sideMenuText,
+        color = Consts.Menu.textColor
+      ) :> Element
+      Text.Create(
+        aspect = Aspect.Fixed,
+        text = description.desc,
+        font = fontDesc(),
+        zOrder = ZOrder.Menu.sideMenuText,
+        color = Consts.Menu.textColor
+      ) :> Element
+    |]
+  )
+  :> Element
 
 let modeTexts = dict <| seq {
   ( Mode.TimeAttack
@@ -129,40 +181,73 @@ let modeTexts = dict <| seq {
     })
 }
 
-let private sideBar (description: Description) =
-  Rectangle.Create(color = Consts.Menu.elementBackground, zOrder = ZOrder.Menu.sideMenuBackground)
-  |> BoxUI.withChild (
-    ItemList.Create(itemMargin = 10.0f)
-    |> BoxUI.marginXY (LengthScale.Relative, 0.05f, 0.06f)
-    |> BoxUI.withChildren [|
-      Text.Create(
-        aspect = Aspect.Fixed,
-        text = description.name,
-        font = fontName(),
-        zOrder = ZOrder.Menu.sideMenuText,
-        color = Consts.Menu.textColor
-      ) :> Element
-      Text.Create(
-        aspect = Aspect.Fixed,
-        text = description.desc,
-        font = fontDesc(),
-        zOrder = ZOrder.Menu.sideMenuText,
-        color = Consts.Menu.textColor
-      ) :> Element
-    |]
+let timeAttackSettingModeDescs = dict [|
+  GameSettingMode.ModeIndex
+  , { name = "目標スコア"; desc = "より短い時間で目標スコアを\n目指します。" }
+  GameSettingMode.Controller
+  , { name = "コントローラー"; desc = "使用するコントローラーを\n選択します。" }
+  GameSettingMode.GameStart
+  , { name = "ゲームスタート"; desc = "ゲームを開始します。" }
+|]
+
+let timeAttackSettingModeNames =
+  [| for x in timeAttackSettingModeDescs -> x.Value.name |]
+
+let scoreAttackSettingModeDescs = dict [|
+  GameSettingMode.ModeIndex
+  , { name = "制限時間"; desc = "時間内に多くのスコアを\n取るのが目標です。" }
+  GameSettingMode.Controller
+  , { name = "コントローラー"; desc = "使用するコントローラーを\n選択します。" }
+  GameSettingMode.GameStart
+  , { name = "ゲームスタート"; desc = "ゲームを開始します。" }
+|]
+
+let scoreAttackSettingModeNames =
+  [| for x in scoreAttackSettingModeDescs -> x.Value.name |]
+
+let timeAttackScoreNames = 
+  timeAttackScores
+  |> Array.map(sprintf "%d 点")
+
+let scoreAttackSecNames =
+  scoreAttackSecs
+  |> Array.map(fun x ->
+    sprintf "%d 分" (x / 60.0f |> int)
   )
-  :> Element
+
+let gameSettingVerticalSelecter modeNames (setting: GameSettingState) =
+  setting.mode |> function
+  | GameSettingMode.ModeIndex ->
+    verticalSelecter modeNames setting.verticalCursor setting.index
+  | GameSettingMode.Controller ->
+    verticalSelecter setting.ControllerNames setting.controllerCursor 0
+  | GameSettingMode.GameStart ->
+    Empty.Create() :> Element
+  |> BoxUI.marginTop (LengthScale.Relative, 0.1f)
 
 let menu (model: Model) =
   Window.Create()
   |> BoxUI.withChild (
     let (item1, item2) =
-      if model.state = State.Menu then
+      model.state |> function
+      | State.Menu ->
         (mainMenu model),
         (sideBar <| modeTexts.[model.cursor])
-      else
-        (Empty.Create() :> Element),
-        (sideBar <| modeTexts.[model.cursor])
+      | State.GameSetting (gameMode, setting) ->
+        let modeNames, selectionNames, descs = gameMode |> function
+          | SoloGameMode.TimeAttack -> timeAttackSettingModeNames, timeAttackScoreNames, timeAttackSettingModeDescs
+          | SoloGameMode.ScoreAttack -> scoreAttackSettingModeNames, scoreAttackSecNames, scoreAttackSettingModeDescs
+
+        mainMenuArea [|
+          split2 ColumnDir.Y 0.05f
+            (settingHeader modeNames setting.mode.ToInt)
+            (setting |> gameSettingVerticalSelecter selectionNames |> BoxUI.marginTop (LengthScale.Relative, 0.1f))
+        |],
+        (descs.[setting.mode]) |> sideBar
+        
+      | _ ->
+        Empty.Create() :> Element,
+        sideBar { name = ""; desc = "" }
     
     split2
       ColumnDir.X
@@ -172,11 +257,21 @@ let menu (model: Model) =
 
 
 let initialize (progress: unit -> int) =
-  let texts = modeTexts |> Seq.skip 1 |> Seq.map(fun x -> x.Value) |> Seq.toArray
+  let texts =[|
+    for x in modeTexts -> x.Value
+    for x in timeAttackSettingModeDescs -> x.Value
+    for x in scoreAttackSettingModeDescs -> x.Value
+  |]
+
+  let alphaBets = [|
+    for i in 'a'..'z' -> i
+    for i in 'A'..'Z' -> i
+  |]
 
   let progressSum =
     texts
     |> Seq.sumBy(fun x -> x.name.Length + x.desc.Length)
+    |> (+) alphaBets.Length
     |> (+) 2
 
   progressSum, async {
@@ -202,4 +297,9 @@ let initialize (progress: unit -> int) =
           fontDesc.GetGlyph(int c) |> ignore
           if progress() % Step = 0 then
             do! Async.Sleep 1
+
+    for c in alphaBets do
+      fontDesc.GetGlyph(int c) |> ignore
+      if progress() % Step = 0 then
+        do! Async.Sleep 1
   }

@@ -47,8 +47,11 @@ type MenuHandler = MenuHandler with
       for i in 0..15 do
         let info = Engine.Joystick.GetJoystickInfo i
         if info <> null && info.IsGamepad then
-          yield Controller.Joystick(info.GamepadName, i)
+          yield Controller.Joystick(i, info.GamepadName, info.GUID)
     |] |> k
+
+  static member inline Handle(GameStartEffect soloGameMode, k) =
+    k ()
 
 type Menu() =
   inherit Node()

@@ -54,12 +54,20 @@ type ItemList private() =
   override this.CalcSize(size) = size
 
   override this.OnResize(area) =
-    let itemSize = Vector2F(area.Width, defaultArg this.ItemHeight area.Width)
-    let mutable pos = area.Position
-    for child in this.Children do
-      let size = child.GetSize(itemSize)
-      child.Resize(RectF(pos, itemSize))
-      pos.Y <- pos.Y + size.Y + this.ItemMargin
+    this.ItemHeight |> function
+    | None ->
+      let itemSize = Vector2F(area.Width, area.Width)
+      let mutable pos = area.Position
+      for child in this.Children do
+        let size = child.GetSize(itemSize)
+        child.Resize(RectF(pos, itemSize))
+        pos.Y <- pos.Y + size.Y + this.ItemMargin
+    | Some itemHeight ->
+      let itemSize = Vector2F(area.Width, itemHeight)
+      let mutable pos = area.Position
+      for child in this.Children do
+        child.Resize(RectF(pos, itemSize))
+        pos.Y <- pos.Y + itemHeight + this.ItemMargin
 
 
 [<AllowNullLiteral; Sealed; AutoSerializable(true)>]
@@ -68,9 +76,9 @@ type Grid private() =
 
   member val private ItemSize = Unchecked.defaultof<_> with get, set
 
-  static member Create(itemSize: float32) =
-    if itemSize <= 0.0f then
-      failwithf "itemSize"
+  static member Create(itemSize: Vector2F) =
+    if itemSize.X <= 0.0f || itemSize.Y <= 0.0f then
+      failwithf "invalid itemSize %O" itemSize
 
     let elem = BoxUISystem.RentOrNull<Grid>() |? Grid()
     elem.ItemSize <- itemSize
@@ -80,19 +88,19 @@ type Grid private() =
     BoxUISystem.Return(this)
 
   override this.CalcSize(size) =
-    let xCount = size.X / this.ItemSize |> int
+    let xCount = size.X / this.ItemSize.X |> int
     let itemMargin = size.X / (float32 xCount) / (float32 xCount - 1.0f)
 
     let y = (this.Children.Count - 1) / xCount
 
-    let ySize = (float32 y) * (this.ItemSize + itemMargin) + this.ItemSize
+    let ySize = (float32 y) * (this.ItemSize.Y + itemMargin) + this.ItemSize.Y
 
     Vector2F(size.X, ySize)
 
   override this.OnResize(area) =
-    let xCount = area.Width / this.ItemSize |> int
+    let xCount = area.Width / this.ItemSize.X |> int
 
-    let itemMargin = (area.Width - (float32 xCount) * this.ItemSize) / (float32 xCount - 1.0f)
+    let itemMargin = (area.Width * Vector2F(1.0f, 1.0f) - (float32 xCount) * this.ItemSize) / (float32 xCount - 1.0f)
 
     let mutable index = 0
     for child in this.Children do
@@ -100,7 +108,7 @@ type Grid private() =
 
       let pos = Vector2F(float32 x, float32 y) * (this.ItemSize + itemMargin)
 
-      child.Resize <| RectF(area.Position + pos, Vector2F(this.ItemSize, this.ItemSize))
+      child.Resize <| RectF(area.Position + pos, this.ItemSize)
 
       index <- index + 1
 

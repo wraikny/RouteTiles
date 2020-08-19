@@ -156,12 +156,14 @@ type Game(gameMode, controller) =
             model.controller |> function
             | Controller.Keyboard ->
               InputControl.SoloGame.getKeyboardInput()
-            | Controller.Joystick (_, ValidJoystickIndex index) ->
-              InputControl.SoloGame.getJoystickInput index
-            | Controller.Joystick (name, index) ->
-              let s = sprintf "joystick '%s' is not present at %d" name index
-              Engine.Log.Warn(LogCategory.User, s)
-              None
+            | Controller.Joystick (index, name, guid) ->
+              let info = Engine.Joystick.GetJoystickInfo(index)
+              if info.GUID = guid then
+                InputControl.SoloGame.getJoystickInput index
+              else
+                let s = sprintf "joystick '%s' is not found at %d" name index
+                Engine.Log.Warn(LogCategory.User, s)
+                None
 
           match input with
           | None -> ()

@@ -35,8 +35,14 @@ type PauseNode(dispatch) =
             controller |> function
             | ValueSome Controller.Keyboard ->
               InputControl.Pause.getKeyboardInput()
-            | ValueSome (Controller.Joystick(_, ValidJoystickIndex index)) ->
-              InputControl.Pause.getJoystickInput(index)
+            | ValueSome (Controller.Joystick (index, name, guid)) ->
+              let info = Engine.Joystick.GetJoystickInfo(index)
+              if info.GUID = guid then
+                InputControl.Pause.getJoystickInput(index)
+              else
+                let s = sprintf "joystick '%s' is not found at %d" name index
+                Engine.Log.Warn(LogCategory.User, s)
+                None
             | _ -> None
           
           match input with
