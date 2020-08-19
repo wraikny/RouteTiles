@@ -20,7 +20,7 @@ module Consts =
     let font = @"mplus-1c-regular.ttf"
 
   module PostEffect =
-    let [<Literal>] wavepath = @"shader/wave.hlsl"
+    let [<Literal>] wavepath = @"Shader/wave.hlsl"
 
   module Board =
     let [<Literal>] nextsCountToShow = 5

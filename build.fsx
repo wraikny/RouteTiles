@@ -67,10 +67,14 @@ Target.create "Build" (fun _ ->
 let runtimes = [ "linux-x64"; "win-x64"; "osx-x64" ]
 let publishOutput = sprintf "publish/RouteTiles.%s"
 
+let resources = "Resources"
+
+Target.create "CopyShader" (fun _ ->
+  Shell.copyDir (sprintf "%s/Shader" resources) @"src/Shader" (fun _ -> true)
+)
+
 Target.create "Resources" (fun _ ->
-  let resources = "Resources"
   let targetProject = "RouteTiles"
-  // let password = Some "password"
 
   !!(sprintf "%s/**" resources)
   |> Zip.zip resources (sprintf "%s.zip" resources)
@@ -197,6 +201,8 @@ Target.create "CISetting" (fun _ ->
 )
 
 Target.create "All" ignore
+
+"CopyShader" ==> "Resources"
 
 "Clean"
   ==> "Build"
