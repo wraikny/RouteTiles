@@ -82,17 +82,20 @@ let private mainMenu (model: Model) =
     // |> BoxUI.marginTop (LengthScale.Relative, 0.8f)
   |]
 
+let textButton text =
+  Rectangle.Create(color = Consts.Menu.elementBackground, zOrder = ZOrder.Menu.iconBackground)
+  |> BoxUI.withChild (
+    Text.Create(text = text, font = fontDesc(), color = Consts.Menu.textColor, zOrder = ZOrder.Menu.icon)
+    |> BoxUI.alignCenter
+  )
+
 let settingHeader (items: string[]) (current: int) =
   Column.Create(ColumnDir.X)
   |> BoxUI.withChildren [|
     for (index, name) in items |> Seq.indexed do
       let elem =
-        Rectangle.Create(color = Consts.Menu.elementBackground, zOrder = ZOrder.Menu.iconBackground)
+        textButton name
         |> BoxUI.margin (LengthScale.RelativeMin, 0.05f)
-        |> BoxUI.withChild (
-          Text.Create(text = name, font = fontDesc(), color = Consts.Menu.textColor, zOrder = ZOrder.Menu.icon)
-          |> BoxUI.alignCenter
-        )
 
       if index = current then
         highlighten 0.0f (Consts.Menu.cursorColor) elem
@@ -105,12 +108,7 @@ let verticalSelecter (items: string[]) (cursor: int) (current: int) =
   ItemList.Create(itemHeight = 40.0f, itemMargin = 10.0f)
   |> BoxUI.withChildren [|
     for (index, name) in items |> Seq.indexed do
-      let elem =
-        Rectangle.Create(color = Consts.Menu.elementBackground, zOrder = ZOrder.Menu.iconBackground)
-        |> BoxUI.withChild (
-          Text.Create(text = name, font = fontDesc(), color = Consts.Menu.textColor, zOrder = ZOrder.Menu.icon)
-          |> BoxUI.alignCenter
-        )
+      let elem = textButton name
 
       if index = current then
         highlighten 0.0f (Color(50uy, 50uy, 200uy)) elem
@@ -120,6 +118,15 @@ let verticalSelecter (items: string[]) (cursor: int) (current: int) =
 
       elem
   |]
+  :> Element
+
+let gameStart() =
+  let elem = textButton "ゲームスタート"
+  highlighten -0.02f (Consts.Menu.cursorColor) elem
+
+  FixedSize.Create(Vector2F(300.0f, 150.0f))
+  |> BoxUI.alignX Align.Center
+  |> BoxUI.withChild elem
   :> Element
 
 type Description = { name: string; desc: string }
@@ -222,7 +229,7 @@ let gameSettingVerticalSelecter modeNames (setting: GameSettingState) =
   | GameSettingMode.Controller ->
     verticalSelecter setting.ControllerNames setting.controllerCursor 0
   | GameSettingMode.GameStart ->
-    Empty.Create() :> Element
+    gameStart()
   |> BoxUI.marginTop (LengthScale.Relative, 0.1f)
 
 let menu (model: Model) =
@@ -244,11 +251,11 @@ let menu (model: Model) =
             (setting |> gameSettingVerticalSelecter selectionNames |> BoxUI.marginTop (LengthScale.Relative, 0.1f))
         |],
         (descs.[setting.mode]) |> sideBar
-        
+
       | _ ->
         Empty.Create() :> Element,
         sideBar { name = ""; desc = "" }
-    
+
     split2
       ColumnDir.X
       Consts.Menu.mainMenuRatio
@@ -263,15 +270,16 @@ let initialize (progress: unit -> int) =
     for x in scoreAttackSettingModeDescs -> x.Value
   |]
 
-  let alphaBets = [|
+  let otherCharacters = [|
     for i in 'a'..'z' -> i
     for i in 'A'..'Z' -> i
+    yield! "点分ゲームスタート"
   |]
 
   let progressSum =
     texts
     |> Seq.sumBy(fun x -> x.name.Length + x.desc.Length)
-    |> (+) alphaBets.Length
+    |> (+) otherCharacters.Length
     |> (+) 2
 
   progressSum, async {
@@ -285,7 +293,7 @@ let initialize (progress: unit -> int) =
 
     do! Async.SwitchToContext(ctx)
 
-    let Step = 5
+    let Step = 10
     for x in texts do
       for c in x.name do
         fontName.GetGlyph(int c) |> ignore
@@ -298,7 +306,7 @@ let initialize (progress: unit -> int) =
           if progress() % Step = 0 then
             do! Async.Sleep 1
 
-    for c in alphaBets do
+    for c in otherCharacters do
       fontDesc.GetGlyph(int c) |> ignore
       if progress() % Step = 0 then
         do! Async.Sleep 1

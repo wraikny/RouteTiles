@@ -121,7 +121,7 @@ module Consts =
 
     do! Async.SwitchToContext ctx
 
-    let Step = 5
+    let Step = 10
     for c in gameInfoChars do
       gameInfoFont.GetGlyph(int c) |> ignore
       if progress () % Step = 0 then
