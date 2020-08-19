@@ -1,4 +1,4 @@
-namespace RouteTiles.App.BoxUIElements
+module RouteTiles.App.BoxUIElements
 
 open System
 open System.Runtime.InteropServices
@@ -103,3 +103,30 @@ type Grid private() =
       child.Resize <| RectF(area.Position + pos, Vector2F(this.ItemSize, this.ItemSize))
 
       index <- index + 1
+
+
+open Altseed2.BoxUI.Elements
+
+let split2 (dir: ColumnDir) (ratio: float32) item1 item2 =
+  Empty.Create()
+  |> BoxUI.withChildren (
+    if dir = ColumnDir.X then
+      [|
+        Empty.Create()
+        |> BoxUI.marginRight (LengthScale.Relative, 1.0f - ratio)
+        |> BoxUI.withChild item1
+        Empty.Create()
+        |> BoxUI.marginLeft (LengthScale.Relative, ratio)
+        |> BoxUI.withChild item2
+      |]
+    else
+      [|
+        Empty.Create()
+        |> BoxUI.marginBottom (LengthScale.Relative, 1.0f - ratio)
+        |> BoxUI.withChild item1
+        Empty.Create()
+        |> BoxUI.marginTop (LengthScale.Relative, ratio)
+        |> BoxUI.withChild item2
+      |]
+  )
+  :> Element

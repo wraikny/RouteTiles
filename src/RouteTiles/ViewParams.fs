@@ -69,12 +69,9 @@ module Consts =
 
     [<Literal>]
     let selectedTimePeriod = 2.0f
-    
-    let debugColor = Nullable <| Color(255uy, 0uy, 0uy, 100uy)
-    let backgroundColor = Nullable <| Color(50uy, 50uy, 50uy)
-    let sideBarColor = Nullable <| Color(200uy, 200uy, 200uy, 150uy)
 
-    let iconBackColor = Nullable <| Color(240uy, 240uy, 240uy, 150uy)
+    let elementBackground = Nullable <| Color(200uy, 200uy, 200uy, 150uy)
+    
     let iconColor = Nullable <| Color(50uy, 50uy, 50uy, 255uy)
     let iconSelectedColor = Color(255uy, 255uy, 0uy, 0uy)
     let selectedAlphaMinMax = (0.2f, 0.6f)

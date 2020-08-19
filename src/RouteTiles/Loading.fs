@@ -13,7 +13,7 @@ type Loading(size: Vector2F, zOrder1, zOrder2) =
     RectangleNode(
       ZOrder = zOrder1,
       RectangleSize = size,
-      Color = Color(80uy, 80uy, 80uy, 255uy)
+      Color = Consts.Menu.elementBackground.Value
     )
   
   let rect =

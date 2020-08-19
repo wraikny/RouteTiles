@@ -31,28 +31,40 @@ let scoreAttackSecs = [|
 // GameModel union
 // Pause of GameModel
 // ControllerSelect
+[<Struct; RequireQualifiedAccess>]
+type GameSettingMode =
+  | ModeIndex
+  | Controller
+  | GameStart
 
-type TimeAttackSettingState = {
-  scoreIndex: int
-  controller: Controller
+type GameSettingState = {
+  mode: GameSettingMode
+  verticalCursor: int
+  index: int
+  controller: int
   controllers: Controller[]
-}
-
-type ScoreAttackSettingState = {
-  secIndex: int
-  controller: Controller
-  controllers: Controller[]
-}
+} with
+  static member Init(controllers) = {
+    mode = GameSettingMode.ModeIndex
+    verticalCursor = 0
+    index = 0
+    controller = 0
+    controllers = controllers
+  }
 
 [<RequireQualifiedAccess>]
 type State =
   | Menu
-  | TimeAttackSetting of timeAttack:TimeAttackSettingState
-  | ScoreAttackSetting of scoreAttack:ScoreAttackSettingState
+  | TimeAttackSetting of timeAttack:GameSettingState
+  | ScoreAttackSetting of scoreAttack:GameSettingState
   | RankingTime of index:int
   | RankingScore of index:int
   | Achievement
   | Setting
+with
+  member this.ControllerRefreshEnabled = this |> function
+    | TimeAttackSetting _  | ScoreAttackSetting _ -> true
+    | _ -> false
 
 
 type Model = { cursor: Mode; state: State }
@@ -62,6 +74,7 @@ type Msg =
   | MoveMode of dir:Dir
   | Select
   | Back
+  | RefreshController of Controller[]
 
 let initModel = { cursor = Mode.TimeAttack; state = State.Menu }
 
@@ -94,8 +107,63 @@ open EffFs
 type CurrentControllers = CurrentControllers with
   static member Effect(_) = Eff.output<Controller[]>
 
-type SelectSoundEffect = SelectSoundEffect of bool with
+[<Struct; RequireQualifiedAccess>]
+type SoundKind =
+  | Select
+  | Move
+  | Invalid
+
+type SoundEffect = SoundEffect of SoundKind with
   static member Effect(_) = Eff.output<unit>
+
+
+let inline moveSettingMode (isRight) (mode: GameSettingMode) = eff {
+  match (mode, isRight) with
+  | GameSettingMode.ModeIndex, true
+  | GameSettingMode.GameStart, false ->
+    do! SoundEffect SoundKind.Move
+    return GameSettingMode.Controller
+  
+  | GameSettingMode.Controller, true ->
+    do! SoundEffect SoundKind.Move
+    return GameSettingMode.ModeIndex
+  
+  | GameSettingMode.Controller, false ->
+    do! SoundEffect SoundKind.Move
+    return GameSettingMode.GameStart
+  
+  | _ ->
+    do! SoundEffect SoundKind.Invalid
+    return mode
+}
+
+let inline updateTimeAttackSetting msg (setting: GameSettingState) =
+  eff {
+    match msg with
+    | Msg.MoveMode dir ->
+      match dir with
+      | Dir.Right | Dir.Left ->
+        let! mode = setting.mode |> moveSettingMode (dir = Dir.Right)
+        return { setting with mode = mode }
+      | _ ->
+        return setting
+    | _ ->
+      return setting
+  }
+
+let inline updateScoreAttackSetting msg (setting: GameSettingState) =
+  eff {
+    match msg with
+    | Msg.MoveMode dir ->
+      match dir with
+      | Dir.Right | Dir.Left ->
+        let! mode = setting.mode |> moveSettingMode (dir = Dir.Right)
+        return { setting with mode = mode }
+      | _ ->
+        return setting
+    | _ ->
+      return setting
+  }
 
 let inline update msg model = eff {
   match msg, model with
@@ -103,6 +171,7 @@ let inline update msg model = eff {
     return { model with state = State.Menu }
 
   | Msg.MoveMode dir, { cursor = cursor; state = State.Menu } ->
+    do! SoundEffect SoundKind.Move
     return
       { model with
           cursor =
@@ -110,23 +179,38 @@ let inline update msg model = eff {
             |> Mode.fromVec
       }
 
+  | msg, { state = State.TimeAttackSetting setting } ->
+    let! newSetting = updateTimeAttackSetting msg setting
+    return
+      if setting = newSetting then
+        model
+      else
+        { model with state = State.TimeAttackSetting newSetting }
+  | msg, { state = State.ScoreAttackSetting setting } ->
+    let! newSetting = updateScoreAttackSetting msg setting
+    return
+      if setting = newSetting then
+        model
+      else
+        { model with state = State.ScoreAttackSetting newSetting }
+
   | Msg.Select, { cursor = cursor; state = State.Menu } ->
 
-    do! SelectSoundEffect (cursor.IsEnabled)
+    do! SoundEffect (if cursor.IsEnabled then SoundKind.Select else SoundKind.Invalid)
 
     match cursor with
     | Mode.TimeAttack ->
       let! controllers = CurrentControllers
       return
         { model with
-            state = State.TimeAttackSetting { scoreIndex = 0; controller = Controller.Keyboard; controllers = controllers }
+            state = State.TimeAttackSetting (GameSettingState.Init controllers)
         }
 
     | Mode.ScoreAttack ->
       let! controllers = CurrentControllers
       return
         { model with
-            state = State.ScoreAttackSetting { secIndex = 0; controller = Controller.Keyboard; controllers = controllers }
+            state = State.ScoreAttackSetting (GameSettingState.Init controllers)
         }
 
     | Mode.Ranking ->
@@ -140,6 +224,15 @@ let inline update msg model = eff {
 
     | _ ->
       return model
+
+  | Msg.RefreshController controllers, { state = state } ->
+    return
+      match state with
+      | State.TimeAttackSetting setting ->
+        { model with state = State.TimeAttackSetting { setting with controllers = controllers }}
+      | State.ScoreAttackSetting setting ->
+        { model with state = State.ScoreAttackSetting { setting with controllers = controllers }}
+      | _ -> model
 
   | _ -> return model
 }

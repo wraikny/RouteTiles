@@ -55,6 +55,7 @@
     <Compile Include="GameView/PauseNode.fs" />
     <Compile Include="GameView/Game.fs" />
     <Compile Include="Menu/MenuCore.fs" />
+    <Compile Include="Menu/MenuView.fs" />
     <Compile Include="Menu/Menu.fs" />
     <Compile Include="PostEffect/Wave.fs" />
     <Compile Include="../../ResourcesPassword.fs" />

@@ -18,7 +18,7 @@ let main _ =
 
   let initializers = [|
     Consts.initialize
-    MenuElement.initialize
+    MenuView.initialize
   |]
 
   let initResources() =
