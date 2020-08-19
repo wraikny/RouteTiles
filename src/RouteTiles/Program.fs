@@ -22,19 +22,28 @@ let main _ =
   |]
 
   let initResources() =
+    let ctx = SynchronizationContext.Current
+
     let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.125f)
     let loading = Loading(loadingSize, 0, 1)
     loading.Position <- (Engine.WindowSize.To2F() - loadingSize) * 0.5f
 
-    let progressSum, initializer =
+
+    let progressSum, initializers =
+      let mutable count = 0
+      let progress () =
+        let c = Interlocked.Increment (&count)
+        ctx.Post((fun _ ->
+          loading.Progress <- c
+        ), ())
+        c
+
       initializers
-      |> Seq.fold (fun (count, init) initializer ->
-        let c, i = initializer ((+) count >> loading.SetProgress)
-        count + c, async {
-          do! init
-          do! i
-        }
-      ) (0, async { return () })
+      |> Array.map(fun i -> i progress)
+      |> Array.unzip
+      |> fun (ps, is) ->
+        Array.sum ps,
+        Async.Parallel is |> Async.Ignore
 
     loading.Init(progressSum)
 
@@ -43,10 +52,10 @@ let main _ =
     async {
       let ctx = SynchronizationContext.Current
 
-      do! initializer
+      do! initializers
 
-      if SynchronizationContext.Current <> ctx then
-        do! Async.SwitchToContext ctx
+      do! Async.SwitchToContext ctx
+
       let node = Menu()
       Engine.RemoveNode(loading)
       Engine.AddNode(node)
@@ -75,20 +84,6 @@ let main _ =
     failwithf "Failed to add root directory"
 
   initResources()
-
-  // let controller =
-  //   Engine.Joystick.GetJoystickInfo(0)
-  //   |> function
-  //   | info when isNull info -> Controller.Keyboard
-  //   | info ->
-  //     let name = if info.IsGamepad then info.GamepadName else info.Name
-  //     Controller.Joystick(name, 0)
-
-  // (
-  //   let node = Game(SoloGame.Mode.TimeAttack, controller)
-  //   Engine.AddNode(node)
-  // )
-
   loop()
 
   BoxUI.BoxUISystem.Terminate()
@@ -99,18 +94,10 @@ let main _ =
     init(config)
 
     try
-
-      // Altseed2のバグでPackageから読み込めない……><
       if not <| Engine.File.AddRootPackageWithPassword(@"Resources.pack", ResourcesPassword.password) then
         failwithf "Failed to add root package"
 
       initResources()
-
-      // (
-      //   let node = Game(SoloGame.Mode.TimeAttack, Controller.Keyboard)
-      //   Engine.AddNode(node)
-      // )
-
       loop()
     with e ->
       Engine.Log.Error(LogCategory.User, sprintf "%A: %s" (e.GetType()) e.Message)

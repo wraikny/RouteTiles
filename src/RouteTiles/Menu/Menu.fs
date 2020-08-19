@@ -160,14 +160,7 @@ module MenuElement =
     )
 
 
-  let initialize (progress: int -> unit) =
-    let progress =
-      let mutable count = 0
-      fun () ->
-        progress count
-        count <- count + 1
-        count
-
+  let initialize (progress: unit -> int) =
     let texts = modeTexts |> Seq.skip 1 |> Seq.map(fun x -> x.Value) |> Seq.toArray
 
     let progressSum =
@@ -224,6 +217,7 @@ open RouteTiles.Core.Utils
 
 open EffFs
 
+[<Struct>]
 type MenuHandler = MenuHandler with
   static member inline Handle(x) = x
 

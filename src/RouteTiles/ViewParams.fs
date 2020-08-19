@@ -86,14 +86,7 @@ module Consts =
 
   open System.Threading
 
-  let initialize (progress: int -> unit) =
-    let progress =
-      let mutable count = 0
-      fun () ->
-        progress count
-        count <- count + 1
-        count
-
+  let initialize (progress: unit -> int) =
     let textures =
       [| Board.tileTexturePath
          Board.tileVanishmentEffectTexturePath
@@ -113,11 +106,14 @@ module Consts =
     let ctx = SynchronizationContext.Current
     do! Async.SwitchToThreadPool()
 
-    textures
-    |> Seq.iter(fun (path) ->
-      path |> Texture2D.Load |> ignore
-      progress() |> ignore
-    )
+    let! texturesLoad =
+      async {
+        textures
+        |> Seq.iter(fun (path) ->
+          path |> Texture2D.Load |> ignore
+          progress() |> ignore
+        )
+      } |> Async.StartChild
 
     let gameInfoFont = Font.LoadDynamicFont(ViewCommon.font, GameInfo.fontSize)
     progress() |> ignore
@@ -129,6 +125,8 @@ module Consts =
       gameInfoFont.GetGlyph(int c) |> ignore
       if progress () % Step = 0 then
         do! Async.Sleep 1
+
+    do! texturesLoad
   }
 
 module Binding =
