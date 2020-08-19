@@ -19,7 +19,6 @@ let main _ =
   let initializers = [|
     Consts.initialize
     MenuElement.initialize
-    MenuParams.Texture.initialize
   |]
 
   let initResources() =

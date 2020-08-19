@@ -7,80 +7,20 @@ open Altseed2.BoxUI
 
 open MenuCore
 
-module MenuParams =
-  let mainMenuRatio = 10.0f / 16.0f
-
-  [<Literal>]
-  let selectedTimePeriod = 2.0f
-
-  module Color =
-    let debugColor = Nullable <| Color(255uy, 0uy, 0uy, 100uy)
-    let backgroundColor = Nullable <| Color(50uy, 50uy, 50uy)
-    let sideBarColor = Nullable <| Color(150uy, 150uy, 150uy, 150uy)
-
-    let iconBack = Nullable <| Color(240uy, 240uy, 240uy)
-    let iconColor = Nullable <| Color(50uy, 50uy, 50uy, 255uy)
-    let iconSelected = Color(255uy, 255uy, 0uy, 0uy)
-
-    let text = Nullable <| Color(0uy, 0uy, 0uy)
-
-  module Texture =
-    let timeAttack = @"menu/stopwatch.png"
-    let scoreAttack = @"menu/hourglass.png"
-    let question = @"menu/question.png"
-    let ranking = @"menu/crown.png"
-    let achievement = @"menu/trophy.png"
-    let setting = @"menu/gear.png"
-
-    let textures = [|
-      Mode.TimeAttack, timeAttack
-      Mode.ScoreAttack, scoreAttack
-      Mode.VS, question
-      Mode.Ranking, ranking
-      Mode.Achievement, achievement
-      Mode.Setting, setting
-    |]
-
-    let initialize (progress: int -> unit) =
-      textures.Length, async {
-        let ctx = SynchronizationContext.Current
-        do! Async.SwitchToThreadPool()
-
-        let mutable count = 0
-        for (_, path) in textures do
-          Texture2D.Load(path) |> ignore
-          count <- count + 1
-          progress(count)
-        
-        do! Async.SwitchToContext(ctx)
-      }
-
-  module ZOrder =
-    let offset = (|||) (100 <<< 16)
-    let background = offset 0
-
-    let footer = offset 10
-    let iconBackground = offset 20
-    let icon = offset 21
-    let iconSelected = offset 22
-
-    let sideMenuBackground = offset 31
-    let sideMenuText = offset 32
 
 module MenuElement =
   open Altseed2.BoxUI.Elements
   open Altseed2.BoxUI
   open RouteTiles.App.BoxUIElements
-  open MenuParams
   open MenuCore
 
   let private modeButtons = [|
-    Texture.timeAttack, Mode.TimeAttack
-    Texture.scoreAttack, Mode.ScoreAttack
-    Texture.question, Mode.VS
-    Texture.ranking, Mode.Ranking
-    Texture.achievement, Mode.Achievement
-    Texture.setting, Mode.Setting
+    Consts.Menu.timeAttackTexture, Mode.TimeAttack
+    Consts.Menu.scoreAttackTexture, Mode.ScoreAttack
+    Consts.Menu.questionTexture, Mode.VS
+    Consts.Menu.rankingTexture, Mode.Ranking
+    Consts.Menu.achievementTexture, Mode.Achievement
+    Consts.Menu.settingTexture, Mode.Setting
   |]
 
   let private mainButtons (model: Model) =
@@ -88,13 +28,13 @@ module MenuElement =
         let texture = Texture2D.LoadStrict path
 
         let buttonIcon = 
-          Rectangle.Create(color = Color.iconBack, zOrder = ZOrder.iconBackground)
+          Rectangle.Create(color = Consts.Menu.iconBackColor, zOrder = ZOrder.Menu.iconBackground)
           |> BoxUI.withChild(
             Sprite.Create(
               aspect = Aspect.Keep,
-              zOrder = ZOrder.icon,
+              zOrder = ZOrder.Menu.icon,
               texture = texture,
-              color = Color.iconColor
+              color = Consts.Menu.iconColor
             )
             |> BoxUI.margin (LengthScale.RelativeMin, 0.1f)
             :> Element
@@ -103,14 +43,14 @@ module MenuElement =
         if mode = model.cursor then
           let mutable selectedTime = 0.0f
           buttonIcon.AddChild(
-            Rectangle.Create(zOrder = ZOrder.iconSelected)
+            Rectangle.Create(zOrder = ZOrder.Menu.iconSelected)
             |> BoxUI.onUpdate (fun (node: RectangleNode) ->
-              let sinTime = MathF.Sin(selectedTime * 2.0f * MathF.PI / selectedTimePeriod)
+              let sinTime = MathF.Sin(selectedTime * 2.0f * MathF.PI / Consts.Menu.selectedTimePeriod)
               buttonIcon.SetMargin(LengthScale.RelativeMin, -0.05f * sinTime) |> ignore
               
               let a = (1.0f + sinTime) * 0.5f
               let alpha = (a * 0.4f + 0.2f) * 255.0f |> byte
-              let color = Color (Color.iconSelected.R, Color.iconSelected.G, Color.iconSelected.B, alpha)
+              let color = Color (Consts.Menu.iconSelectedColor.R, Consts.Menu.iconSelectedColor.G, Consts.Menu.iconSelectedColor.B, alpha)
               node.Color <- color
               selectedTime <- selectedTime + Engine.DeltaSecond)
             :> Element
@@ -121,7 +61,7 @@ module MenuElement =
 
   let private mainMenuArea(children) =
     Empty.Create()
-    |> BoxUI.marginRight (LengthScale.Relative, 1.0f - mainMenuRatio)
+    |> BoxUI.marginRight (LengthScale.Relative, 1.0f - Consts.Menu.mainMenuRatio)
     |> BoxUI.withChildren [|
       Empty.Create()
       |> BoxUI.marginX (LengthScale.Relative, 0.1f)
@@ -134,7 +74,7 @@ module MenuElement =
     mainMenuArea [|
       Grid.Create(180.0f) :> Element
       |> BoxUI.withChildren (mainButtons model)
-      // Rectangle.Create(zOrder = ZOrder.footer) :> Element
+      // Rectangle.Create(zOrder = ZOrder.Menu.footer) :> Element
       // |> BoxUI.marginTop (LengthScale.Relative, 0.8f)
     |]
 
@@ -177,8 +117,8 @@ module MenuElement =
   let fontDesc() = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 40)
 
   let private sideBar (description: Description) =
-    Rectangle.Create(color = Color.sideBarColor, zOrder = ZOrder.sideMenuBackground)
-    |> BoxUI.marginLeft (LengthScale.Relative, mainMenuRatio)
+    Rectangle.Create(color = Consts.Menu.sideBarColor, zOrder = ZOrder.Menu.sideMenuBackground)
+    |> BoxUI.marginLeft (LengthScale.Relative, Consts.Menu.mainMenuRatio)
     |> BoxUI.withChild (
       ItemList.Create(itemMargin = 10.0f)
       |> BoxUI.marginXY (LengthScale.Relative, 0.05f, 0.06f)
@@ -187,22 +127,22 @@ module MenuElement =
           aspect = Aspect.Fixed,
           text = description.name,
           font = fontName(),
-          zOrder = ZOrder.sideMenuText,
-          color = Color.text
+          zOrder = ZOrder.Menu.sideMenuText,
+          color = Consts.Menu.textColor
         ) :> Element
         Text.Create(
           aspect = Aspect.Fixed,
           text = description.desc,
           font = fontDesc(),
-          zOrder = ZOrder.sideMenuText,
-          color = Color.text
+          zOrder = ZOrder.Menu.sideMenuText,
+          color = Consts.Menu.textColor
         ) :> Element
       |]
     )
     :> Element
 
   let menu (model: Model) =
-    let background = Rectangle.Create(color = Color.backgroundColor, zOrder = ZOrder.background) :> Element
+    let background = Rectangle.Create(color = Consts.Menu.backgroundColor, zOrder = ZOrder.Menu.background) :> Element
 
     Window.Create()
     |> BoxUI.withChildren (
@@ -219,10 +159,14 @@ module MenuElement =
         |]
     )
 
-  [<Literal>]
-  let private Step = 3
 
   let initialize (progress: int -> unit) =
+    let progress =
+      let mutable count = 0
+      fun () ->
+        progress count
+        count <- count + 1
+        count
 
     let texts = modeTexts |> Seq.skip 1 |> Seq.map(fun x -> x.Value) |> Seq.toArray
 
@@ -236,26 +180,22 @@ module MenuElement =
       do! Async.SwitchToThreadPool()
 
       let fontName = fontName()
-      progress(1)
+      progress() |> ignore
       let fontDesc = fontDesc()
-      progress(2)
+      progress() |> ignore
 
       do! Async.SwitchToContext(ctx)
 
-      let mutable count = 3
+      let Step = 5
       for x in texts do
         for c in x.name do
           fontName.GetGlyph(int c) |> ignore
-          count <- count + 1
-          progress(count)
-          if count % Step = 0 then
+          if progress() % Step = 0 then
             do! Async.Sleep 1
 
         for c in x.desc do
           fontDesc.GetGlyph(int c) |> ignore
-          count <- count + 1
-          progress(count)
-          if count % Step = 0 then
+          if progress() % Step = 0 then
             do! Async.Sleep 1
     }
 
@@ -314,7 +254,7 @@ type Menu() =
 
     updater.Subscribe(fun model ->
       prevModel
-      |> ValueOption.map((=) model)
+      |> ValueOption.map(fun x -> Object.ReferenceEquals(x, model))
       |> ValueOption.defaultValue false
       |> function
       | true -> ()

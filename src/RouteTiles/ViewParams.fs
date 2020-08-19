@@ -1,9 +1,10 @@
 namespace RouteTiles.App
 
-open RouteTiles.Core.Utils
-
+open System
 open Altseed2
 open Affogato
+
+open RouteTiles.Core.Utils
 
 module Consts =
   // -- Core --
@@ -60,40 +61,74 @@ module Consts =
   module SoloGame =
     let [<Literal>] nextsBoardMergin = 200.0f
 
+  module Menu =
+    let mainMenuRatio = 10.0f / 16.0f
+
+    [<Literal>]
+    let selectedTimePeriod = 2.0f
+    
+    let debugColor = Nullable <| Color(255uy, 0uy, 0uy, 100uy)
+    let backgroundColor = Nullable <| Color(50uy, 50uy, 50uy)
+    let sideBarColor = Nullable <| Color(150uy, 150uy, 150uy, 150uy)
+
+    let iconBackColor = Nullable <| Color(240uy, 240uy, 240uy)
+    let iconColor = Nullable <| Color(50uy, 50uy, 50uy, 255uy)
+    let iconSelectedColor = Color(255uy, 255uy, 0uy, 0uy)
+
+    let textColor = Nullable <| Color(0uy, 0uy, 0uy)
+    
+    let [<Literal>] timeAttackTexture = @"menu/stopwatch.png"
+    let [<Literal>] scoreAttackTexture = @"menu/hourglass.png"
+    let [<Literal>] questionTexture = @"menu/question.png"
+    let [<Literal>] rankingTexture = @"menu/crown.png"
+    let [<Literal>] achievementTexture = @"menu/trophy.png"
+    let [<Literal>] settingTexture = @"menu/gear.png"
+
   open System.Threading
 
   let initialize (progress: int -> unit) =
+    let progress =
+      let mutable count = 0
+      fun () ->
+        progress count
+        count <- count + 1
+        count
+
+    let textures =
+      [| Board.tileTexturePath
+         Board.tileVanishmentEffectTexturePath
+         Menu.timeAttackTexture
+         Menu.scoreAttackTexture
+         Menu.questionTexture
+         Menu.rankingTexture
+         Menu.achievementTexture
+         Menu.settingTexture
+      |]
+
     let gameInfoChars = "0123456789:"
 
-    let pSum = 3 + gameInfoChars.Length
+    let pSum = 1 + textures.Length + gameInfoChars.Length
 
     pSum, async {
     let ctx = SynchronizationContext.Current
     do! Async.SwitchToThreadPool()
-    [| Board.tileTexturePath
-       Board.tileVanishmentEffectTexturePath
-    |]
-    |> Seq.indexed
-    |> Seq.iter(fun (i, path) ->
+
+    textures
+    |> Seq.iter(fun (path) ->
       path |> Texture2D.Load |> ignore
-      progress i
+      progress() |> ignore
     )
 
     let gameInfoFont = Font.LoadDynamicFont(ViewCommon.font, GameInfo.fontSize)
-    progress 2
-
-    let Step = 3
-
-    let mutable count = 3
-    for c in gameInfoChars do
-      gameInfoFont.GetGlyph(int c) |> ignore
-      progress (count)
-      count <- count + 1
-      if count % Step = 0 then
-        do! Async.Sleep 1
-
+    progress() |> ignore
 
     do! Async.SwitchToContext ctx
+
+    let Step = 5
+    for c in gameInfoChars do
+      gameInfoFont.GetGlyph(int c) |> ignore
+      if progress () % Step = 0 then
+        do! Async.Sleep 1
   }
 
 module Binding =
@@ -221,3 +256,15 @@ module ZOrder =
     let background = offset 0
     let elementBackground = offset 1
     let text = offset 100
+
+  module Menu =
+    let offset = (|||) (100 <<< 16)
+    let background = offset 0
+
+    let footer = offset 10
+    let iconBackground = offset 20
+    let icon = offset 21
+    let iconSelected = offset 22
+
+    let sideMenuBackground = offset 31
+    let sideMenuText = offset 32
