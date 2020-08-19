@@ -28,9 +28,9 @@ let timeAttackScores = [|
 |]
 
 let scoreAttackSecs = [|
-  60.0f * 3.0f
-  60.0f * 5.0f
-  60.0f * 10.0f
+  60 * 3
+  60 * 5
+  60 * 10
 |]
 
 // GameModel union
@@ -74,12 +74,19 @@ type GameSettingState = {
 [<RequireQualifiedAccess>]
 type State =
   | Menu
-  | GameSetting of gameMode:SoloGameMode * timeAttack:GameSettingState
+  | GameSetting of gameMode:SoloGameMode * settingState:GameSettingState
+  | Game of gameMode:SoloGame.Mode
+  | PauseGame
+  | GameResult of SoloGame.Mode
   | RankingTime of index:int
   | RankingScore of index:int
   | Achievement
   | Setting
 with
+  member this.IsActive = this |> function
+    | Game _ -> false
+    | _ -> true
+
   member this.ControllerRefreshEnabled = this |> function
     | GameSetting _ -> true
     | _ -> false
@@ -89,6 +96,7 @@ type Model = { cursor: Mode; state: State }
 
 [<Struct; RequireQualifiedAccess>]
 type Msg =
+  | GameStarted of gameMode:SoloGame.Mode
   | MoveMode of dir:Dir
   | Select
   | Back
@@ -134,7 +142,7 @@ type SoundKind =
 type SoundEffect = SoundEffect of SoundKind with
   static member Effect(_) = Eff.output<unit>
 
-type GameStartEffect = GameStartEffect of SoloGame.Mode with
+type GameStartEffect = GameStartEffect of SoloGame.Mode * Controller with
   static member Effect(_) = Eff.output<unit>
 
 
@@ -161,7 +169,9 @@ let inline moveSettingMode (isRight) (mode: GameSettingMode) = eff {
 let inline updateGameSetting msg selectionCount gameMode (setting: GameSettingState) =
   eff {
     match msg, setting.mode with
-    | Msg.Back, _ -> return setting
+    | Msg.Back, _
+    | Msg.GameStarted _, _ ->
+      return setting
 
     | Msg.RefreshController controllers, _ ->
       return { setting with controllers = controllers }
@@ -187,10 +197,10 @@ let inline updateGameSetting msg selectionCount gameMode (setting: GameSettingSt
     // ゲームスタート
     | Msg.Select, GameSettingMode.GameStart ->
       do! SoundEffect SoundKind.Select
-      do! GameStartEffect(gameMode |> function
+      do! GameStartEffect((gameMode |> function
         | SoloGameMode.TimeAttack -> SoloGame.Mode.TimeAttack(timeAttackScores.[setting.index])
-        | SoloGameMode.ScoreAttack -> SoloGame.Mode.ScoreAttack(scoreAttackSecs.[setting.index])
-      )
+        | SoloGameMode.ScoreAttack -> SoloGame.Mode.ScoreAttack(float32 scoreAttackSecs.[setting.index])
+      ), setting.selectedController)
       return setting
 
     // モード切替
@@ -228,6 +238,9 @@ let inline updateGameSetting msg selectionCount gameMode (setting: GameSettingSt
 
 let inline update msg model = eff {
   match msg, model with
+  | Msg.GameStarted gameMode, _ -> return { model with state = State.Game gameMode }
+  | _, { state = State.Game _ } -> return model
+
   | Msg.Back, _ ->
     return { model with state = State.Menu }
 

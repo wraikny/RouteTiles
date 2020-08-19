@@ -169,7 +169,8 @@ type Game(gameMode, controller) =
           | None -> ()
 
           | Some (SoloGame.Msg.Board _ as msg) ->
-            let m = updater.Dispatch(msg) |> ValueOption.get
+            updater.Dispatch(msg)
+            let m = updater.Model.Value
 
             yield! Coroutine.sleep Consts.GameCommon.inputInterval
 

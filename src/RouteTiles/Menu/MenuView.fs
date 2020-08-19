@@ -219,7 +219,7 @@ let timeAttackScoreNames =
 let scoreAttackSecNames =
   scoreAttackSecs
   |> Array.map(fun x ->
-    sprintf "%d 分" (x / 60.0f |> int)
+    sprintf "%d 分" (x / 60)
   )
 
 let gameSettingVerticalSelecter modeNames (setting: GameSettingState) =
@@ -233,34 +233,38 @@ let gameSettingVerticalSelecter modeNames (setting: GameSettingState) =
   |> BoxUI.marginTop (LengthScale.Relative, 0.1f)
 
 let menu (model: Model) =
-  Window.Create()
-  |> BoxUI.withChild (
-    let (item1, item2) =
-      model.state |> function
-      | State.Menu ->
-        (mainMenu model),
-        (sideBar <| modeTexts.[model.cursor])
-      | State.GameSetting (gameMode, setting) ->
-        let modeNames, selectionNames, descs = gameMode |> function
-          | SoloGameMode.TimeAttack -> timeAttackSettingModeNames, timeAttackScoreNames, timeAttackSettingModeDescs
-          | SoloGameMode.ScoreAttack -> scoreAttackSettingModeNames, scoreAttackSecNames, scoreAttackSettingModeDescs
+  model.state |> function
+  | State.Game _ -> Window.Create() :> ElementRoot
+  | _ ->
+    Window.Create()
+    |> BoxUI.withChild (
+      let (item1, item2) =
+        model.state |> function
+        | State.Menu ->
+          (mainMenu model),
+          (sideBar <| modeTexts.[model.cursor])
+        | State.GameSetting (gameMode, setting) ->
+          let modeNames, selectionNames, descs = gameMode |> function
+            | SoloGameMode.TimeAttack -> timeAttackSettingModeNames, timeAttackScoreNames, timeAttackSettingModeDescs
+            | SoloGameMode.ScoreAttack -> scoreAttackSettingModeNames, scoreAttackSecNames, scoreAttackSettingModeDescs
 
-        mainMenuArea [|
-          split2 ColumnDir.Y 0.05f
-            (settingHeader modeNames setting.mode.ToInt)
-            (setting |> gameSettingVerticalSelecter selectionNames |> BoxUI.marginTop (LengthScale.Relative, 0.1f))
-        |],
-        (descs.[setting.mode]) |> sideBar
+          mainMenuArea [|
+            split2 ColumnDir.Y 0.05f
+              (settingHeader modeNames setting.mode.ToInt)
+              (setting |> gameSettingVerticalSelecter selectionNames |> BoxUI.marginTop (LengthScale.Relative, 0.1f))
+          |],
+          (descs.[setting.mode]) |> sideBar
 
-      | _ ->
-        Empty.Create() :> Element,
-        sideBar { name = ""; desc = "" }
+        | _ ->
+          Empty.Create() :> Element,
+          sideBar { name = ""; desc = "" }
 
-    split2
-      ColumnDir.X
-      Consts.Menu.mainMenuRatio
-      item1 item2
-  )
+      split2
+        ColumnDir.X
+        Consts.Menu.mainMenuRatio
+        item1 item2
+    )
+    :> ElementRoot
 
 
 let initialize (progress: unit -> int) =

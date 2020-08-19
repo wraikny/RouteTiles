@@ -6,9 +6,9 @@ open System.Collections.Generic
 
 type Updater<'model, 'msg>() =
   let mutable queue = Queue<'msg>()
+  let mutable isUpdating = false
 
   let mutable model = ValueNone
-
   let mutable update' = Unchecked.defaultof<_>
 
   let modelEvent = Event<'model>()
@@ -28,14 +28,21 @@ type Updater<'model, 'msg>() =
 
   member __.Dispatch(msg: 'msg) =
     model |> function
-    | ValueSome m ->
-      let m = update' msg m
+    | ValueSome m when not isUpdating ->
+      isUpdating <- true
+      let mutable m = update' msg m
       modelEvent.Trigger(m)
+
+      while queue.Count > 0 do
+        m <- update' (queue.Dequeue()) m
+        modelEvent.Trigger(m)
+
       model <- ValueSome m
-      model
+      isUpdating <- false
+
     | _ ->
       queue.Enqueue(msg)
-      ValueNone
+
 
   member __.Model with get() = model
 

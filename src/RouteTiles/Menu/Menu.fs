@@ -20,7 +20,6 @@ module MenuInput =
       yield [|Key.Space, ButtonState.Push|], Msg.Select
       yield [|Key.Enter, ButtonState.Push|], Msg.Select
       yield [|Key.Escape, ButtonState.Push|], Msg.Back
-      yield [|Key.Backspace, ButtonState.Push|], Msg.Back
     |]
 
   let joystick = [|
@@ -31,11 +30,14 @@ module MenuInput =
   |]
 
 open RouteTiles.Core.Utils
+open RouteTiles.Core.Types
 
 open EffFs
 
 [<Struct>]
-type MenuHandler = MenuHandler with
+type MenuHandler = {
+  startGame: SoloGame.Mode * Controller -> unit
+} with
   static member inline Handle(x) = x
 
   static member inline Handle(SoundEffect _kind, k) =
@@ -50,8 +52,8 @@ type MenuHandler = MenuHandler with
           yield Controller.Joystick(i, info.GamepadName, info.GUID)
     |] |> k
 
-  static member inline Handle(GameStartEffect soloGameMode, k) =
-    k ()
+  static member inline Handle(GameStartEffect(x,y), k) =
+    Eff.capture(fun h -> h.startGame(x, y); k() )
 
 type Menu() =
   inherit Node()
@@ -59,11 +61,13 @@ type Menu() =
   let mutable prevModel = ValueNone
   let updater = Updater<MenuCore.Model, MenuCore.Msg>()
 
-  let coroutine = CoroutineNode()
+  // let coroutine = CoroutineNode()
   let uiRoot = BoxUIRootNode()
 
+  let mutable gameNode = ValueNone
+
   do
-    base.AddChildNode coroutine
+    // base.AddChildNode coroutine
     base.AddChildNode uiRoot
 
     updater.Subscribe(fun model ->
@@ -92,31 +96,40 @@ type Menu() =
         let controllers = MenuHandler.Handle(CurrentControllers, id)
         updater.Dispatch(Msg.RefreshController controllers) |> ignore
 
-    getKeyboardInput ()
-    |> Option.alt(fun () ->
-      let count = Engine.Joystick.ConnectedJoystickCount
-      seq {
-        for i in 0..count-1 do
-          let info = Engine.Joystick.GetJoystickInfo(i)
-          if info.IsGamepad then
-            match getJoystickInput i with
-            | Some x -> yield x
-            | _ -> ()
-      }
-      |> Seq.tryHead
-    )
-    |> Option.iter (fun msg ->
-      updater.Dispatch msg
-      |> ignore
-    )
+    if updater.Model.Value.state.IsActive then
+      getKeyboardInput ()
+      |> Option.alt(fun () ->
+        let count = Engine.Joystick.ConnectedJoystickCount
+        seq {
+          for i in 0..count-1 do
+            let info = Engine.Joystick.GetJoystickInfo(i)
+            if info.IsGamepad then
+              match getJoystickInput i with
+              | Some x -> yield x
+              | _ -> ()
+        }
+        |> Seq.tryHead
+      )
+      |> Option.iter (fun msg ->
+        updater.Dispatch msg
+        |> ignore
+      )
 
-  override __.OnAdded() =
+  override this.OnAdded() =
     prevModel <-
       ( initModel,
         fun msg model ->
-          printfn "Msg: %A" msg
-          MenuCore.update msg model
-          |> Eff.handle MenuHandler
+          let newModel =
+            MenuCore.update msg model
+            |> Eff.handle {
+              startGame = fun (gameMode, controller) ->
+                let n = Game(gameMode, controller)
+                gameNode <- ValueSome n
+                this.AddChildNode(n)
+                updater.Dispatch(Msg.GameStarted(gameMode)) |> ignore
+          }
+          printfn "Msg: %A\nModel: %A\n" msg newModel
+          newModel
       )
       |> updater.Init
       |> ValueSome
