@@ -249,7 +249,7 @@ let menu (model: Model) =
             | SoloGameMode.ScoreAttack -> scoreAttackSettingModeNames, scoreAttackSecNames, scoreAttackSettingModeDescs
 
           mainMenuArea [|
-            split2 ColumnDir.Y 0.05f
+            split2 ColumnDir.Y 0.08f
               (settingHeader modeNames setting.mode.ToInt)
               (setting |> gameSettingVerticalSelecter selectionNames |> BoxUI.marginTop (LengthScale.Relative, 0.1f))
           |],

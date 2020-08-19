@@ -113,8 +113,16 @@ type Game(gameMode, controller) =
       match lastModel with
       | ValueNone -> ()
       | ValueSome m ->
+        gameMode |> function
+        | SoloGame.Mode.TimeAttack score ->
+          if model.board.point > score then
+            // 終了処理
+            ()
+        | _ -> ()
+
         match Pause.isPauseActivated m.pause model.pause with
-        | ValueSome t -> coroutineNode.IsUpdated <- not t
+        | ValueSome t ->
+          coroutineNode.IsUpdated <- not t
         | _ -> ()
 
       lastModel <- ValueSome model
@@ -128,7 +136,11 @@ type Game(gameMode, controller) =
       seq {
         while true do
           time <- time - Engine.DeltaSecond
-          gameInfoNode.SetTime(time)
+          if sec < time then
+            // 終了処理
+            gameInfoNode.SetTime(sec)
+          else
+            gameInfoNode.SetTime(time)
           yield()
       }
     | SoloGame.Mode.TimeAttack _ ->

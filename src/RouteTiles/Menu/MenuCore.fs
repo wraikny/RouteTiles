@@ -28,6 +28,7 @@ let timeAttackScores = [|
 |]
 
 let scoreAttackSecs = [|
+  20
   60 * 3
   60 * 5
   60 * 10
@@ -254,7 +255,11 @@ let inline update msg model = eff {
       }
 
   | msg, { state = State.GameSetting(gameMode, setting) } ->
-    let! newSetting = setting |> updateGameSetting msg timeAttackScores.Length gameMode
+    let selectionCount = gameMode |> function
+      | SoloGameMode.TimeAttack -> timeAttackScores.Length
+      | SoloGameMode.ScoreAttack -> scoreAttackSecs.Length
+
+    let! newSetting = setting |> updateGameSetting msg selectionCount gameMode
     return
       if setting = newSetting then
         model
