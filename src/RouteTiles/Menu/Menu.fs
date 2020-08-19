@@ -72,11 +72,9 @@ type Menu() =
 
     updater.Subscribe(fun model ->
       prevModel
-      |> ValueOption.map((=) model)
-      |> ValueOption.defaultValue false
       |> function
-      | true -> ()
-      | false ->
+      | ValueSome x when x = model -> ()
+      | _ ->
         prevModel <- ValueSome model
         uiRoot.ClearElement()
         uiRoot.SetElement <| MenuView.menu model
