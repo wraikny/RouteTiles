@@ -1,3 +1,9 @@
 [submodule "lib/Altseed2.BoxUI"]
 	path = lib/Altseed2.BoxUI
 	url = https://github.com/wraikny/Altseed2.BoxUI.git
+[submodule "lib/EffFs"]
+	path = lib/EffFs
+	url = https://github.com/wraikny/EffFs.git
+[submodule "lib/Affogato"]
+	path = lib/Affogato
+	url = https://github.com/wraikny/Affogato.git

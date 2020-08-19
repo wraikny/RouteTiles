@@ -10,9 +10,9 @@
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RouteTiles.Core\RouteTiles.Core.fsproj">
-      <Name>RouteTiles.Core.fsproj</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\..\lib\Affogato\src\Affogato\Affogato.fsproj" />
+    <ProjectReference Include="..\..\lib\EffFs\src\EffFs\EffFs.fsproj" />
+    <ProjectReference Include="..\RouteTiles.Core\RouteTiles.Core.fsproj" />
     <ProjectReference Include="..\..\lib\Altseed2.BoxUI\src\Altseed2.BoxUI\Altseed2.BoxUI.csproj" />
   </ItemGroup>
 
@@ -62,5 +62,4 @@
   <ItemGroup>
     <Reference Include="..\..\lib\Altseed2\Altseed2.dll" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
