@@ -19,6 +19,9 @@ module Consts =
 
     let font = @"mplus-1c-regular.ttf"
 
+  module PostEffect =
+    let [<Literal>] wavepath = @"shader/wave.hlsl"
+
   module Board =
     let [<Literal>] nextsCountToShow = 5
 
@@ -69,11 +72,12 @@ module Consts =
     
     let debugColor = Nullable <| Color(255uy, 0uy, 0uy, 100uy)
     let backgroundColor = Nullable <| Color(50uy, 50uy, 50uy)
-    let sideBarColor = Nullable <| Color(150uy, 150uy, 150uy, 150uy)
+    let sideBarColor = Nullable <| Color(200uy, 200uy, 200uy, 150uy)
 
-    let iconBackColor = Nullable <| Color(240uy, 240uy, 240uy)
+    let iconBackColor = Nullable <| Color(240uy, 240uy, 240uy, 150uy)
     let iconColor = Nullable <| Color(50uy, 50uy, 50uy, 255uy)
     let iconSelectedColor = Color(255uy, 255uy, 0uy, 0uy)
+    let selectedAlphaMinMax = (0.2f, 0.6f)
 
     let textColor = Nullable <| Color(0uy, 0uy, 0uy)
     
@@ -236,6 +240,7 @@ module Helper =
 
 
 module ZOrder =
+  let posteffect = -100
 
   module Board =
     let offset = (|||) (10 <<< 16)

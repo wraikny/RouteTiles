@@ -22,6 +22,8 @@ let main _ =
   |]
 
   let initResources() =
+    Engine.AddNode(PostEffect.Wave(ZOrder = ZOrder.posteffect))
+
     let ctx = SynchronizationContext.Current
 
     let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.125f)

@@ -49,7 +49,8 @@ module MenuElement =
               buttonIcon.SetMargin(LengthScale.RelativeMin, -0.05f * sinTime) |> ignore
               
               let a = (1.0f + sinTime) * 0.5f
-              let alpha = (a * 0.4f + 0.2f) * 255.0f |> byte
+              let (aMin, aMax) = Consts.Menu.selectedAlphaMinMax
+              let alpha = (a * (aMax - aMin) + aMin) * 255.0f |> byte
               let color = Color (Consts.Menu.iconSelectedColor.R, Consts.Menu.iconSelectedColor.G, Consts.Menu.iconSelectedColor.B, alpha)
               node.Color <- color
               selectedTime <- selectedTime + Engine.DeltaSecond)
@@ -142,19 +143,19 @@ module MenuElement =
     :> Element
 
   let menu (model: Model) =
-    let background = Rectangle.Create(color = Consts.Menu.backgroundColor, zOrder = ZOrder.Menu.background) :> Element
+    // let background = Rectangle.Create(color = Consts.Menu.backgroundColor, zOrder = ZOrder.Menu.background) :> Element
 
     Window.Create()
     |> BoxUI.withChildren (
       if model.state = State.Menu then
         [|
-          background
+          // background
           mainMenu model
           sideBar <| modeTexts.[model.cursor]
         |]
       else
         [|
-          background
+          // background
           sideBar <| modeTexts.[model.cursor]
         |]
     )
@@ -187,9 +188,10 @@ module MenuElement =
             do! Async.Sleep 1
 
         for c in x.desc do
-          fontDesc.GetGlyph(int c) |> ignore
-          if progress() % Step = 0 then
-            do! Async.Sleep 1
+          if c <> '\n' then
+            fontDesc.GetGlyph(int c) |> ignore
+            if progress() % Step = 0 then
+              do! Async.Sleep 1
     }
 
 open RouteTiles.Core.Types.Common
