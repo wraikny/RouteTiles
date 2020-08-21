@@ -16,12 +16,10 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Types/Common.fs" />
     <Compile Include="Types/Board.fs" />
-    <Compile Include="Types/Pause.fs" />
     <Compile Include="Types/SoloGame.fs" />
     <Compile Include="Effects/Random.fs" />
     <Compile Include="Effects/Effect.fs" />
     <Compile Include="Board.fs" />
-    <Compile Include="Pause.fs" />
     <Compile Include="SoloGame.fs" />
   </ItemGroup>
 </Project>

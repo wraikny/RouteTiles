@@ -46,7 +46,6 @@ type Game(gameMode, controller) =
   let updater = Updater<SoloGame.Model, _>()
 
   let coroutineNode = CoroutineNode()
-  let pauseNode = PauseNode(lift >> updater.Dispatch >> ignore)
   let boardNode = BoardNode(Helper.SoloGame.boardViewPos, coroutineNode.Add)
   let nextTilesNode = NextTilesNode(Helper.SoloGame.nextsViewPos, coroutineNode.Add)
   let gameInfoNode = GameInfoNode(Helper.SoloGame.gameInfoCenterPos)
@@ -95,35 +94,22 @@ type Game(gameMode, controller) =
     base.AddChildNode(nextTilesNode)
     base.AddChildNode(gameInfoNode)
 
-    base.AddChildNode(pauseNode)
-
     updater :> IObservable<_>
     |> Observable.subscribe(fun model ->
-      if model.pause = Pause.Model.NotPaused then
-        boardNode.OnNext(model.board)
-        nextTilesNode.OnNext(model.board)
-        gameInfoNode.OnNext(model)
-      
-      pauseNode.OnNext(model)
+      boardNode.OnNext(model.board)
+      nextTilesNode.OnNext(model.board)
+      gameInfoNode.OnNext(model)
     )
     |> ignore
 
     updater :> IObservable<_>
     |> Observable.subscribe(fun model ->
-      match lastModel with
-      | ValueNone -> ()
-      | ValueSome m ->
-        gameMode |> function
-        | SoloGame.Mode.TimeAttack score ->
-          if model.board.point > score then
-            // 終了処理
-            ()
-        | _ -> ()
-
-        match Pause.isPauseActivated m.pause model.pause with
-        | ValueSome t ->
-          coroutineNode.IsUpdated <- not t
-        | _ -> ()
+      gameMode |> function
+      | SoloGame.Mode.TimeAttack score ->
+        if model.board.point > score then
+          // 終了処理
+          ()
+      | _ -> ()
 
       lastModel <- ValueSome model
     )

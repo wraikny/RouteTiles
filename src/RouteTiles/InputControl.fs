@@ -43,46 +43,16 @@ module Board =
     (btnR, ButtonState.Push), Msg.Slide dir
   |]
 
-module Pause =
-  open RouteTiles.Core.Types
-  open RouteTiles.Core.Pause
-
-  let keyboard = [|
-    [|Key.Escape, ButtonState.Push|], Msg.QuitPause
-    [|Key.W, ButtonState.Push|], Msg.Decr
-    [|Key.Up, ButtonState.Push|], Msg.Decr
-    [|Key.S, ButtonState.Push|], Msg.Incr
-    [|Key.Down, ButtonState.Push|], Msg.Incr
-    [|Key.Space, ButtonState.Push|], Msg.Select
-    [|Key.Enter, ButtonState.Push|], Msg.Select
-  |]
-
-  let joystick = [|
-    yield!
-      seq { JoystickButton.Start; JoystickButton.Guide }
-      |> Seq.map(fun a -> (a, ButtonState.Push), Msg.QuitPause)
-    (JoystickButton.DPadUp, ButtonState.Push), Msg.Decr
-    (JoystickButton.DPadDown, ButtonState.Push), Msg.Incr
-    (JoystickButton.RightRight, ButtonState.Push), Msg.Select
-  |]
-
-  let getKeyboardInput = getKeyboardInput keyboard
-  let getJoystickInput = getJoystickInput joystick
-
 module SoloGame =
   open RouteTiles.Core
   open RouteTiles.Core.SoloGame
 
   let keyboard = [|
-    yield [|Key.Escape, ButtonState.Push|], Msg.PauseMsg Pause.Msg.OpenPause
     for (button, msg) in Board.keyboardMapping do
       yield (button, Msg.Board msg)
   |]
 
   let joystick = [|
-    yield!
-      seq { JoystickButton.Start; JoystickButton.Guide }
-      |> Seq.map(fun a -> (a, ButtonState.Push), Msg.PauseMsg Pause.Msg.OpenPause)
     yield! Board.joystickMapping |> Seq.map(fun (a, b) -> (a, Msg.Board b))
   |]
 

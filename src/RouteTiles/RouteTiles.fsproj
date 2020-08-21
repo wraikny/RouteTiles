@@ -52,7 +52,6 @@
     <Compile Include="GameView/GameInfo.fs" />
     <Compile Include="GameView/Board.fs" />
     <Compile Include="GameView/NextTiles.fs" />
-    <Compile Include="GameView/PauseNode.fs" />
     <Compile Include="GameView/Game.fs" />
     <Compile Include="Menu/MenuCore.fs" />
     <Compile Include="Menu/MenuView.fs" />

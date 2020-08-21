@@ -11,6 +11,4 @@ type Model = {
   controller: Controller
   mode: Mode
   board: Board.Model
-
-  pause: Pause.Model
 }
