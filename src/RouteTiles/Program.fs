@@ -11,8 +11,7 @@ open RouteTiles.App.Consts.ViewCommon
 [<EntryPoint; System.STAThread>]
 let main _ =
   let inline init(config) =
-    if not <| Engine.Initialize("RouteTiles", windowSize.X, windowSize.Y, config) then
-      failwith "Failed to initialize the Altseed2"
+    Engine.InitializeEx("RouteTiles", windowSize, config)
 
     Engine.ClearColor <- clearColor
 
@@ -52,13 +51,6 @@ let main _ =
     }
     |> Async.StartImmediate
 
-  let rec loop() =
-    if Engine.DoEvents() then
-      // printfn "%f" Engine.DeltaSecond
-      BoxUI.BoxUISystem.Update()
-      Engine.Update() |> ignore
-      loop()
-
   let config =
     Configuration(
       FileLoggingEnabled = true,
@@ -74,10 +66,8 @@ let main _ =
     failwithf "Failed to add root directory"
 
   initResources()
-  loop()
-
-  BoxUI.BoxUISystem.Terminate()
-  Engine.Terminate()
+  Engine.Run()
+  Engine.TerminateEx()
 #else
 
   try
@@ -88,13 +78,13 @@ let main _ =
         failwithf "Failed to add root package"
 
       initResources()
-      loop()
+      Engine.Run()
+
     with e ->
       Engine.Log.Error(LogCategory.User, sprintf "%A: %s" (e.GetType()) e.Message)
       reraise()
 
-    BoxUI.BoxUISystem.Terminate()
-    Engine.Terminate()
+    Engine.TerminateEx()
   with e ->
     printfn "%A: %s" (e.GetType()) e.Message
 #endif
