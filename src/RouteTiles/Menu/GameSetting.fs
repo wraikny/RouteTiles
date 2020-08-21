@@ -15,7 +15,7 @@ open RouteTiles.App
 
 let gameStart() =
   let elem = textButton "ゲームスタート"
-  highlighten -0.02f (Consts.Menu.cursorColor) elem
+  highlightenSelected true -0.02f elem
 
   FixedSize.Create(Vector2F(300.0f, 150.0f))
   |> BoxUI.alignX Align.Center
@@ -23,7 +23,6 @@ let gameStart() =
   :> Element
 
 module TimeAttack =
-
   let modeDescs = dict [|
     GameSettingMode.ModeIndex
     , { name = "目標スコア"; desc = "より短い時間で目標スコアを\n目指します。" }

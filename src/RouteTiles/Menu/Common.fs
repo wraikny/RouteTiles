@@ -14,23 +14,40 @@ open RouteTiles.App
 let fontName() = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 60)
 let fontDesc() = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 40)
 
-let highlighten (movement: float32) (color: Color) (button: Rectangle) =
-  let mutable selectedTime = 0.0f
+let highlighten zOrder (color: Color) twinkleEnable (movement: float32) (button: Rectangle) =
   button.AddChild(
-    Rectangle.Create(zOrder = ZOrder.Menu.iconSelected)
+    Rectangle.Create(zOrder = zOrder)
     |> BoxUI.onUpdate (fun (node: RectangleNode) ->
-      let sinTime = MathF.Sin(selectedTime * 2.0f * MathF.PI / Consts.Menu.selectedTimePeriod)
+      let sinTime = MathF.Sin(Engine.Time * 2.0f * MathF.PI / Consts.Menu.selectedTimePeriod)
       if movement <> 0.0f then
         button.SetMargin(LengthScale.RelativeMin, movement * sinTime) |> ignore
       
-      let a = (1.0f + sinTime) * 0.5f
-      let (aMin, aMax) = Consts.Menu.cursorAlphaMinMax
-      let alpha = (a * (aMax - aMin) + aMin) * 255.0f |> byte
-      let color = Color (color.R, color.G, color.B, alpha)
+      let color =
+        if twinkleEnable then
+          let a = (1.0f + sinTime) * 0.5f
+          let (aMin, aMax) = Consts.Menu.cursorAlphaMinMax
+          let alpha = (a * (aMax - aMin) + aMin) * 255.0f |> byte
+          Color (color.R, color.G, color.B, alpha)
+        else
+          color
+      
       node.Color <- color
-      selectedTime <- selectedTime + Engine.DeltaSecond)
+    )
     :> Element
   )
+
+let highlightenSelected =
+  highlighten
+    ZOrder.Menu.iconSelected
+    Consts.Menu.cursorColor
+
+let highlightenCurrent =
+  highlighten
+    ZOrder.Menu.iconCurrent
+    Consts.Menu.currentColor
+    false
+    0.0f
+
 
 let mainMenuArea(children) =
   Empty.Create()
@@ -45,7 +62,7 @@ let mainMenuArea(children) =
 let textButton text =
   Rectangle.Create(color = Consts.Menu.elementBackground, zOrder = ZOrder.Menu.iconBackground)
   |> BoxUI.withChild (
-    Text.Create(text = text, font = fontDesc(), color = Consts.Menu.textColor, zOrder = ZOrder.Menu.icon)
+    Text.Create(text = text, font = fontDesc(), color = Consts.Menu.textColor, zOrder = ZOrder.Menu.buttonText)
     |> BoxUI.alignCenter
   )
 
@@ -57,10 +74,17 @@ let settingHeader (items: string[]) (current: int) =
         textButton name
         |> BoxUI.margin (LengthScale.RelativeMin, 0.05f)
 
+      
       if index = current then
-        highlighten 0.0f (Consts.Menu.cursorColor) elem
+        elem
+        |> (
+          highlighten
+            ZOrder.Menu.iconCurrent
+            Consts.Menu.cursorColor
+            false 0.0f
+        )
 
-      elem
+      yield elem
   |]
   :> Element
 
@@ -71,10 +95,10 @@ let verticalSelecter (items: string[]) (cursor: int) (current: int) =
       let elem = textButton name
 
       if index = current then
-        highlighten 0.0f (Color(50uy, 50uy, 200uy)) elem
+        highlightenCurrent elem
 
       if index = cursor then
-        highlighten -0.05f (Consts.Menu.cursorColor) elem
+        highlightenSelected true 0.0f elem
 
       elem
   |]

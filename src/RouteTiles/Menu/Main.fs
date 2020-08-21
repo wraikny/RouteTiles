@@ -78,7 +78,7 @@ let private mainMenu (model: Model) =
         let buttonIcon = buttonIcon path
         if mode = model.cursor then
           buttonIcon
-          |> highlighten -0.05f (Consts.Menu.cursorColor)
+          |> highlightenSelected true -0.05f
         buttonIcon
     |]
   |]

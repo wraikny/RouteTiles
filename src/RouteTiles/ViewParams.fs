@@ -73,8 +73,9 @@ module Consts =
     let elementBackground = Nullable <| Color(200uy, 200uy, 200uy, 150uy)
     
     let iconColor = Nullable <| Color(50uy, 50uy, 50uy, 255uy)
-    let cursorColor = Color(255uy, 255uy, 0uy, 0uy)
+    let cursorColor = Color(255uy, 255uy, 0uy, 150uy)
     let cursorAlphaMinMax = (0.2f, 0.6f)
+    let currentColor = Color(50uy, 50uy, 200uy, 200uy)
 
     let textColor = Nullable <| Color(0uy, 0uy, 0uy)
     
@@ -263,8 +264,12 @@ module ZOrder =
 
     let footer = offset 10
     let iconBackground = offset 20
-    let icon = offset 21
-    let iconSelected = offset 22
+    let iconCurrent = offset 22
+    
+    let icon = offset 23
+    let buttonText = offset 23
+
+    let iconSelected = offset 24
 
     let sideMenuBackground = offset 31
     let sideMenuText = offset 32
