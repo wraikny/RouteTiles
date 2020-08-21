@@ -46,7 +46,7 @@ let main _ =
       do! loader
       do! Async.SwitchToContext ctx
 
-      let node = Menu()
+      let node = MenuNode()
       Engine.RemoveNode(loading)
       Engine.AddNode(node)
     }

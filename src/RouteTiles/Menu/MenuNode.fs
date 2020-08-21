@@ -51,7 +51,7 @@ type MenuHandler = {
   static member inline Handle(GameStartEffect(x,y), k) =
     Eff.capture(fun h -> h.startGame(x, y); k() )
 
-type Menu() =
+type MenuNode() =
   inherit Node()
 
   let mutable prevModel = ValueNone
