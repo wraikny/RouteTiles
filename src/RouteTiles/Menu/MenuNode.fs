@@ -12,11 +12,26 @@ open RouteTiles.Core.Effects
 
 open RouteTiles.Core.Utils
 
+
+module private MenuUtil =
+  let getCurrentControllers() =
+    [|
+      yield Controller.Keyboard
+      for i in 0..15 do
+        let info = Engine.Joystick.GetJoystickInfo i
+        if info <> null && info.IsGamepad then
+          yield Controller.Joystick(i, info.GamepadName, info.GUID)
+    |]
+
+
 open EffFs
 
 [<Struct>]
 type MenuHandler = {
-  startGame: SoloGame.Mode * Controller -> unit
+  Pause: unit -> unit
+  Resume: unit -> unit
+  StartGame: SoloGame.Mode * Controller -> unit
+  QuitGame: unit -> unit
 } with
   static member inline Handle(x) = x
 
@@ -24,25 +39,20 @@ type MenuHandler = {
     k()
 
   static member inline Handle(e: GameControlEffect, k) =
-    e |> function
-    | GameControlEffect.Resume ->
-      Engine.Resume()
-      ()
-    | _ ->
-      ()
-    k()
+    Eff.capture(fun h ->
+      e |> function
+      | GameControlEffect.Pause -> h.Pause()
+      | GameControlEffect.Resume -> h.Resume()
+      | GameControlEffect.Quit -> h.QuitGame()
+      | GameControlEffect.Restart -> ()
+      k()
+    )
 
   static member inline Handle(CurrentControllers, k) =
-    [|
-      yield Controller.Keyboard
-      for i in 0..15 do
-        let info = Engine.Joystick.GetJoystickInfo i
-        if info <> null && info.IsGamepad then
-          yield Controller.Joystick(i, info.GamepadName, info.GUID)
-    |] |> k
+    MenuUtil.getCurrentControllers() |> k
 
   static member inline Handle(GameStartEffect(x,y), k) =
-    Eff.capture(fun h -> h.startGame(x, y); k() )
+    Eff.capture(fun h -> h.StartGame(x, y); k() )
 
 type MenuNode() =
   inherit Node()
@@ -80,7 +90,7 @@ type MenuNode() =
       let curretConnectedCount = Engine.Joystick.ConnectedJoystickCount
       if curretConnectedCount <> prevControllerCount then
         prevControllerCount <- curretConnectedCount
-        let controllers = MenuHandler.Handle(CurrentControllers, id)
+        let controllers = MenuUtil.getCurrentControllers()
         updater.Dispatch(Msg.RefreshController controllers) |> ignore
 
     // 入力受付
@@ -89,7 +99,6 @@ type MenuNode() =
     | State.Game (_, controller) ->
       if InputControl.pauseInput controller then
         updater.Dispatch(Msg.Pause)
-        Engine.Pause(this)
 
     | _ ->
       getKeyboardInput ()
@@ -98,7 +107,7 @@ type MenuNode() =
         seq {
           for i in 0..count-1 do
             let info = Engine.Joystick.GetJoystickInfo(i)
-            if info.IsGamepad then
+            if info <> null && info.IsGamepad then
               match getJoystickInput i with
               | Some x -> yield x
               | _ -> ()
@@ -109,22 +118,33 @@ type MenuNode() =
 
   override this.OnAdded() =
     let handler = {
-      startGame = fun (gameMode, controller) ->
+      Pause = fun () -> Engine.Pause(this)
+
+      Resume = fun () -> Engine.Resume()
+
+      StartGame = fun (gameMode, controller) ->
         let n = Game(gameMode, controller)
         gameNode <- ValueSome n
         Engine.AddNode(n)
+
+      QuitGame = fun () ->
+        gameNode |> function
+        | ValueSome n ->
+          n.Parent.RemoveChildNode(n)
+        | ValueNone ->
+          failwith "invalid state for QuitGame"
     }
 
-    prevModel <-
-      ( initModel,
-        fun msg model ->
-          let newModel =
-            update msg model
-            |> Eff.handle handler
+    let update msg model =
+      let newModel =
+        update msg model
+        |> Eff.handle handler
 #if DEBUG
-          printfn "Msg: %A\nModel: %A\n" msg newModel
+      printfn "Msg: %A\nModel: %A\n" msg newModel
 #endif
-          newModel
-      )
+      newModel
+
+    prevModel <-
+      (initModel, update)
       |> updater.Init
       |> ValueSome

@@ -39,30 +39,30 @@ let initialize =
     for x in GameSetting.ScoreAttack.modeDescs -> x.Value
   |]
 
-  let names =
-    texts
-    |> Seq.map(fun t -> t.name.ToCharArray())
-    |> Seq.concat
-    |> Seq.distinct
-    |> Seq.toArray
-
-  let descs =
-    texts
-    |> Seq.map(fun t -> t.desc.ToCharArray())
-    |> Seq.concat
-    |> Seq.distinct
-    |> Seq.toArray
-
   let otherCharacters = [|
     for i in 'a'..'z' -> i
     for i in 'A'..'Z' -> i
     yield! "点分ゲームスタート"
   |]
 
+  let names =
+    [|
+      for t in texts do yield! t.name
+    |]
+    |> Array.distinct
+
+  let descs =
+    [|
+       yield! otherCharacters
+       for t in texts do yield! t.desc
+       for s in Pause.pauseSelectNames do yield! s
+    |]
+    |> Array.distinct
+
+
   let progressSum =
     [|names.Length
       descs.Length
-      otherCharacters.Length
       2 // font
     |] |> Array.sum
 
