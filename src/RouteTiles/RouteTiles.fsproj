@@ -49,10 +49,10 @@
     <Compile Include="ViewParams.fs" />
     <Compile Include="InputControl.fs" />
     <Compile Include="Loading.fs" />
-    <Compile Include="GameView/GameInfo.fs" />
-    <Compile Include="GameView/Board.fs" />
-    <Compile Include="GameView/NextTiles.fs" />
-    <Compile Include="GameView/Game.fs" />
+    <Compile Include="Game/GameInfo.fs" />
+    <Compile Include="Game/Board.fs" />
+    <Compile Include="Game/NextTiles.fs" />
+    <Compile Include="Game/Game.fs" />
     <Compile Include="Menu/MenuView.fs" />
     <Compile Include="Menu/Menu.fs" />
     <Compile Include="PostEffect/Wave.fs" />
