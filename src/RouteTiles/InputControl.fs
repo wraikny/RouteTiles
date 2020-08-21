@@ -58,3 +58,22 @@ module SoloGame =
 
   let getKeyboardInput = getKeyboardInput keyboard
   let getJoystickInput = getJoystickInput joystick
+
+
+module Menu =
+  open RouteTiles.Core.Types.Menu
+
+  let keyboard =
+    [|
+      for (key, _, _, dir) in dirPairs -> [|key, ButtonState.Push|], Msg.MoveMode dir
+      yield [|Key.Space, ButtonState.Push|], Msg.Select
+      yield [|Key.Enter, ButtonState.Push|], Msg.Select
+      yield [|Key.Escape, ButtonState.Push|], Msg.Back
+    |]
+
+  let joystick = [|
+    for (_, btnL, _, dir) in dirPairs -> (btnL, ButtonState.Push), Msg.MoveMode dir
+    yield (JoystickButton.RightRight, ButtonState.Push), Msg.Select
+    yield (JoystickButton.RightDown, ButtonState.Push), Msg.Back
+    yield (JoystickButton.Guide, ButtonState.Push), Msg.Back
+  |]

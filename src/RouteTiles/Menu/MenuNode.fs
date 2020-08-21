@@ -10,22 +10,6 @@ open RouteTiles.Core.Types.Menu
 open RouteTiles.Core.Menu
 open RouteTiles.Core.Effects
 
-module MenuInput =
-  let keyboard =
-    [|
-      for (key, _, _, dir) in InputControl.dirPairs -> [|key, ButtonState.Push|], Msg.MoveMode dir
-      yield [|Key.Space, ButtonState.Push|], Msg.Select
-      yield [|Key.Enter, ButtonState.Push|], Msg.Select
-      yield [|Key.Escape, ButtonState.Push|], Msg.Back
-    |]
-
-  let joystick = [|
-    for (_, btnL, _, dir) in InputControl.dirPairs -> (btnL, ButtonState.Push), Msg.MoveMode dir
-    yield (JoystickButton.RightRight, ButtonState.Push), Msg.Select
-    yield (JoystickButton.RightDown, ButtonState.Push), Msg.Back
-    yield (JoystickButton.Guide, ButtonState.Push), Msg.Back
-  |]
-
 open RouteTiles.Core.Utils
 
 open EffFs
@@ -78,8 +62,8 @@ type MenuNode() =
 
   let mutable prevControllerCount = Engine.Joystick.ConnectedJoystickCount
 
-  let getKeyboardInput = InputControl.getKeyboardInput MenuInput.keyboard
-  let getJoystickInput = InputControl.getJoystickInput MenuInput.joystick
+  let getKeyboardInput = InputControl.getKeyboardInput InputControl.Menu.keyboard
+  let getJoystickInput = InputControl.getJoystickInput InputControl.Menu.joystick
 
   override __.OnUpdate() =
     // Controllerの接続状況の更新
