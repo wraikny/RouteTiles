@@ -20,7 +20,16 @@ type MenuHandler = {
 } with
   static member inline Handle(x) = x
 
-  static member inline Handle(SoundEffect _kind, k) =
+  static member inline Handle(_kind: SoundEffect, k) =
+    k()
+
+  static member inline Handle(e: GameControlEffect, k) =
+    e |> function
+    | GameControlEffect.Resume ->
+      Engine.Resume()
+      ()
+    | _ ->
+      ()
     k()
 
   static member inline Handle(CurrentControllers, k) =
@@ -65,7 +74,7 @@ type MenuNode() =
   let getKeyboardInput = InputControl.getKeyboardInput InputControl.Menu.keyboard
   let getJoystickInput = InputControl.getJoystickInput InputControl.Menu.joystick
 
-  override __.OnUpdate() =
+  override this.OnUpdate() =
     // Controllerの接続状況の更新
     if updater.Model.Value.state.ControllerRefreshEnabled then
       let curretConnectedCount = Engine.Joystick.ConnectedJoystickCount
@@ -75,7 +84,14 @@ type MenuNode() =
         updater.Dispatch(Msg.RefreshController controllers) |> ignore
 
     // 入力受付
-    if updater.Model.Value.state.IsActive then
+    updater.Model.Value.state
+    |> function
+    | State.Game (_, controller) ->
+      if InputControl.pauseInput controller then
+        updater.Dispatch(Msg.Pause)
+        Engine.Pause(this)
+
+    | _ ->
       getKeyboardInput ()
       |> Option.alt(fun () ->
         let count = Engine.Joystick.ConnectedJoystickCount
@@ -89,18 +105,14 @@ type MenuNode() =
         }
         |> Seq.tryHead
       )
-      |> Option.iter (fun msg ->
-        updater.Dispatch msg
-        |> ignore
-      )
+      |> Option.iter (updater.Dispatch)
 
   override this.OnAdded() =
     let handler = {
       startGame = fun (gameMode, controller) ->
         let n = Game(gameMode, controller)
         gameNode <- ValueSome n
-        this.AddChildNode(n)
-        updater.Dispatch(Msg.GameStarted(gameMode)) |> ignore
+        Engine.AddNode(n)
     }
 
     prevModel <-

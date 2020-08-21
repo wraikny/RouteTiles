@@ -87,19 +87,15 @@ type GameSettingState = {
 [<RequireQualifiedAccess>]
 type State =
   | Menu
-  | GameSetting of gameMode:SoloGameMode * settingState:GameSettingState
-  | Game of gameMode:SoloGame.Mode
-  | PauseGame
-  | GameResult of SoloGame.Mode
+  | GameSetting of SoloGameMode * settingState:GameSettingState
+  | Game of SoloGame.Mode * Controller
+  | PauseGame of SoloGame.Mode * Controller * index:int
+  | GameResult
   | RankingTime of index:int
   | RankingScore of index:int
   | Achievement
   | Setting
 with
-  member this.IsActive = this |> function
-    | Game _ -> false
-    | _ -> true
-
   member this.ControllerRefreshEnabled = this |> function
     | GameSetting _ -> true
     | _ -> false
@@ -111,11 +107,11 @@ let initModel = { cursor = Mode.SoloGame SoloGameMode.TimeAttack; state = State.
 
 [<Struct; RequireQualifiedAccess>]
 type Msg =
-  | GameStarted of gameMode:SoloGame.Mode
   | MoveMode of dir:Dir
   | Select
   | Back
   | RefreshController of Controller[]
+  | Pause
 
 let timeAttackScores = [|
   10000
@@ -127,4 +123,16 @@ let scoreAttackSecs = [|
   60 * 3
   60 * 5
   60 * 10
+|]
+
+[<Struct; RequireQualifiedAccess>]
+type PauseSelect =
+  | Continue
+  | Restart
+  | QuitGame
+
+let pauseSelects = [|
+  PauseSelect.Continue
+  PauseSelect.Restart
+  PauseSelect.QuitGame
 |]

@@ -12,21 +12,24 @@ open RouteTiles.App.BoxUIElements
 open RouteTiles.App.Menu.Common
 open RouteTiles.App.Menu
 
+let private window() =
+  Window.Create() :> ElementRoot
+
 let menu (model: Model) =
   model.state |> function
-  | State.Game _ ->
-    Window.Create() :> ElementRoot
+  | State.Game _ -> window()
+
+  | State.PauseGame (_, _, index) ->
+    window().With(Pause.element index)
 
   | State.Menu ->
-    Window.Create().With <| Main.element model
-    :> ElementRoot
+    window().With(Main.element model)
 
   | State.GameSetting (gameMode, setting) ->
-    Window.Create().With <|
-      GameSetting.element (gameMode, setting)
-    :> ElementRoot
+    window().With
+      (GameSetting.element (gameMode, setting))
 
-  | _ -> Window.Create() :> ElementRoot
+  | _ -> window()
 
 
 let initialize =

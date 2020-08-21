@@ -88,11 +88,11 @@ let settingHeader (items: string[]) (current: int) =
   |]
   :> Element
 
-let verticalSelecter (items: string[]) (cursor: int) (current: int) =
+let verticalSelecter (button: string -> Rectangle) (items: string[]) (cursor: int) (current: int) =
   ItemList.Create(itemHeight = 40.0f, itemMargin = 10.0f)
   |> BoxUI.withChildren [|
     for (index, name) in items |> Seq.indexed do
-      let elem = textButton name
+      let elem = button name
 
       if index = current then
         highlightenCurrent elem

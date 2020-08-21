@@ -61,9 +61,14 @@ module ScoreAttack =
 let private gameSettingVerticalSelecter modeNames (setting: GameSettingState) =
   setting.mode |> function
   | GameSettingMode.ModeIndex ->
-    verticalSelecter modeNames setting.verticalCursor setting.index
+    verticalSelecter textButton modeNames setting.verticalCursor setting.index
   | GameSettingMode.Controller ->
-    verticalSelecter setting.ControllerNames setting.controllerCursor 0
+    let currentInedx = 
+      setting.controllers
+      |> Array.tryFindIndex((=) setting.selectedController)
+      |> Option.defaultValue -1
+
+    verticalSelecter textButton setting.ControllerNames setting.controllerCursor currentInedx
   | GameSettingMode.GameStart ->
     gameStart()
   |> BoxUI.marginTop (LengthScale.Relative, 0.1f)

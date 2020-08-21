@@ -15,27 +15,36 @@ type EmitVanishParticleEffect = EmitVanishParticleEffect of Set<Types.Board.Rout
 with
   static member Effect(_: EmitVanishParticleEffect) = Eff.output<unit>
 
+[<Struct; RequireQualifiedAccess>]
+type GameControlEffect =
+  | Pause
+  | Resume
+  | Restart
+  | Quit
+with
+  static member Effect(_) = Eff.output<unit>
+
 [<Struct>]
 type LogEffect = LogEffect of string
 with
   static member Effect(_: LogEffect) = Eff.output<unit>
 
-[<AutoOpen>]
-module Utils =
-  let logEffect format = sprintf format >> LogEffect
-
-
 type CurrentControllers = CurrentControllers with
   static member Effect(_) = Eff.output<Controller[]>
 
-[<Struct; RequireQualifiedAccess>]
-type SoundKind =
+
+[<RequireQualifiedAccess>]
+type SoundEffect =
   | Select
   | Move
   | Invalid
-
-type SoundEffect = SoundEffect of SoundKind with
+with
   static member Effect(_) = Eff.output<unit>
 
 type GameStartEffect = GameStartEffect of SoloGame.Mode * Controller with
   static member Effect(_) = Eff.output<unit>
+
+[<AutoOpen>]
+module Utils =
+  let logEffect format = sprintf format >> LogEffect
+

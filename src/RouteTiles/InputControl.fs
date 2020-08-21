@@ -1,5 +1,6 @@
 module RouteTiles.App.InputControl
 
+open RouteTiles.Core.Types
 open Altseed2
 
 let getKeyboardInput (inputs) () : 'msg option =
@@ -17,7 +18,13 @@ let getJoystickInput (inputs) (index): 'msg option =
   )
   |> Option.map snd
 
-open RouteTiles.Core.Types
+let pauseInput controller =
+  controller |> function
+  | Controller.Keyboard ->
+    Engine.Keyboard.IsPushState(Key.Escape)
+  | Controller.Joystick (index, _, _) ->
+    Engine.Joystick.IsPushState(index, JoystickButton.Guide)
+
 
 let dirPairs = [|
   Key.W, JoystickButton.DPadUp, JoystickButton.RightUp, Dir.Up

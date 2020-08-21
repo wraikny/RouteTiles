@@ -78,6 +78,8 @@ module Consts =
     let currentColor = Color(50uy, 200uy, 50uy, 200uy)
 
     let textColor = Nullable <| Color(0uy, 0uy, 0uy)
+
+    let pauseBackgroundColor = Nullable <| Color(100uy, 100uy, 100uy, 255uy)
     
     let [<Literal>] timeAttackTexture = @"menu/stopwatch.png"
     let [<Literal>] scoreAttackTexture = @"menu/hourglass.png"

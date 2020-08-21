@@ -39,7 +39,11 @@ type Game(gameMode, controller) =
   let nextTilesNode = NextTilesNode(Helper.SoloGame.nextsViewPos, coroutineNode.Add)
   let gameInfoNode = GameInfoNode(Helper.SoloGame.gameInfoCenterPos)
 
+  let mutable time = 0.0f
+
   let initialize() =
+    time <- 0.0f
+
     let handler: Handler = {
 #if DEBUG
       rand = Random(0)
@@ -101,7 +105,6 @@ type Game(gameMode, controller) =
     )
     |> ignore
 
-    let mutable time = 0.0f
     (gameMode |> function
     | SoloGame.Mode.ScoreAttack sec ->
       time <- sec
