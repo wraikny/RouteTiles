@@ -21,20 +21,17 @@ module ValueOption =
     | _ -> o
 
 module Array =
+  open System
+
   let inline pushFrontPopBack (item: 'a) (array: 'a []): 'a[] * 'a =
     if Array.isEmpty array then Array.empty, item
     else
-      [|
-        yield item
-        yield! array.[0..array.Length-2]
-      |], Array.last array
+      let span = array.AsSpan().Slice(0, array.Length - 1)
+      let res = Array.zeroCreate array.Length
+      span.CopyTo(res.AsSpan().Slice(1, array.Length - 1))
+      res.[0] <- item
+      res, Array.last array
 
-  // let inline mapOfIndex (index: int) (f: 'a -> 'a) (array: 'a[]): 'a[] =
-  //   [|
-  //     yield! array.[0..index-1]
-  //     yield f array.[index]
-  //     yield! array.[index+1..array.Length-1]
-  //   |]
 
 module Array2D =
   let inline tryGet x y (arr: 'a[,]) =
@@ -44,13 +41,6 @@ module Array2D =
     then ValueSome arr.[x,y]
     else ValueNone
 
-  let inline toSeq (arr: 'a[,]) =
-    let (w, h) = Array2D.length1 arr, Array2D.length2 arr
-    seq {
-      for x in 0..w-1 do
-      for y in 0..h-1 do
-        yield arr.[x, y]
-    }
 
 module Seq =
   let inline filterMap f (xs: seq<'a>): seq<'b> =
