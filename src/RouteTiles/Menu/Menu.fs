@@ -5,15 +5,12 @@ open System.Threading
 open Altseed2
 open Altseed2.BoxUI
 
-open MenuCore
-
-
-
-open RouteTiles.Core.Types.Common
+open RouteTiles.Core.Types
+open RouteTiles.Core.Types.Menu
+open RouteTiles.Core.Menu
+open RouteTiles.Core.Effects
 
 module MenuInput =
-  open MenuCore
-
   let keyboard =
     [|
       for (key, _, _, dir) in InputControl.dirPairs -> [|key, ButtonState.Push|], Msg.MoveMode dir
@@ -30,7 +27,6 @@ module MenuInput =
   |]
 
 open RouteTiles.Core.Utils
-open RouteTiles.Core.Types
 
 open EffFs
 
@@ -59,7 +55,7 @@ type Menu() =
   inherit Node()
 
   let mutable prevModel = ValueNone
-  let updater = Updater<MenuCore.Model, MenuCore.Msg>()
+  let updater = Updater<Model, Msg>()
 
   // let coroutine = CoroutineNode()
   let uiRoot = BoxUIRootNode()
@@ -118,7 +114,7 @@ type Menu() =
       ( initModel,
         fun msg model ->
           let newModel =
-            MenuCore.update msg model
+            update msg model
             |> Eff.handle {
               startGame = fun (gameMode, controller) ->
                 let n = Game(gameMode, controller)

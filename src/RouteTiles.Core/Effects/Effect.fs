@@ -1,6 +1,7 @@
 namespace RouteTiles.Core.Effects
 
 open RouteTiles.Core
+open RouteTiles.Core.Types
 
 open EffFs
 
@@ -30,3 +31,19 @@ with
 [<AutoOpen>]
 module Utils =
   let logEffect format = sprintf format >> LogEffect
+
+
+type CurrentControllers = CurrentControllers with
+  static member Effect(_) = Eff.output<Controller[]>
+
+[<Struct; RequireQualifiedAccess>]
+type SoundKind =
+  | Select
+  | Move
+  | Invalid
+
+type SoundEffect = SoundEffect of SoundKind with
+  static member Effect(_) = Eff.output<unit>
+
+type GameStartEffect = GameStartEffect of SoloGame.Mode * Controller with
+  static member Effect(_) = Eff.output<unit>

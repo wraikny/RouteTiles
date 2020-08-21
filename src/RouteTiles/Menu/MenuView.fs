@@ -7,8 +7,8 @@ open Altseed2.BoxUI
 open Altseed2.BoxUI.Elements
 
 open RouteTiles.Core.Types
+open RouteTiles.Core.Types.Menu
 open RouteTiles.App.BoxUIElements
-open RouteTiles.App.MenuCore
 
 
 let fontName() = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 60)
