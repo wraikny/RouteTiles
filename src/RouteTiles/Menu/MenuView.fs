@@ -14,16 +14,19 @@ open RouteTiles.App.Menu
 
 let menu (model: Model) =
   model.state |> function
-  | State.Game _ -> Window.Create() :> ElementRoot
-  | _ ->
-    Window.Create()
-    |> BoxUI.withChild (
-      model.state |> function
-      | State.Menu -> Main.element model
-      | State.GameSetting (gameMode, setting) ->  GameSetting.element (gameMode, setting)
-      | _ -> Empty.Create() :> Element
-    )
+  | State.Game _ ->
+    Window.Create() :> ElementRoot
+
+  | State.Menu ->
+    Window.Create().With <| Main.element model
     :> ElementRoot
+
+  | State.GameSetting (gameMode, setting) ->
+    Window.Create().With <|
+      GameSetting.element (gameMode, setting)
+    :> ElementRoot
+
+  | _ -> Window.Create() :> ElementRoot
 
 
 let initialize =

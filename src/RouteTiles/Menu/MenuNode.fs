@@ -74,6 +74,7 @@ type MenuNode() =
         let controllers = MenuHandler.Handle(CurrentControllers, id)
         updater.Dispatch(Msg.RefreshController controllers) |> ignore
 
+    // 入力受付
     if updater.Model.Value.state.IsActive then
       getKeyboardInput ()
       |> Option.alt(fun () ->
@@ -94,19 +95,23 @@ type MenuNode() =
       )
 
   override this.OnAdded() =
+    let handler = {
+      startGame = fun (gameMode, controller) ->
+        let n = Game(gameMode, controller)
+        gameNode <- ValueSome n
+        this.AddChildNode(n)
+        updater.Dispatch(Msg.GameStarted(gameMode)) |> ignore
+    }
+
     prevModel <-
       ( initModel,
         fun msg model ->
           let newModel =
             update msg model
-            |> Eff.handle {
-              startGame = fun (gameMode, controller) ->
-                let n = Game(gameMode, controller)
-                gameNode <- ValueSome n
-                this.AddChildNode(n)
-                updater.Dispatch(Msg.GameStarted(gameMode)) |> ignore
-          }
+            |> Eff.handle handler
+#if DEBUG
           printfn "Msg: %A\nModel: %A\n" msg newModel
+#endif
           newModel
       )
       |> updater.Init
