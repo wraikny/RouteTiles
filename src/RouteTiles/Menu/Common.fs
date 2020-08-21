@@ -59,19 +59,21 @@ let mainMenuArea(children) =
   |]
   :> Element
 
-let textButton text =
+let textButton font text =
   Rectangle.Create(color = Consts.Menu.elementBackground, zOrder = ZOrder.Menu.iconBackground)
   |> BoxUI.withChild (
-    Text.Create(text = text, font = fontDesc(), color = Consts.Menu.textColor, zOrder = ZOrder.Menu.buttonText)
+    Text.Create(text = text, font = font, color = Consts.Menu.textColor, zOrder = ZOrder.Menu.buttonText)
     |> BoxUI.alignCenter
   )
+
+let textButtonDesc = textButton (fontDesc())
 
 let settingHeader (items: string[]) (current: int) =
   Column.Create(ColumnDir.X)
   |> BoxUI.withChildren [|
     for (index, name) in items |> Seq.indexed do
       let elem =
-        textButton name
+        textButtonDesc name
         |> BoxUI.margin (LengthScale.RelativeMin, 0.05f)
 
       
@@ -88,8 +90,8 @@ let settingHeader (items: string[]) (current: int) =
   |]
   :> Element
 
-let verticalSelecter (button: string -> Rectangle) (items: string[]) (cursor: int) (current: int) =
-  ItemList.Create(itemHeight = 40.0f, itemMargin = 10.0f)
+let verticalSelecter (height, margin) (button: string -> Rectangle) (items: string[]) (cursor: int) (current: int) =
+  ItemList.Create(itemHeight = height, itemMargin = margin)
   |> BoxUI.withChildren [|
     for (index, name) in items |> Seq.indexed do
       let elem = button name

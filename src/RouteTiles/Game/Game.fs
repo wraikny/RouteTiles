@@ -28,7 +28,11 @@ type Handler = {
       k()
     )
 
-type Game(gameMode, controller) =
+type IGameInfoViewer =
+  abstract SetPoint: SoloGame.Mode * int -> unit
+  abstract SetTime: float32 -> unit
+
+type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
   inherit Node()
 
   let mutable lastModel: SoloGame.Model voption = ValueNone
@@ -37,44 +41,17 @@ type Game(gameMode, controller) =
   let coroutineNode = CoroutineNode()
   let boardNode = BoardNode(Helper.SoloGame.boardViewPos, coroutineNode.Add)
   let nextTilesNode = NextTilesNode(Helper.SoloGame.nextsViewPos, coroutineNode.Add)
-  let gameInfoNode = GameInfoNode(Helper.SoloGame.gameInfoCenterPos)
+  // let gameInfoNode = GameInfoNode(Helper.SoloGame.gameInfoCenterPos)
 
   let mutable time = 0.0f
 
-  let initialize() =
-    time <- 0.0f
-
-    let handler: Handler = {
-#if DEBUG
-      rand = Random(0)
-#else
-      rand = Random()
-#endif
-      emitVanishmentParticle = boardNode.EmitVanishmentParticle
-    }
-
-    let initModel =
-      let config: Board.BoardConfig = {
-        nextCounts = Consts.Core.nextsCount
-        size = Consts.Core.boardSize
-      }
-
-      SoloGame.init
-        config
-        gameMode
-        controller
-      
-      |> Eff.handle handler
-
-    let update msg model =
-#if DEBUG
-      printfn "Msg: %A" msg
-#endif
-      SoloGame.update msg model
-      |> Eff.handle handler
-
-    updater.Init(initModel, update) |> ignore
-
+  let initTime() =
+    time <- 
+      gameMode |> function
+      | SoloGame.Mode.ScoreAttack sec ->
+        sec
+      | SoloGame.Mode.TimeAttack _ ->
+      0.0f
 
   /// Binding Children
   do
@@ -82,13 +59,13 @@ type Game(gameMode, controller) =
 
     base.AddChildNode(boardNode)
     base.AddChildNode(nextTilesNode)
-    base.AddChildNode(gameInfoNode)
+    // base.AddChildNode(gameInfoNode)
 
     updater :> IObservable<_>
     |> Observable.subscribe(fun model ->
       boardNode.OnNext(model.board)
       nextTilesNode.OnNext(model.board)
-      gameInfoNode.OnNext(model)
+      gameInfoViewer.SetPoint(model.mode, model.board.point)
     )
     |> ignore
 
@@ -113,16 +90,16 @@ type Game(gameMode, controller) =
           time <- time - Engine.DeltaSecond
           if sec < time then
             // 終了処理
-            gameInfoNode.SetTime(sec)
+            gameInfoViewer.SetTime(sec)
           else
-            gameInfoNode.SetTime(time)
+            gameInfoViewer.SetTime(time)
           yield()
       }
     | SoloGame.Mode.TimeAttack _ ->
       seq {
         while true do
           time <- time + Engine.DeltaSecond
-          gameInfoNode.SetTime(time)
+          gameInfoViewer.SetTime(time)
           yield()
       }
     ) |> coroutineNode.Add
@@ -172,4 +149,37 @@ type Game(gameMode, controller) =
           yield()
     })
 
-  override __.OnAdded() = initialize()
+  let handler: Handler = {
+#if DEBUG
+      rand = Random(0)
+#else
+      rand = Random()
+#endif
+      emitVanishmentParticle = boardNode.EmitVanishmentParticle
+    }
+
+  let initModel =
+    let config: Board.BoardConfig = {
+      nextCounts = Consts.Core.nextsCount
+      size = Consts.Core.boardSize
+    }
+
+    SoloGame.init
+      config
+      gameMode
+      controller
+    |> Eff.handle handler
+
+  let update msg model =
+#if DEBUG
+    printfn "Msg: %A" msg
+#endif
+    SoloGame.update msg model
+    |> Eff.handle handler
+
+  override this.OnAdded() = this.Initialize()
+
+  member __.Initialize() =
+    updater.Init(initModel, update) |> ignore
+
+    initTime()

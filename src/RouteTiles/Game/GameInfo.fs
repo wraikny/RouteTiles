@@ -7,15 +7,10 @@ open System.Threading.Tasks
 open Affogato
 open Altseed2
 
-type GameInfoNode(centerPosition) =
-  inherit Node()
+type GameInfoNode() =
+  inherit TransformNode()
 
   let font = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, Consts.GameInfo.fontSize)
-
-  let transform =
-    RectangleNode(
-      Position = centerPosition
-    ) :> TransformNode
 
   let separateLine =
     let size = Vector2F(Consts.GameInfo.lineLength, Consts.GameInfo.lineWidth)
@@ -58,19 +53,19 @@ type GameInfoNode(centerPosition) =
     setScoreText "0"
     setTimeText "00:00:00"
 
-    base.AddChildNode(transform)
-    transform.AddChildNode(separateLine)
-    transform.AddChildNode(scoreText)
-    transform.AddChildNode(timeText)
+    base.AddChildNode(separateLine)
+    base.AddChildNode(scoreText)
+    base.AddChildNode(timeText)
 
-  member __.OnNext(model: SoloGame.Model) =
-    (model.mode |> function
-    | SoloGame.Mode.TimeAttack score ->
-      sprintf "%d/%d" model.board.point score
-    | SoloGame.Mode.ScoreAttack _ ->
-      sprintf "%d" model.board.point
-    ) |> setScoreText
+  interface IGameInfoViewer with
+    member __.SetPoint(mode, point) =
+      (mode |> function
+      | SoloGame.Mode.TimeAttack score ->
+        sprintf "%d/%d" point score
+      | SoloGame.Mode.ScoreAttack _ ->
+        sprintf "%d" point
+      ) |> setScoreText
 
-  member __.SetTime(time) =
-    sprintf "%02i:%02i:%02i" (time / 60.0f |> int) (time % 60.0f |> int) ((time % 1.0f) * 100.0f |> int)
-    |> setTimeText
+    member __.SetTime(time) =
+      sprintf "%02i:%02i:%02i" (time / 60.0f |> int) (time % 60.0f |> int) ((time % 1.0f) * 100.0f |> int)
+      |> setTimeText

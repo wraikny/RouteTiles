@@ -24,7 +24,7 @@ let element (index: int) =
   Empty.Create()
   |> BoxUI.withChildren [|
     Rectangle.Create(color = Consts.Menu.pauseBackgroundColor, zOrder = ZOrder.Menu.background) :> Element
-    ( verticalSelecter textButton pauseSelectNames index -1
+    ( verticalSelecter (60.0f, 15.0f) (textButton (fontName())) pauseSelectNames index -1
       |> BoxUI.margin (LengthScale.Relative, 0.3f)
       |> BoxUI.alignCenter
     )

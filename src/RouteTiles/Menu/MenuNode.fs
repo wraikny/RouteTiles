@@ -13,7 +13,7 @@ open RouteTiles.Core.Effects
 open RouteTiles.Core.Utils
 
 
-module private MenuUtil =
+module MenuUtil =
   let getCurrentControllers() =
     [|
       yield Controller.Keyboard
@@ -123,9 +123,20 @@ type MenuNode() =
       Resume = fun () -> Engine.Resume()
 
       StartGame = fun (gameMode, controller) ->
-        let n = Game(gameMode, controller)
-        gameNode <- ValueSome n
-        Engine.AddNode(n)
+        gameNode |> function
+        | ValueNone ->
+          // todo
+          let gameInfo = GameInfoNode(Position = Helper.SoloGame.gameInfoCenterPos)
+          let n = Game(gameMode, controller, gameInfo)
+          n.AddChildNode(gameInfo)
+
+          Engine.AddNode(n)
+
+          gameNode <- ValueSome n
+
+        | ValueSome n ->
+          n.Initialize()
+          Engine.AddNode(n)
 
       QuitGame = fun () ->
         gameNode |> function

@@ -14,7 +14,7 @@ open RouteTiles.App
 
 
 let gameStart() =
-  let elem = textButton "ゲームスタート"
+  let elem = textButtonDesc "ゲームスタート"
   highlightenSelected true -0.02f elem
 
   FixedSize.Create(Vector2F(300.0f, 150.0f))
@@ -61,14 +61,14 @@ module ScoreAttack =
 let private gameSettingVerticalSelecter modeNames (setting: GameSettingState) =
   setting.mode |> function
   | GameSettingMode.ModeIndex ->
-    verticalSelecter textButton modeNames setting.verticalCursor setting.index
+    verticalSelecter (40.0f, 10.0f) textButtonDesc modeNames setting.verticalCursor setting.index
   | GameSettingMode.Controller ->
     let currentInedx = 
       setting.controllers
       |> Array.tryFindIndex((=) setting.selectedController)
       |> Option.defaultValue -1
 
-    verticalSelecter textButton setting.ControllerNames setting.controllerCursor currentInedx
+    verticalSelecter (40.0f, 10.0f) textButtonDesc setting.ControllerNames setting.controllerCursor currentInedx
   | GameSettingMode.GameStart ->
     gameStart()
   |> BoxUI.marginTop (LengthScale.Relative, 0.1f)

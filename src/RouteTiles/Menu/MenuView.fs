@@ -48,6 +48,7 @@ let initialize =
   let names =
     [|
       for t in texts do yield! t.name
+      for s in Pause.pauseSelectNames do yield! s
     |]
     |> Array.distinct
 
@@ -55,7 +56,6 @@ let initialize =
     [|
        yield! otherCharacters
        for t in texts do yield! t.desc
-       for s in Pause.pauseSelectNames do yield! s
     |]
     |> Array.distinct
 
