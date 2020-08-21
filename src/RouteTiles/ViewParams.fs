@@ -87,7 +87,7 @@ module Consts =
 
   open System.Threading
 
-  let initialize (progress: unit -> int) =
+  let initialize =
     let textures =
       [| Board.tileTexturePath
          Board.tileVanishmentEffectTexturePath
@@ -103,7 +103,7 @@ module Consts =
 
     let pSum = 1 + textures.Length + gameInfoChars.Length
 
-    pSum, async {
+    pSum, fun (progress: unit -> int) -> async {
     let ctx = SynchronizationContext.Current
     do! Async.SwitchToThreadPool()
 

@@ -46,8 +46,8 @@
     <Compile Include="Coroutine.fs" />
     <Compile Include="NodePool.fs" />
     <Compile Include="AnimationSpriteNode.fs" />
-    <Compile Include="ViewParams.fs" />
     <Compile Include="InputControl.fs" />
+    <Compile Include="ViewParams.fs" />
     <Compile Include="Loading.fs" />
     <Compile Include="Game/GameInfo.fs" />
     <Compile Include="Game/Board.fs" />

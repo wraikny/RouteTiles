@@ -267,7 +267,7 @@ let menu (model: Model) =
     :> ElementRoot
 
 
-let initialize (progress: unit -> int) =
+let initialize =
   let texts =[|
     for x in modeTexts -> x.Value
     for x in timeAttackSettingModeDescs -> x.Value
@@ -286,7 +286,7 @@ let initialize (progress: unit -> int) =
     |> (+) otherCharacters.Length
     |> (+) 2
 
-  progressSum, async {
+  progressSum, fun (progress: unit -> int) -> async {
     let ctx = SynchronizationContext.Current
     do! Async.SwitchToThreadPool()
 

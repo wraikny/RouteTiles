@@ -15,14 +15,6 @@ type EmitVanishParticleEffect = EmitVanishParticleEffect of Set<Types.Board.Rout
 with
   static member Effect(_: EmitVanishParticleEffect) = Eff.output<unit>
 
-[<Struct; RequireQualifiedAccess>]
-type ControlEffect =
-  | SetIsPaused of bool
-  | Restart
-  | Quit
-with
-  static member Effect(_: ControlEffect) = Eff.output<unit>
-
 [<Struct>]
 type LogEffect = LogEffect of string
 with

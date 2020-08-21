@@ -62,8 +62,10 @@ module Seq =
 [<Measure>] type sec
 [<Measure>] type millisec
 
+open System
+
 [<Struct; CustomEquality; NoComparison>]
-type SetOf2<'a when 'a : equality> = private | SetOf2 of 'a * 'a
+type SetOf2<'a when 'a : equality> = SetOf2 of 'a * 'a
 
 with
   override x.Equals(yobj) = 
@@ -77,7 +79,7 @@ with
     override x.GetHashCode() =
       x |> function
       | SetOf2(a, b) ->
-        hash a ||| hash b
+        HashCode.Combine(a, b)
 
     interface System.IEquatable<SetOf2<'a>> with
       member this.Equals(that : SetOf2<'a>) =

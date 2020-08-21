@@ -23,39 +23,27 @@ let main _ =
 
   let initResources() =
     Engine.AddNode(PostEffect.Wave(ZOrder = ZOrder.posteffect))
-
-    let ctx = SynchronizationContext.Current
+    
+    let progressSum = initializers |> Seq.sumBy fst
 
     let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.125f)
-    let loading = Loading(loadingSize, 0, 1)
-    loading.Position <- (Engine.WindowSize.To2F() - loadingSize) * 0.5f
+    let loading =
+      Loading(progressSum, loadingSize, 0, 1,
+        Position = (Engine.WindowSize.To2F() - loadingSize) * 0.5f
+      )
 
-
-    let progressSum, initializers =
-      let mutable count = 0
-      let progress () =
-        let c = Interlocked.Increment (&count)
-        ctx.Post((fun _ ->
-          loading.Progress <- c
-        ), ())
-        c
-
+    let loader =
       initializers
-      |> Array.map(fun i -> i progress)
-      |> Array.unzip
-      |> fun (ps, is) ->
-        Array.sum ps,
-        Async.Parallel is |> Async.Ignore
-
-    loading.Init(progressSum)
+      |> Array.map(fun (_, i) -> i loading.Progress)
+      |> Async.Parallel
+      |> Async.Ignore
 
     Engine.AddNode(loading)
 
     async {
       let ctx = SynchronizationContext.Current
 
-      do! initializers
-
+      do! loader
       do! Async.SwitchToContext ctx
 
       let node = Menu()

@@ -11,7 +11,6 @@ open EffFs
 
 type Handler = {
   rand: Random
-  setIsPaused: bool -> unit
   emitVanishmentParticle: Set<Board.RouteOrLoop> -> unit
 } with
   static member Handle(x) = x
@@ -22,16 +21,6 @@ type Handler = {
   static member Handle(LogEffect s, k) =
     Engine.Log.Warn(LogCategory.User, s)
     k ()
-
-  static member Handle(effect, k) =
-    Eff.capture(fun h ->
-      match effect with
-      | ControlEffect.SetIsPaused t -> h.setIsPaused t
-      | ControlEffect.Restart -> ()
-      | ControlEffect.Quit -> ()
-
-      k()
-    )
 
   static member Handle(EmitVanishParticleEffect particleSet, k) =
     Eff.capture(fun h ->
@@ -57,9 +46,6 @@ type Game(gameMode, controller) =
 #else
       rand = Random()
 #endif
-      setIsPaused = fun t ->
-        coroutineNode.IsUpdated <- not t
-
       emitVanishmentParticle = boardNode.EmitVanishmentParticle
     }
 
