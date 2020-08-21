@@ -20,9 +20,7 @@ let main _ =
     MenuView.initialize
   |]
 
-  let initResources() =
-    Engine.AddNode(PostEffect.Wave(ZOrder = ZOrder.posteffect))
-    
+  let initLoading() =
     let progressSum = initializers |> Seq.sumBy fst
 
     let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.125f)
@@ -40,14 +38,18 @@ let main _ =
     Engine.AddNode(loading)
 
     async {
-      let ctx = SynchronizationContext.Current
-
       do! loader
-      do! Async.SwitchToContext ctx
-
-      let node = MenuNode()
       Engine.RemoveNode(loading)
-      Engine.AddNode(node)
+    }
+
+  let initGame() =
+    Engine.AddNode(PostEffect.Wave(ZOrder = ZOrder.posteffect))
+
+    async {
+#if !DEBUG
+      do! initLoading()
+#endif
+      Engine.AddNode(MenuNode())
     }
     |> Async.StartImmediate
 
@@ -65,7 +67,7 @@ let main _ =
   if not <| Engine.File.AddRootDirectory(@"Resources") then
     failwithf "Failed to add root directory"
 
-  initResources()
+  initGame()
   Engine.Run()
   Engine.TerminateEx()
 #else
@@ -77,7 +79,7 @@ let main _ =
       if not <| Engine.File.AddRootPackageWithPassword(@"Resources.pack", ResourcesPassword.password) then
         failwithf "Failed to add root package"
 
-      initResources()
+      initGame()
       Engine.Run()
 
     with e ->

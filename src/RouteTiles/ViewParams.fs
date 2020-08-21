@@ -75,7 +75,7 @@ module Consts =
     let iconColor = Nullable <| Color(50uy, 50uy, 50uy, 255uy)
     let cursorColor = Color(255uy, 255uy, 0uy, 150uy)
     let cursorAlphaMinMax = (0.2f, 0.6f)
-    let currentColor = Color(50uy, 50uy, 200uy, 200uy)
+    let currentColor = Color(50uy, 200uy, 50uy, 200uy)
 
     let textColor = Nullable <| Color(0uy, 0uy, 0uy)
     
