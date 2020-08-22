@@ -3,11 +3,24 @@ open RouteTiles.Core.Types
 
 open Affogato
 
+[<Struct; RequireQualifiedAccess>]
+type Background =
+  | Wave
+
+let backgrounds = [|
+  Background.Wave
+|]
+
 type Config = {
   guid: System.Guid
   name: string voption
+  background: Background
 } with
-  static member Create() = { guid = System.Guid.NewGuid(); name = ValueNone }
+  static member Create() = {
+    guid = System.Guid.NewGuid()
+    name = ValueNone
+    background = Background.Wave
+}
 
 [<Struct; RequireQualifiedAccess>]
 type SoloGameMode = TimeAttack | ScoreAttack
@@ -107,6 +120,32 @@ type GameRankingState =
   | Success of int64 * SimpleRankingsServer.Data<GameResult>[]
 
 [<RequireQualifiedAccess>]
+type SettingMode =
+  | InputtingName
+  | InputName
+  | Background
+  | Enter
+
+type SettingState = {
+  mode: SettingMode
+  modeCursor: int
+  vertCursor: int
+  name: char[]
+  background: int
+  prevConfig: Config
+} with
+  static member Init (config: Config) = {
+    mode = SettingMode.InputName
+    modeCursor = 0
+    vertCursor = 0
+    name = config.name |> function
+      | ValueNone -> Array.empty
+      | ValueSome s -> s.ToCharArray()
+    background = backgrounds |> Array.findIndex((=) config.background)
+    prevConfig = config
+  }
+
+[<RequireQualifiedAccess>]
 type State =
   | Menu
   | GameSetting of SoloGameMode * settingState:GameSettingState
@@ -116,13 +155,17 @@ type State =
   // | NextGame of SoloGame.Mode * Controller * index:int
   | Ranking of int * ((SoloGame.Mode * SimpleRankingsServer.Data<GameResult>[])[] voption)
   // | Achievement
-  | Setting
+  | Setting of SettingState
   | Erro of string * State
 with
   member this.ControllerRefreshEnabled = this |> function
     | GameSetting _ -> true
     | _ -> false
 
+  member this.IsStringInputMode = this |> function
+    | GameResult (_, _, GameRankingState.InputName _) -> true
+    | Setting(s) when s.mode = SettingMode.InputtingName -> true
+    | _ -> false
 
 type Model = {
   config: Config
@@ -150,6 +193,8 @@ type Msg =
   | RankingResult of Result<int64 * SimpleRankingsServer.Data<GameResult>[], string>
   | InputName of StringInput
 
+let [<Literal>] UsernameMaxLength = 16
+
 let timeAttackScores = [|
   2000
   5000
@@ -160,7 +205,9 @@ let scoreAttackSecs = [|
   180
   300
   600
+#if DEBUG
   20
+#endif
 |]
 
 [<Struct; RequireQualifiedAccess>]
@@ -188,7 +235,7 @@ let gameModeToInt =
       index <- index + 1
       yield (SoloGame.Mode.TimeAttack t, index)
 
-    index <- index + 100
+    index <- index + 1000
 
     for s in scoreAttackSecs do
       index <- index + 1
@@ -197,7 +244,17 @@ let gameModeToInt =
 
   dict pairs
 
+
+let settingModes = [|
+  SettingMode.InputName
+  SettingMode.Background
+  SettingMode.Enter
+|]
+
 // let nextGameSelect = [|
 //   PauseSelect.Restart
 //   PauseSelect.QuitGame
 // |]
+
+module Model =
+  let inline mapConfig f model = { model with config = f model.config }

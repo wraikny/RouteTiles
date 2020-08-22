@@ -33,7 +33,7 @@ type CurrentControllers = CurrentControllers with
   static member Effect(_) = Eff.output<Controller[]>
 
 
-[<RequireQualifiedAccess>]
+[<Struct; RequireQualifiedAccess>]
 type SoundEffect =
   | Select
   | Move
@@ -41,10 +41,12 @@ type SoundEffect =
 with
   static member Effect(_) = Eff.output<unit>
 
+[<Struct>]
 type GameStartEffect = GameStartEffect of SoloGame.Mode * Controller
 with
   static member Effect(_) = Eff.output<unit>
 
+[<Struct>]
 type GameRankingEffect<'msg> =
   GameRankingEffect of
     {|
@@ -60,6 +62,11 @@ with
 // type AsyncEffect<'msg> = AsyncEffect of Async<'msg>
 // with
 //   static member Effect(_) = Eff.output<unit>
+
+[<Struct>]
+type SaveConfig = SaveConfig of Menu.Config
+with
+  static member Effect(_) = Eff.output<unit>
 
 [<AutoOpen>]
 module Utils =

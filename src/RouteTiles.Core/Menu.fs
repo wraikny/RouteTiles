@@ -100,39 +100,46 @@ let inline update msg model = eff {
   // ゲーム終了
   | Msg.FinishGame (soloGameModel, time), { state = State.Game (mode, _) } ->
     let result = {
-        Name = "unknown"
-        Point = soloGameModel.board.point
-        Time = time
-        SlideCount = soloGameModel.board.slideCount
-        Kind = gameModeToInt.[mode]
-      }
+      Name = ""
+      Point = soloGameModel.board.point
+      Time = time
+      SlideCount = soloGameModel.board.slideCount
+      Kind = gameModeToInt.[mode]
+    }
 
     // デフォルト名が設定されているかどうか
-    match model.config.name with
-    | ValueSome username when username <> "" ->
-      let result = { result with Name = username }
-      let param = {|
-        mode = mode
-        guid = model.config.guid
-        result = result
-        onSuccess = Ok >> Msg.RankingResult
-        onError = Error >> Msg.RankingResult
-      |}
+    let result =
+      model.config.name |> function
+      | ValueSome username when username <> "" ->
+        { result with Name = username }
+      | _ -> result
 
-      do! GameRankingEffect param
-      return { model with state = State.GameResult(mode, result, GameRankingState.Waiting) }
-    | _ ->
-      return { model with state = State.GameResult(mode, result, GameRankingState.InputName <| "unknown".ToCharArray()) }
+    // match model.config.name with
+    // | ValueSome username when username <> "" ->
+    //   let result = { result with Name = username }
+    //   let param = {|
+    //     mode = mode
+    //     guid = model.config.guid
+    //     result = result
+    //     onSuccess = Ok >> Msg.RankingResult
+    //     onError = Error >> Msg.RankingResult
+    //   |}
+
+    //   do! GameRankingEffect param
+    //   return { model with state = State.GameResult(mode, result, GameRankingState.Waiting) }
+    // | _ ->
+    return { model with state = State.GameResult(mode, result, GameRankingState.InputName <| result.Name.ToCharArray()) }
   
   | _, { state = State.Game _ } -> return model
 
+  // ゲームリザルト
   | Msg.InputName stringInput, { state = State.GameResult(mode, result, GameRankingState.InputName name)} ->
     let setName n =
       { model with state = State.GameResult(mode, result, GameRankingState.InputName n)}
 
     match stringInput with
     | StringInput.Input c ->
-      if name.Length >= 8 then
+      if name.Length >= UsernameMaxLength then
         do! SoundEffect.Invalid
         return model
       else
@@ -175,6 +182,7 @@ let inline update msg model = eff {
   | Msg.Select, { state = State.GameResult(_, _, GameRankingState.Success _) }
   | Msg.Select, { state = State.GameResult(_, _, GameRankingState.Error _) }
   | Msg.Back, { state = State.GameResult(_, _, _) } ->
+    do! GameControlEffect.Quit
     do! SoundEffect.Select
     return { model with state = State.Menu }
 
@@ -216,6 +224,100 @@ let inline update msg model = eff {
 
     | _ ->
       return model
+
+  // 設定
+  // 名前入力中
+  | msg, { state = State.Setting({ mode = SettingMode.InputtingName } as s) } ->
+    match msg with
+    | Msg.MoveMode _ -> return model
+    | Msg.Back ->
+      let name = model.config.name |> function
+        | ValueNone -> Array.empty
+        | ValueSome s -> s.ToCharArray()
+
+      return
+        { model with state = State.Setting({ s with mode = SettingMode.InputName; name = name }) }
+
+    | Msg.InputName (stringInput) ->
+      let setName n =
+        { model with state = State.Setting({ s with name = n }) }
+
+      match stringInput with
+      | StringInput.Input c ->
+        if s.name.Length >= UsernameMaxLength then
+          do! SoundEffect.Invalid
+          return model
+        else
+          return setName [| yield! s.name; yield c|]
+      | StringInput.Delete ->
+        if s.name |> Array.isEmpty then
+          do! SoundEffect.Invalid
+          return model
+        else
+          return setName s.name.[0..s.name.Length-2]
+      | StringInput.Enter ->
+        do! SoundEffect.Select
+
+        let name = if s.name |> Array.isEmpty then ValueNone else ValueSome <| new System.String(s.name)
+
+        return
+          { model with state = State.Setting({ s with mode = SettingMode.InputName }) }
+          |> Model.mapConfig(fun c -> { c with name = name })
+
+    | _ -> return model
+
+  | Msg.MoveMode dir, { state = State.Setting(s) } ->
+    match dir with
+    | Dir.Right | Dir.Left ->
+      let newCursor = s.modeCursor + if dir = Dir.Right then +1 else -1
+      if newCursor < 0 || settingModes.Length <= newCursor then
+        do! SoundEffect.Invalid
+        return model
+      else
+        let mode = settingModes.[newCursor]
+        do! SoundEffect.Move
+        return { model with state = State.Setting({ s with mode = mode; vertCursor = 0; modeCursor = newCursor }) }
+    | Dir.Up | Dir.Down ->
+      let mode = settingModes.[s.modeCursor]
+      match mode with
+      | SettingMode.InputtingName
+      | SettingMode.InputName
+      | SettingMode.Enter ->
+        do! SoundEffect.Invalid
+        return model
+      | SettingMode.Background ->
+        let newVert = s.vertCursor + if dir = Dir.Down then +1 else -1
+        if newVert < 0 || backgrounds.Length <= newVert then
+          do! SoundEffect.Invalid
+          return model
+        else
+          do! SoundEffect.Move
+          return { model with state = State.Setting({ s with vertCursor = newVert})}
+
+  | Msg.Select, { state = State.Setting(s) } ->
+    let mode = settingModes.[s.modeCursor]
+    
+    match mode with
+    | SettingMode.InputName ->
+      do! SoundEffect.Select
+      return
+        { model with state = State.Setting({ s with mode = SettingMode.InputtingName }) }
+    | SettingMode.Background ->
+      return
+        model
+        |> Model.mapConfig(fun c -> { c with background = backgrounds.[s.vertCursor] })
+
+    | SettingMode.Enter ->
+      // 設定保存
+      do! SaveConfig model.config
+      return { model with state = State.Menu }
+
+    | SettingMode.InputtingName ->
+      return model
+
+  // 元のコンフィグに戻す。
+  | Msg.Back, { state = State.Setting(s) } ->
+    return { model with state = State.Menu; config = s.prevConfig }
 
   // 戻る
   | Msg.Back, _ ->
@@ -278,7 +380,7 @@ let inline update msg model = eff {
     //   return { model with state = State.Achievement }
 
     |  Mode.Setting ->
-      return { model with state = State.Setting }
+      return { model with state = State.Setting(SettingState.Init model.config) }
 
     | _ ->
       return model

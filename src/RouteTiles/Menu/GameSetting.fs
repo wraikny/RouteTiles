@@ -14,13 +14,7 @@ open RouteTiles.App
 
 
 let gameStart() =
-  let elem = textButtonDesc "ゲームスタート"
-  highlightenSelected true -0.02f elem
-
-  FixedSize.Create(Vector2F(300.0f, 150.0f))
-  |> BoxUI.alignX Align.Center
-  |> BoxUI.withChild elem
-  :> Element
+  centeredButton (Vector2F(300.0f, 100.0f)) "ゲームスタート"
 
 module TimeAttack =
   let modeDescs = dict [|
@@ -68,12 +62,17 @@ let private gameSettingVerticalSelecter modeNames (setting: GameSettingState) =
       |> Array.tryFindIndex((=) setting.selectedController)
       |> Option.defaultValue -1
 
-    verticalSelecter (40.0f, 10.0f) textButtonDesc setting.ControllerNames setting.controllerCursor currentInedx
+    verticalSelecter
+      (40.0f, 10.0f)
+      textButtonDesc
+      setting.ControllerNames
+      setting.controllerCursor
+      currentInedx
   | GameSettingMode.GameStart ->
     gameStart()
   |> BoxUI.marginTop (LengthScale.Relative, 0.1f)
 
-let element (gameMode, setting) =
+let element (gameMode, setting: GameSettingState) =
   let modeNames, selectionNames, descs = gameMode |> function
     | SoloGameMode.TimeAttack ->
       TimeAttack.modeNames, TimeAttack.scoreNames, TimeAttack.modeDescs
@@ -82,7 +81,7 @@ let element (gameMode, setting) =
 
   let itemMain =
     mainMenuArea [|
-      split2 ColumnDir.Y 0.08f
+      split2 ColumnDir.Y Consts.Menu.modeHeaderRatio
         (settingHeader modeNames setting.mode.ToInt)
         (setting |> gameSettingVerticalSelecter selectionNames |> BoxUI.marginTop (LengthScale.Relative, 0.1f))
     |]

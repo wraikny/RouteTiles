@@ -14,9 +14,13 @@ open RouteTiles.App
 let fontName() = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 60)
 let fontDesc() = Font.LoadDynamicFontStrict(Consts.ViewCommon.font, 40)
 
-let highlighten zOrder (color: Color) twinkleEnable (movement: float32) (button: Rectangle) =
-  button.AddChild(
-    Rectangle.Create(zOrder = zOrder)
+let highlighten zOrder (color: Color) twinkleEnable (movement: float32) (button: Element) =
+  let rect = Rectangle.Create(zOrder = zOrder, color = Nullable(color))
+
+  button.AddChild(rect)
+
+  if movement <> 0.0f || twinkleEnable then
+    rect
     |> BoxUI.onUpdate (fun (node: RectangleNode) ->
       let sinTime = MathF.Sin(Engine.Time * 2.0f * MathF.PI / Consts.Menu.selectedTimePeriod)
       if movement <> 0.0f then
@@ -33,20 +37,23 @@ let highlighten zOrder (color: Color) twinkleEnable (movement: float32) (button:
       
       node.Color <- color
     )
-    :> Element
-  )
+    |> ignore
 
-let highlightenSelected =
+let highlightenSelected twinkleEnable (movement: float32) (button: Element) =
   highlighten
     ZOrder.Menu.iconSelected
     Consts.Menu.cursorColor
+    twinkleEnable
+    movement
+    button
 
-let highlightenCurrent =
+let highlightenCurrent (button: Element) =
   highlighten
     ZOrder.Menu.iconCurrent
     Consts.Menu.currentColor
     false
     0.0f
+    button
 
 
 let mainMenuArea(children) =
@@ -59,12 +66,15 @@ let mainMenuArea(children) =
   |]
   :> Element
 
-let textButton font text =
-  Rectangle.Create(color = Consts.Menu.elementBackground, zOrder = ZOrder.Menu.iconBackground)
+let textButtonWith color font text =
+  Rectangle.Create(color = color, zOrder = ZOrder.Menu.iconBackground)
   |> BoxUI.withChild (
     Text.Create(text = text, font = font, color = Consts.Menu.textColor, zOrder = ZOrder.Menu.buttonText)
     |> BoxUI.alignCenter
   )
+
+let textButton =
+  textButtonWith Consts.Menu.elementBackground
 
 let textButtonDesc = textButton (fontDesc())
 
@@ -131,3 +141,15 @@ let sideBar (description: Description) =
     |]
   )
   :> Element
+
+let centeredButton size text =
+  let elem = textButtonDesc text
+  highlightenSelected true -0.02f elem
+
+  FixedSize.Create(size)
+  |> BoxUI.alignX Align.Center
+  |> BoxUI.withChild elem
+  :> Element
+
+let line() =
+  FixedHeight.Create(3.0f).With(Rectangle.Create(zOrder = ZOrder.Menu.buttonText)) :> Element

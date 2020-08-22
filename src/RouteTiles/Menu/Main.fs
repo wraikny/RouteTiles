@@ -17,7 +17,8 @@ let private modeButtons = [|
   Consts.Menu.scoreAttackTexture, Mode.ScoreAttack
   Consts.Menu.questionTexture, Mode.VS
   Consts.Menu.rankingTexture, Mode.Ranking
-  Consts.Menu.achievementTexture, Mode.Achievement
+  // Consts.Menu.achievementTexture, Mode.Achievement
+  Consts.Menu.questionTexture, Mode.Achievement
   Consts.Menu.settingTexture, Mode.Setting
 |]
 
@@ -35,6 +36,10 @@ let private buttonIcon path =
     :> Element
   )
 
+let notImplementedDescription = {
+  name = "？？？"
+  desc = "未実装の機能です。"
+}
 
 let modeTexts = dict <| seq {
   ( Mode.TimeAttack
@@ -47,21 +52,13 @@ let modeTexts = dict <| seq {
       name = "スコアアタック"
       desc = "制限時間内のスコアを\n競うモードです。"
     })
-  ( Mode.VS
-    , {
-      name = "？？？"
-      desc = "未実装の機能です。"
-    })
+  ( Mode.VS, notImplementedDescription )
   ( Mode.Ranking
     , {
       name = "ランキング"
       desc = "オンラインランキングを\nチェックしよう！"
     })
-  ( Mode.Achievement
-    , {
-      name = "実績"
-      desc = "開放した実績を確認します。"
-    })
+  ( Mode.Achievement, notImplementedDescription )
   ( Mode.Setting
     , {
       name = "設定"

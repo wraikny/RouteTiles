@@ -105,8 +105,9 @@ type MenuHandler = {
   Dispatch: Menu.Msg -> unit
   Pause: unit -> unit
   Resume: unit -> unit
-  StartGame: SoloGame.Mode * Controller -> unit
   QuitGame: unit -> unit
+  Restart: unit -> unit
+  StartGame: SoloGame.Mode * Controller -> unit
 } with
   static member inline Handle(x) = x
 
@@ -119,7 +120,7 @@ type MenuHandler = {
       | GameControlEffect.Pause -> h.Pause()
       | GameControlEffect.Resume -> h.Resume()
       | GameControlEffect.Quit -> h.QuitGame()
-      | GameControlEffect.Restart -> ()
+      | GameControlEffect.Restart -> h.Restart()
       k()
     )
 
@@ -132,17 +133,20 @@ type MenuHandler = {
   static member inline Handle(GameRankingEffect param, k) =
     Eff.capture(fun h ->
       async {
-        let orderKey, isDescending = param.mode |> function
-          | SoloGame.Mode.TimeAttack _ -> "Time", false
-          | SoloGame.Mode.ScoreAttack _ -> "Point", true
-
-        let table = ResourcesPassword.Server.table
+        let table, orderKey, isDescending = param.mode |> function
+          | SoloGame.Mode.TimeAttack _ ->
+            ResourcesPassword.Server.tableTime, "Time", false
+          | SoloGame.Mode.ScoreAttack _ ->
+            ResourcesPassword.Server.tableScore, "Point", true
 
         let! result =
           async {
             let! id = RankingServer.client.AsyncInsert(table, param.guid, param.result)
             let! data = RankingServer.client.AsyncSelect<GameResult>(table, orderBy = orderKey, isDescending = isDescending, limit = 10)
-            let data = data |> Array.filter (fun x -> x.values.Kind = param.result.Kind)
+            let data =
+              data
+              |> Array.filter (fun x -> x.values.Kind = param.result.Kind)
+            let data = if data.Length > 10 then data.[0..9] else data
             return (id, data)
           }
           |> Async.Catch
@@ -153,6 +157,12 @@ type MenuHandler = {
           h.Dispatch(Msg.RankingResult <| Error e.Message)
         
       } |> Async.StartImmediate
+      k()
+    )
+
+  static member inline Handle(SaveConfig config, k) =
+    Eff.capture(fun h ->
+      Config.save config
       k()
     )
 
@@ -219,7 +229,7 @@ type MenuNode() =
       if InputControl.pauseInput controller then
         updater.Dispatch(Msg.Pause)
 
-    | State.GameResult (_, _, GameRankingState.InputName _) ->
+    | s when s.IsStringInputMode ->
       InputControl.getKeyboardInput InputControl.Menu.characterInput ()
       |> Option.iter(updater.Dispatch)
 
@@ -261,6 +271,12 @@ type MenuNode() =
         gameNode |> function
         | ValueSome n ->
           n.Parent.RemoveChildNode(n)
+        | ValueNone ->
+          failwith "invalid state for QuitGame"
+
+      Restart = fun () ->
+        gameNode |> function
+        | ValueSome n -> n.Initialize()
         | ValueNone ->
           failwith "invalid state for QuitGame"
     }

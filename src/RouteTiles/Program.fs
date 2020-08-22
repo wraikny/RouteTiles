@@ -17,10 +17,10 @@ let main _ =
 
   let initializers = [|
     Config.initialize
-#if !DEBUG
+// #if !DEBUG
     Consts.initialize
     MenuView.initialize
-#endif
+// #endif
   |]
 
   let initLoading() =

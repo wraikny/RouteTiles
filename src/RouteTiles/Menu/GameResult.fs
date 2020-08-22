@@ -40,7 +40,7 @@ let private rankingElement (dataKind: DataKind) rank name result slideCount date
       )
   )
 
-let ranking(config: Config, mode, id: int64 voption, data: SimpleRankingsServer.Data<GameResult>[]) =
+let ranking(config: Config, mode, res: GameResult, id: int64 voption, data: SimpleRankingsServer.Data<GameResult>[]) =
   let isTime = mode |> function
     | SoloGame.Mode.TimeAttack _ -> true
     | SoloGame.Mode.ScoreAttack _ -> false
@@ -52,7 +52,7 @@ let ranking(config: Config, mode, id: int64 voption, data: SimpleRankingsServer.
     for r in data do
       let kind =
         if id.IsSome && id.Value = r.id then Current
-        else if config.guid = r.userId then SelfOld
+        else if config.guid = r.userId && res.Name = r.values.Name then SelfOld
         else Other
 
       yield
@@ -67,7 +67,7 @@ let ranking(config: Config, mode, id: int64 voption, data: SimpleRankingsServer.
   |]
   :> Element
 
-let element(config: Config, mode, res: GameResult, state) =
+let element(config: Config, mode, res: GameResult, state: GameRankingState) =
   let modeName, resultText = mode |> function
     | SoloGame.Mode.TimeAttack _ ->
       "タイムアタック"
@@ -87,12 +87,19 @@ let element(config: Config, mode, res: GameResult, state) =
       match state with
       | GameRankingState.InputName name ->
         yield textItem (fontName()) (sprintf "リザルト: %s" modeName)
-        yield FixedHeight.Create(10.0f).With(Rectangle.Create()) :> Element
+        yield line()
         yield textDesc resultText
         yield textDesc "キーボードで名前を入力してください。"
         yield textDesc "Enterキーを押すとスコアがランキングサーバーに投稿されます。"
         yield textDesc "Escキーを押すと投稿せずにメニューに戻ります。"
-        yield textDesc (new String(name))
+        yield textDesc "メインメニューの設定からデフォルト名を設定可能です。"
+        yield line()
+        yield (
+          FixedHeight.Create(40.0f)
+          |> BoxUI.withChild(textButtonDesc (new String(name)))
+          :> Element
+        )
+        yield line()
       | GameRankingState.Waiting ->
         yield textDesc "ランキング情報を取得中です..."
       | GameRankingState.Error e ->
@@ -102,7 +109,7 @@ let element(config: Config, mode, res: GameResult, state) =
           |> Array.chunkBySize 20
           |> Array.map(fun cs -> new String(cs) |> textDesc)
       | GameRankingState.Success(id, data) ->
-        yield ranking(config, mode, ValueSome id, data)
+        yield ranking(config, mode, res, ValueSome id, data)
     |]
   )
   :> Element

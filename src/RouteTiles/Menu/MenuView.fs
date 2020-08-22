@@ -32,6 +32,9 @@ let menu (model: Model) =
   | State.GameResult (mode, res, state) ->
     window().With(GameResult.element(model.config, mode, res, state))
 
+  | State.Setting s ->
+    window().With(Setting.element(s))
+
   | _ -> window()
 
 
@@ -40,6 +43,7 @@ let initialize =
     for x in Main.modeTexts -> x.Value
     for x in GameSetting.TimeAttack.modeDescs -> x.Value
     for x in GameSetting.ScoreAttack.modeDescs -> x.Value
+    for x in Setting.settingDescs -> x.Value
   |]
 
   let names =
@@ -54,7 +58,14 @@ let initialize =
     [|
       for i in 'a'..'z' -> i
       for i in 'A'..'Z' -> i
-      yield! "点分ゲームスタート得時間秒順位名前キーボードで名前を入力してください/."
+      yield! """
+点分ゲームスタート得時間秒順位
+名前キーボードで名前を入力してください
+Enterキーを押すとスコアがランキングサーバーに投稿されます。
+Escキーを押すと投稿せずにメニューに戻ります。
+ランキング情報を取得中です...
+エラーが発生しました。
+/."""
       for t in texts do yield! t.desc
     |]
     |> Array.distinct

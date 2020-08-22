@@ -59,6 +59,7 @@
     <Compile Include="Menu/GameSetting.fs" />
     <Compile Include="Menu/Pause.fs" />
     <Compile Include="Menu/GameResult.fs" />
+    <Compile Include="Menu/Setting.fs" />
     <Compile Include="Menu/MenuView.fs" />
     <Compile Include="Menu/MenuNode.fs" />
     <Compile Include="PostEffect/Wave.fs" />
