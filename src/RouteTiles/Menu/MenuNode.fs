@@ -25,12 +25,12 @@ module Config =
   let dirName = Path.GetDirectoryName ConfigFile
   let formatter = new BinaryFormatter()
 
-  let private write conf =
+  let private write (conf: Config) =
     let exists = Directory.Exists(dirName)
     if not exists then
       Directory.CreateDirectory(dirName) |> ignore
 
-    use file = new FileStream(ConfigFile, FileMode.OpenOrCreate)
+    use file = new FileStream(ConfigFile, FileMode.Create)
     formatter.Serialize(file, conf)
 
   let private writeQueue = ConcurrentQueue<Config>()
@@ -52,7 +52,7 @@ module Config =
   let tryGetConfig() = config
 
   let initialize =
-    2, fun (progress: unit -> int) -> async {
+    1, fun (progress: unit -> int) -> async {
       do! Async.SwitchToThreadPool()
 
       let exists = Directory.Exists(dirName)
@@ -61,35 +61,19 @@ module Config =
 
       let fileExists = File.Exists(ConfigFile)
 
-      use file = new FileStream(ConfigFile, FileMode.OpenOrCreate)
+      let createNew() =
+        let config' = Config.Create()
+        write config'
+        config <- ValueSome config'
 
-      progress() |> ignore
-
-      let createWrite() =
-        let c = Config.Create()
-        formatter.Serialize(file, c)
-        c
-
-      let c =
-        if fileExists then
-          let mutable c = Unchecked.defaultof<_>
-          let mutable res = ValueNone
-          try
-            res <- ValueSome <| formatter.Deserialize(file)
-          with :? SerializationException ->
-            c <- createWrite()
-
-          res |> ValueOption.iter(function
-            | :? Config as conf -> c <- conf
-            | _ -> c <- createWrite()
-          )
-
-          c
-
-        else 
-          createWrite()
-
-      config <- ValueSome c
+      if fileExists then
+        try
+          use file = new FileStream(ConfigFile, FileMode.OpenOrCreate)
+          config <- formatter.Deserialize(file) |> unbox<Config> |> ValueSome
+        with :? SerializationException ->
+          createNew()
+      else
+        createNew()
 
       progress() |> ignore
     }
@@ -157,7 +141,7 @@ type MenuHandler = {
         let! result =
           async {
             let! id = RankingServer.client.AsyncInsert(table, param.guid, param.result)
-            let! data = RankingServer.client.AsyncSelect<GameResult>(table, orderBy = orderKey, isDescending = isDescending, limit = 200)
+            let! data = RankingServer.client.AsyncSelect<GameResult>(table, orderBy = orderKey, isDescending = isDescending, limit = 10)
             let data = data |> Array.filter (fun x -> x.values.Kind = param.result.Kind)
             return (id, data)
           }

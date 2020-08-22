@@ -113,8 +113,7 @@ type State =
   | PauseGame of SoloGame.Mode * Controller * index:int
   | GameResult of SoloGame.Mode * GameResult * GameRankingState
   // | NextGame of SoloGame.Mode * Controller * index:int
-  | RankingTime of index:int
-  | RankingScore of index:int
+  | Ranking of int * ((SoloGame.Mode * SimpleRankingsServer.Data<GameResult>[])[] voption)
   | Achievement
   | Setting
   | Erro of string * State
@@ -173,6 +172,11 @@ let pauseSelects = [|
   PauseSelect.Continue
   PauseSelect.Restart
   PauseSelect.QuitGame
+|]
+
+let gameModes = [|
+  for t in timeAttackScores -> SoloGame.Mode.TimeAttack t
+  for s in scoreAttackSecs -> SoloGame.Mode.ScoreAttack s
 |]
 
 let gameModeToInt =

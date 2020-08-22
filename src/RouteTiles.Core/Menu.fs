@@ -100,14 +100,29 @@ let inline update msg model = eff {
   // ゲーム終了
   | Msg.FinishGame (soloGameModel, time), { state = State.Game (mode, _) } ->
     let result = {
-      Name = "unknown"
-      Point = soloGameModel.board.point
-      Time = time
-      SlideCount = soloGameModel.board.slideCount
-      Kind = gameModeToInt.[mode]
-    }
+        Name = "unknown"
+        Point = soloGameModel.board.point
+        Time = time
+        SlideCount = soloGameModel.board.slideCount
+        Kind = gameModeToInt.[mode]
+      }
 
-    return { model with state = State.GameResult(mode, result, GameRankingState.InputName <| "unknown".ToCharArray()) }
+    // デフォルト名が設定されているかどうか
+    match model.config.name with
+    | ValueSome username when username <> "" ->
+      let result = { result with Name = username }
+      let param = {|
+        mode = mode
+        guid = model.config.guid
+        result = result
+        onSuccess = Ok >> Msg.RankingResult
+        onError = Error >> Msg.RankingResult
+      |}
+
+      do! GameRankingEffect param
+      return { model with state = State.GameResult(mode, result, GameRankingState.Waiting) }
+    | _ ->
+      return { model with state = State.GameResult(mode, result, GameRankingState.InputName <| "unknown".ToCharArray()) }
   
   | _, { state = State.Game _ } -> return model
 
@@ -146,12 +161,15 @@ let inline update msg model = eff {
         return { model with state = State.GameResult(mode, result, GameRankingState.Waiting) }
 
   // ランキング受け取り
-  | Msg.RankingResult rRes, { state = State.GameResult(mode, res, _) } ->
+  | Msg.RankingResult rRes, { state = State.GameResult(mode, res, GameRankingState.Waiting) } ->
     let rankingState = rRes |> function
       | Ok x -> GameRankingState.Success x
       | Error e -> GameRankingState.Error e
 
     return { model with state = State.GameResult(mode, res, rankingState)}
+
+  | _, { state = State.GameResult(_, _, GameRankingState.Waiting)} ->
+    return model
 
   // todo
   | Msg.Select, { state = State.GameResult(_, _, GameRankingState.Success _) }
@@ -199,6 +217,7 @@ let inline update msg model = eff {
     | _ ->
       return model
 
+  // 戻る
   | Msg.Back, _ ->
     return { model with state = State.Menu }
 
@@ -251,7 +270,8 @@ let inline update msg model = eff {
         }
 
     | Mode.Ranking ->
-      return { model with state = State.RankingTime 0 }
+      // todo
+      return { model with state = State.Ranking(0, ValueNone) }
 
     | Mode.Achievement ->
       return { model with state = State.Achievement }
