@@ -270,7 +270,7 @@ type MenuNode() =
       QuitGame = fun () ->
         gameNode |> function
         | ValueSome n ->
-          n.Parent.RemoveChildNode(n)
+          Engine.RemoveNode(n)
         | ValueNone ->
           failwith "invalid state for QuitGame"
 

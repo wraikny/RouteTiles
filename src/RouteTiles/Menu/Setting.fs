@@ -34,18 +34,11 @@ let private inputName text =
 let settingDescs = Map.ofSeq [|
   SettingMode.InputtingName
   , { name = "入力中..."
-      desc = """決定ボタンで確定します。
-Escキー/メニューボタンで
-キャンセルします。""" }
+      desc = "決定ボタンで確定します。\nEscキー/メニューボタンで\nキャンセルします。" }
 
   SettingMode.InputName
   , { name = "ユーザ名設定"
-      desc = """デフォルトのユーザ名を
-キーボードで設定します。
-空欄の場合はプレイ毎に
-入力可能です。
-決定ボタンで入力状態に
-移行します。""" }
+      desc = "デフォルトのユーザ名を\nキーボードで設定します。\n空欄の場合はプレイ毎に\n入力可能です。\n決定ボタンで入力状態に\n移行します。" }
   SettingMode.Background
   , { name = "背景設定"; desc = "好みの背景を設定可能です。" }
   SettingMode.Enter
