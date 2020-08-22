@@ -197,6 +197,7 @@ module Server =
   let [<Literal>] url = ""
   let [<Literal>] username = ""
   let [<Literal>] password = ""
+  let [<Literal>] table = ""
 
 let [<Literal>] password = ""
 """
