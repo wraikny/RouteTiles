@@ -63,7 +63,7 @@ module Config =
 
       let createNew() =
         let config' = Config.Create()
-        write config'
+        save config'
         config <- ValueSome config'
 
       if fileExists then

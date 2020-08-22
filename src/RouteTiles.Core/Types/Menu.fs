@@ -24,6 +24,7 @@ with
   static member ScoreAttack = SoloGame SoloGameMode.ScoreAttack
 
   member this.IsEnabled = this |> function
+    | Achievement
     | VS -> false
     | _ -> true
 
@@ -114,7 +115,7 @@ type State =
   | GameResult of SoloGame.Mode * GameResult * GameRankingState
   // | NextGame of SoloGame.Mode * Controller * index:int
   | Ranking of int * ((SoloGame.Mode * SimpleRankingsServer.Data<GameResult>[])[] voption)
-  | Achievement
+  // | Achievement
   | Setting
   | Erro of string * State
 with

@@ -273,8 +273,9 @@ let inline update msg model = eff {
       // todo
       return { model with state = State.Ranking(0, ValueNone) }
 
-    | Mode.Achievement ->
-      return { model with state = State.Achievement }
+    // todo
+    // | Mode.Achievement ->
+    //   return { model with state = State.Achievement }
 
     |  Mode.Setting ->
       return { model with state = State.Setting }
