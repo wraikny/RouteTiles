@@ -59,7 +59,9 @@ let element(mode, res: GameResult, state) =
 
       match state with
       | GameRankingState.InputName name ->
-        yield textDesc "キーボードで名前を入力してください"
+        yield textDesc "キーボードで名前を入力してください。"
+        yield textDesc "Enterキーを押すとスコアがランキングサーバーに投稿されます。"
+        yield textDesc "Escキーを押すと投稿せずにメニューに戻ります。"
         yield textDesc (new String(name))
       | GameRankingState.Waiting ->
         yield textDesc "ランキング情報を取得中です..."
