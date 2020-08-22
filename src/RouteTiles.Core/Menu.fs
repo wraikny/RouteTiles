@@ -26,13 +26,9 @@ let inline moveSettingMode (isRight) (mode: GameSettingMode) = eff {
     return mode
 }
 
-let inline updateGameSetting msg selectionCount gameMode (setting: GameSettingState) =
+let inline updateGameSetting msg selectionCount (setting: GameSettingState) =
   eff {
     match msg, setting.mode with
-    | Msg.Pause, _
-    | Msg.Back, _ ->
-      return setting
-
     | Msg.RefreshController controllers, _ ->
       return { setting with controllers = controllers }
 
@@ -70,7 +66,7 @@ let inline updateGameSetting msg selectionCount gameMode (setting: GameSettingSt
         let! mode = setting.mode |> moveSettingMode false
         return { setting with mode = mode; verticalCursor = 0 }
 
-    // ゲームモード選択
+    // 縦方向選択
     | Msg.MoveMode dir, GameSettingMode.ModeIndex ->
       let newCursor = setting.verticalCursor + (if dir = Dir.Up then -1 else +1)
       if newCursor < 0 || selectionCount <= newCursor then
@@ -89,6 +85,9 @@ let inline updateGameSetting msg selectionCount gameMode (setting: GameSettingSt
       else
         do! SoundEffect.Move
         return { setting with controllerCursor = newCursor }
+
+    | _ ->
+      return setting
   }
 
 let inline update msg model = eff {
@@ -96,7 +95,67 @@ let inline update msg model = eff {
   // Game
   | Msg.Pause, { state = State.Game (gameMode, controller) } ->
     return { model with state = State.PauseGame (gameMode, controller, 0) }
+
+  // ゲーム終了
+  | Msg.FinishGame (point, time), { state = State.Game (mode, _) } ->
+    let result = {
+      Name = "unknown"
+      Point = point
+      Time = time
+    }
+
+    return { model with state = State.GameResult(mode, result, GameRankingState.InputName <| "unknown".ToCharArray()) }
+  
   | _, { state = State.Game _ } -> return model
+
+  | Msg.InputName stringInput, { state = State.GameResult(mode, result, GameRankingState.InputName name)} ->
+    let setName n =
+      { model with state = State.GameResult(mode, result, GameRankingState.InputName n)}
+
+    match stringInput with
+    | StringInput.Input c ->
+      if name.Length >= 8 then
+        do! SoundEffect.Invalid
+        return model
+      else
+        return setName[| yield! name; yield c|]
+    | StringInput.Delete ->
+      if name |> Array.isEmpty then
+        do! SoundEffect.Invalid
+        return model
+      else
+        return setName name.[0..name.Length-2]
+    | StringInput.Enter ->
+      if name.Length < 1 then
+        do! SoundEffect.Invalid
+        return model
+      else
+        let result = { result with Name = new System.String(name) }
+        let param = {|
+          mode = mode
+          result = result
+          onSuccess = Ok >> Msg.RankingResult
+          onError = Error >> Msg.RankingResult
+        |}
+
+        do! GameRankingEffect param
+        return { model with state = State.GameResult(mode, result, GameRankingState.Waiting) }
+
+  // ランキング受け取り
+  | Msg.RankingResult rRes, { state = State.GameResult(mode, res, _) } ->
+    let rankingState = rRes |> function
+      | Ok x -> GameRankingState.Success x
+      | Error e -> GameRankingState.Error e
+
+    return { model with state = State.GameResult(mode, res, rankingState)}
+
+  // todo
+  | Msg.Select, { state = State.GameResult(_, _, GameRankingState.Success _) }
+  | Msg.Select, { state = State.GameResult(_, _, GameRankingState.Error _) }
+  | Msg.Back, { state = State.GameResult(_, _, _) } ->
+    do! SoundEffect.Select
+    return { model with state = State.Menu }
+
 
   // Pause
   | msg, { state = State.PauseGame (gameMode, controller, index)} ->
@@ -165,7 +224,7 @@ let inline update msg model = eff {
       | SoloGameMode.TimeAttack -> timeAttackScores.Length
       | SoloGameMode.ScoreAttack -> scoreAttackSecs.Length
 
-    let! newSetting = setting |> updateGameSetting msg selectionCount gameMode
+    let! newSetting = setting |> updateGameSetting msg selectionCount
     return
       if setting = newSetting then
         model

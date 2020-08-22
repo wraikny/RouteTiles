@@ -28,6 +28,7 @@ open EffFs
 
 [<Struct>]
 type MenuHandler = {
+  Dispatch: Menu.Msg -> unit
   Pause: unit -> unit
   Resume: unit -> unit
   StartGame: SoloGame.Mode * Controller -> unit
@@ -54,6 +55,12 @@ type MenuHandler = {
   static member inline Handle(GameStartEffect(x,y), k) =
     Eff.capture(fun h -> h.StartGame(x, y); k() )
 
+  static member inline Handle(GameRankingEffect param, k) =
+    Eff.capture(fun h ->
+      h.Dispatch(Msg.RankingResult(Error "未実装です。"))
+      k()
+    )
+
 type MenuNode() =
   inherit Node()
 
@@ -76,13 +83,31 @@ type MenuNode() =
       | _ ->
         prevModel <- ValueSome model
         uiRoot.ClearElement()
-        uiRoot.SetElement <| MenuView.menu model
+
+        let (elem) = MenuView.menu model
+
+        uiRoot.SetElement elem
     ) |> ignore
 
   let mutable prevControllerCount = Engine.Joystick.ConnectedJoystickCount
 
   let getKeyboardInput = InputControl.getKeyboardInput InputControl.Menu.keyboard
   let getJoystickInput = InputControl.getJoystickInput InputControl.Menu.joystick
+
+  let playerInput() =
+    getKeyboardInput ()
+    |> Option.alt(fun () ->
+      let count = Engine.Joystick.ConnectedJoystickCount
+      seq {
+        for i in 0..count-1 do
+          let info = Engine.Joystick.GetJoystickInfo(i)
+          if info <> null && info.IsGamepad then
+            match getJoystickInput i with
+            | Some x -> yield x
+            | _ -> ()
+      }
+      |> Seq.tryHead
+    )
 
   override this.OnUpdate() =
     // Controllerの接続状況の更新
@@ -100,24 +125,17 @@ type MenuNode() =
       if InputControl.pauseInput controller then
         updater.Dispatch(Msg.Pause)
 
+    | State.GameResult (_, _, GameRankingState.InputName _) ->
+      InputControl.getKeyboardInput InputControl.Menu.characterInput ()
+      |> Option.iter(updater.Dispatch)
+
     | _ ->
-      getKeyboardInput ()
-      |> Option.alt(fun () ->
-        let count = Engine.Joystick.ConnectedJoystickCount
-        seq {
-          for i in 0..count-1 do
-            let info = Engine.Joystick.GetJoystickInfo(i)
-            if info <> null && info.IsGamepad then
-              match getJoystickInput i with
-              | Some x -> yield x
-              | _ -> ()
-        }
-        |> Seq.tryHead
-      )
+      playerInput()
       |> Option.iter (updater.Dispatch)
 
   override this.OnAdded() =
     let handler = {
+      Dispatch = updater.Dispatch
       Pause = fun () -> Engine.Pause(this)
 
       Resume = fun () -> Engine.Resume()
@@ -127,7 +145,14 @@ type MenuNode() =
         | ValueNone ->
           // todo
           let gameInfo = GameInfoNode(Position = Helper.SoloGame.gameInfoCenterPos)
-          let n = Game(gameMode, controller, gameInfo)
+          let viewer = { new IGameInfoViewer with
+            member __.SetPoint(m, p) = gameInfo.SetPoint(m, p)
+            member __.SetTime(t) = gameInfo.SetTime(t)
+            member __.FinishGame(p, t) =
+              updater.Dispatch(Msg.FinishGame(p, t))
+              Engine.Pause(this)
+          }
+          let n = Game(gameMode, controller, viewer)
           n.AddChildNode(gameInfo)
 
           Engine.AddNode(n)

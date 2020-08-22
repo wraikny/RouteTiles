@@ -84,3 +84,39 @@ module Menu =
     yield (JoystickButton.RightDown, ButtonState.Push), Msg.Back
     yield (JoystickButton.Guide, ButtonState.Push), Msg.Back
   |]
+
+
+  let characterInput =
+    [|
+      let mutable c = 'a'
+      let mutable C = 'A'
+      for i in (int Key.A)..(int Key.Z) do
+        let key = enum<Key> i
+        yield [| Key.RightShift, ButtonState.Hold;  key, ButtonState.Push |], C
+        yield [| Key.LeftShift, ButtonState.Hold;  key, ButtonState.Push |], C
+        yield [| key, ButtonState.Push|], c
+        c <- char(int c + 1)
+        C <- char(int C + 1)
+
+      c <- '0'
+      for i in (int Key.Num0)..(int Key.Num9) do
+        let key = enum<Key> i
+        yield [| key, ButtonState.Push |], c
+        c <- char (int c + 1)
+
+      c <- '0'
+      for i in (int Key.Keypad0)..(int Key.Keypad9) do
+        let key = enum<Key> i
+        yield [| key, ButtonState.Push |], c
+        c <- char (int c + 1)
+    |]
+    |> Array.map (fun (keys, c) -> (keys, StringInput.Input c))
+    |> Array.append [|
+      [| Key.Enter, ButtonState.Push |], StringInput.Enter
+      [| Key.Backspace, ButtonState.Push |], StringInput.Delete
+      [| Key.Delete, ButtonState.Push |], StringInput.Delete
+    |]
+    |> Array.map (fun (keys, c) -> (keys, Msg.InputName c))
+    |> Array.append [|
+      [| Key.Escape, ButtonState.Push |], Msg.Back
+    |]

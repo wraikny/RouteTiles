@@ -41,8 +41,21 @@ type SoundEffect =
 with
   static member Effect(_) = Eff.output<unit>
 
-type GameStartEffect = GameStartEffect of SoloGame.Mode * Controller with
+type GameStartEffect = GameStartEffect of SoloGame.Mode * Controller
+with
   static member Effect(_) = Eff.output<unit>
+
+type GameRankingEffect<'msg> =
+  GameRankingEffect of
+    {|
+      mode: SoloGame.Mode
+      result: Menu.GameResult
+      onSuccess: int64 * SimpleRankingsServer.Data<Menu.GameResult>[] -> 'msg
+      onError: string -> 'msg
+    |}
+with
+  static member Effect(_) = Eff.output<unit>
+
 
 [<AutoOpen>]
 module Utils =

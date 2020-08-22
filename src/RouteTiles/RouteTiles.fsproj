@@ -57,6 +57,7 @@
     <Compile Include="Menu/Main.fs" />
     <Compile Include="Menu/GameSetting.fs" />
     <Compile Include="Menu/Pause.fs" />
+    <Compile Include="Menu/GameResult.fs" />
     <Compile Include="Menu/MenuView.fs" />
     <Compile Include="Menu/MenuNode.fs" />
     <Compile Include="PostEffect/Wave.fs" />
@@ -65,5 +66,8 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="..\..\lib\Altseed2\Altseed2.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Json" Version="0.4.0" />
   </ItemGroup>
 </Project>

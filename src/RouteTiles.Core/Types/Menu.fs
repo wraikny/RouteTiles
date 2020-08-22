@@ -84,17 +84,32 @@ type GameSettingState = {
       | Controller.Joystick(_, name, _) -> name
     )
 
+type GameResult = {
+  Name: string
+  Time: float32
+  Point: int
+}
+
+[<RequireQualifiedAccess>]
+type GameRankingState =
+  | InputName of name:char[]
+  | Waiting
+  | Error of err:string
+  | Success of int64 * SimpleRankingsServer.Data<GameResult>[]
+
 [<RequireQualifiedAccess>]
 type State =
   | Menu
   | GameSetting of SoloGameMode * settingState:GameSettingState
   | Game of SoloGame.Mode * Controller
   | PauseGame of SoloGame.Mode * Controller * index:int
-  | GameResult
+  | GameResult of SoloGame.Mode * GameResult * GameRankingState
+  // | NextGame of SoloGame.Mode * Controller * index:int
   | RankingTime of index:int
   | RankingScore of index:int
   | Achievement
   | Setting
+  | Erro of string * State
 with
   member this.ControllerRefreshEnabled = this |> function
     | GameSetting _ -> true
@@ -106,17 +121,23 @@ type Model = { cursor: Mode; state: State }
 let initModel = { cursor = Mode.SoloGame SoloGameMode.TimeAttack; state = State.Menu }
 
 [<Struct; RequireQualifiedAccess>]
+type StringInput = Input of char | Delete | Enter
+
+[<RequireQualifiedAccess>]
 type Msg =
-  | MoveMode of dir:Dir
+  | MoveMode of Dir
   | Select
   | Back
   | RefreshController of Controller[]
   | Pause
+  | FinishGame of point:int * second:float32
+  | RankingResult of Result<int64 * SimpleRankingsServer.Data<GameResult>[], string>
+  | InputName of StringInput
 
 let timeAttackScores = [|
+  2000
+  5000
   10000
-  50000
-  100000
 |]
 
 let scoreAttackSecs = [|
@@ -136,3 +157,8 @@ let pauseSelects = [|
   PauseSelect.Restart
   PauseSelect.QuitGame
 |]
+
+// let nextGameSelect = [|
+//   PauseSelect.Restart
+//   PauseSelect.QuitGame
+// |]

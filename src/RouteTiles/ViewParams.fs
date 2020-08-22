@@ -79,6 +79,8 @@ module Consts =
 
     let textColor = Nullable <| Color(0uy, 0uy, 0uy)
 
+    let resultBackgroundColor = Nullable <| Color(100uy, 100uy, 100uy, 220uy)
+
     let pauseBackgroundColor = Nullable <| Color(100uy, 100uy, 100uy, 255uy)
     
     let [<Literal>] timeAttackTexture = @"menu/stopwatch.png"

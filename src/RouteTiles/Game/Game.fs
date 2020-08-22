@@ -31,6 +31,7 @@ type Handler = {
 type IGameInfoViewer =
   abstract SetPoint: SoloGame.Mode * int -> unit
   abstract SetTime: float32 -> unit
+  abstract FinishGame: int * float32 -> unit
 
 type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
   inherit Node()
@@ -74,7 +75,7 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
       gameMode |> function
       | SoloGame.Mode.TimeAttack score ->
         if model.board.point > score then
-          // 終了処理
+          gameInfoViewer.FinishGame(model.board.point, time)
           ()
       | _ -> ()
 
@@ -89,7 +90,7 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
         while true do
           time <- time - Engine.DeltaSecond
           if sec < time then
-            // 終了処理
+            gameInfoViewer.FinishGame(lastModel.Value.board.point, time)
             gameInfoViewer.SetTime(sec)
           else
             gameInfoViewer.SetTime(time)

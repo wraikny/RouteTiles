@@ -57,15 +57,14 @@ type GameInfoNode() =
     base.AddChildNode(scoreText)
     base.AddChildNode(timeText)
 
-  interface IGameInfoViewer with
-    member __.SetPoint(mode, point) =
-      (mode |> function
-      | SoloGame.Mode.TimeAttack score ->
-        sprintf "%d/%d" point score
-      | SoloGame.Mode.ScoreAttack _ ->
-        sprintf "%d" point
-      ) |> setScoreText
+  member __.SetPoint(mode, point) =
+    (mode |> function
+    | SoloGame.Mode.TimeAttack score ->
+      sprintf "%d/%d" point score
+    | SoloGame.Mode.ScoreAttack _ ->
+      sprintf "%d" point
+    ) |> setScoreText
 
-    member __.SetTime(time) =
-      sprintf "%02i:%02i:%02i" (time / 60.0f |> int) (time % 60.0f |> int) ((time % 1.0f) * 100.0f |> int)
-      |> setTimeText
+  member __.SetTime(time) =
+    sprintf "%02i:%02i:%02i" (time / 60.0f |> int) (time % 60.0f |> int) ((time % 1.0f) * 100.0f |> int)
+    |> setTimeText
