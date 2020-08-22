@@ -191,12 +191,15 @@ Target.create "Download" (fun _ ->
 )
 
 Target.create "CISetting" (fun _ ->
-  let password = "fakepassword"
+  """module ResourcesPassword
 
-  sprintf """module ResourcesPassword
-  [<Literal>] let password = "%s"
+module Server =
+  let [<Literal>] url = ""
+  let [<Literal>] username = ""
+  let [<Literal>] password = ""
+
+let [<Literal>] password = ""
 """
-    password
   |> File.writeString false "ResourcesPassword.fs"
 )
 

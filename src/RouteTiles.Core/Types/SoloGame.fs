@@ -5,7 +5,7 @@ open RouteTiles.Core.Types
 [<Struct; RequireQualifiedAccess>]
 type Mode =
   | TimeAttack of score:int
-  | ScoreAttack of sec:float32
+  | ScoreAttack of sec:int
 
 type Model = {
   controller: Controller

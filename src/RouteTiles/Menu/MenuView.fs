@@ -30,7 +30,7 @@ let menu (model: Model) =
       (GameSetting.element (gameMode, setting))
 
   | State.GameResult (mode, res, state) ->
-    window().With(GameResult.element(mode, res, state))
+    window().With(GameResult.element(model.config, mode, res, state))
 
   | _ -> window()
 

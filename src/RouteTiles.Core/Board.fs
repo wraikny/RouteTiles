@@ -238,6 +238,8 @@ module Model =
           nextTiles = nextTiles
           point = 0
 
+          slideCount = 0
+
           routesAndLoops = Set.empty
           routesHistory = List.empty
           loopsHistory = List.empty
@@ -254,6 +256,8 @@ type Msg =
   | ApplyVanishment
 
 module Update =
+  let incr model = { model with slideCount = model.slideCount + 1 }
+
   let calculatePoint (routesAndLoops: Set<RouteOrLoop>) =
     routesAndLoops
     |> Seq.sumBy(function
@@ -380,6 +384,6 @@ module Update =
             }
           | x -> failwithf "Unexpected nextTiles state: %A" x
 
-        let board = sldieTiles dir next board
+        let board = board |> sldieTiles dir next |> incr
         return board
       }

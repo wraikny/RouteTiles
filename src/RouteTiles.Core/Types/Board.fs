@@ -52,6 +52,8 @@ type Model = {
   config: BoardConfig
   markers: (int * int * Dir)[]
 
+  slideCount: int
+
   nextId: int<TileId>
   cursor: int Vector2
   tiles: Tile voption [,]

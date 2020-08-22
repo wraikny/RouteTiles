@@ -3,7 +3,11 @@ open RouteTiles.Core.Types
 
 open Affogato
 
-
+type Config = {
+  guid: System.Guid
+  name: string voption
+} with
+  static member Create() = { guid = System.Guid.NewGuid(); name = ValueNone }
 
 [<Struct; RequireQualifiedAccess>]
 type SoloGameMode = TimeAttack | ScoreAttack
@@ -90,6 +94,8 @@ type GameResult = {
   Name: string
   Time: float32
   Point: int
+  SlideCount: int
+  Kind: int
 }
 
 [<RequireQualifiedAccess>]
@@ -118,9 +124,17 @@ with
     | _ -> false
 
 
-type Model = { cursor: Mode; state: State }
+type Model = {
+  config: Config
+  cursor: Mode
+  state: State
+}
 
-let initModel = { cursor = Mode.SoloGame SoloGameMode.TimeAttack; state = State.Menu }
+let initModel config = {
+  config = config
+  cursor = Mode.SoloGame SoloGameMode.TimeAttack
+  state = State.Menu
+}
 
 [<Struct; RequireQualifiedAccess>]
 type StringInput = Input of char | Delete | Enter
@@ -132,7 +146,7 @@ type Msg =
   | Back
   | RefreshController of Controller[]
   | Pause
-  | FinishGame of point:int * second:float32
+  | FinishGame of SoloGame.Model * second:float32
   | RankingResult of Result<int64 * SimpleRankingsServer.Data<GameResult>[], string>
   | InputName of StringInput
 
@@ -143,9 +157,10 @@ let timeAttackScores = [|
 |]
 
 let scoreAttackSecs = [|
-  60 * 3
-  60 * 5
-  60 * 10
+  180
+  300
+  600
+  20
 |]
 
 [<Struct; RequireQualifiedAccess>]
@@ -159,6 +174,23 @@ let pauseSelects = [|
   PauseSelect.Restart
   PauseSelect.QuitGame
 |]
+
+let gameModeToInt =
+  let pairs = [|
+    let mutable index = -1
+
+    for t in timeAttackScores do
+      index <- index + 1
+      yield (SoloGame.Mode.TimeAttack t, index)
+
+    index <- index + 100
+
+    for s in scoreAttackSecs do
+      index <- index + 1
+      yield (SoloGame.Mode.ScoreAttack s, index)
+  |]
+
+  dict pairs
 
 // let nextGameSelect = [|
 //   PauseSelect.Restart

@@ -54,9 +54,6 @@ let inline updateGameSetting msg selectionCount (setting: GameSettingState) =
     | Msg.Select, GameSettingMode.GameStart ->
       // 呼び出し元で拾う
       return setting
-    | _, GameSettingMode.GameStart ->
-      do! SoundEffect.Invalid
-      return setting
 
     // モード切替
     | Msg.MoveMode Dir.Right, _ ->
@@ -86,6 +83,10 @@ let inline updateGameSetting msg selectionCount (setting: GameSettingState) =
         do! SoundEffect.Move
         return { setting with controllerCursor = newCursor }
 
+    | _, GameSettingMode.GameStart ->
+      do! SoundEffect.Invalid
+      return setting
+
     | _ ->
       return setting
   }
@@ -97,11 +98,13 @@ let inline update msg model = eff {
     return { model with state = State.PauseGame (gameMode, controller, 0) }
 
   // ゲーム終了
-  | Msg.FinishGame (point, time), { state = State.Game (mode, _) } ->
+  | Msg.FinishGame (soloGameModel, time), { state = State.Game (mode, _) } ->
     let result = {
       Name = "unknown"
-      Point = point
+      Point = soloGameModel.board.point
       Time = time
+      SlideCount = soloGameModel.board.slideCount
+      Kind = gameModeToInt.[mode]
     }
 
     return { model with state = State.GameResult(mode, result, GameRankingState.InputName <| "unknown".ToCharArray()) }
@@ -133,6 +136,7 @@ let inline update msg model = eff {
         let result = { result with Name = new System.String(name) }
         let param = {|
           mode = mode
+          guid = model.config.guid
           result = result
           onSuccess = Ok >> Msg.RankingResult
           onError = Error >> Msg.RankingResult
@@ -213,7 +217,7 @@ let inline update msg model = eff {
     let controller = setting.selectedController
     let mode = gameMode |> function
       | SoloGameMode.TimeAttack -> SoloGame.Mode.TimeAttack(timeAttackScores.[setting.index])
-      | SoloGameMode.ScoreAttack -> SoloGame.Mode.ScoreAttack(float32 scoreAttackSecs.[setting.index])
+      | SoloGameMode.ScoreAttack -> SoloGame.Mode.ScoreAttack(scoreAttackSecs.[setting.index])
     
 
     do! GameStartEffect(mode, controller)

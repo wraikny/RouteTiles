@@ -16,8 +16,11 @@ let main _ =
     Engine.ClearColor <- clearColor
 
   let initializers = [|
+    Config.initialize
+#if !DEBUG
     Consts.initialize
     MenuView.initialize
+#endif
   |]
 
   let initLoading() =
@@ -46,9 +49,8 @@ let main _ =
     Engine.AddNode(PostEffect.Wave(ZOrder = ZOrder.posteffect))
 
     async {
-#if !DEBUG
       do! initLoading()
-#endif
+      let! _ = Async.StartChild (Config.update)
       Engine.AddNode(MenuNode())
     }
     |> Async.StartImmediate

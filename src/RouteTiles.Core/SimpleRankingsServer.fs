@@ -62,7 +62,8 @@ type Client(url : string, usrename, password) =
       if result.IsSuccessStatusCode then
         return Json.deserialize<InsertResult>(resString).id
       else
-        return failwithf "%A:%s" result.StatusCode resString
+        failwithf "%A:%s" result.StatusCode resString
+        return 0L
     }
 
   member __.AsyncSelect (tableName: string, ?orderBy : string, ?isDescending : bool, ?limit : int) : Async<Data<'a>[]> =

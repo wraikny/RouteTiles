@@ -49,6 +49,7 @@ type GameRankingEffect<'msg> =
   GameRankingEffect of
     {|
       mode: SoloGame.Mode
+      guid: System.Guid
       result: Menu.GameResult
       onSuccess: int64 * SimpleRankingsServer.Data<Menu.GameResult>[] -> 'msg
       onError: string -> 'msg
@@ -56,6 +57,9 @@ type GameRankingEffect<'msg> =
 with
   static member Effect(_) = Eff.output<unit>
 
+// type AsyncEffect<'msg> = AsyncEffect of Async<'msg>
+// with
+//   static member Effect(_) = Eff.output<unit>
 
 [<AutoOpen>]
 module Utils =

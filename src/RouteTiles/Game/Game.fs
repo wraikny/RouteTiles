@@ -31,7 +31,7 @@ type Handler = {
 type IGameInfoViewer =
   abstract SetPoint: SoloGame.Mode * int -> unit
   abstract SetTime: float32 -> unit
-  abstract FinishGame: int * float32 -> unit
+  abstract FinishGame: SoloGame.Model * float32 -> unit
 
 type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
   inherit Node()
@@ -44,13 +44,15 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
   let nextTilesNode = NextTilesNode(Helper.SoloGame.nextsViewPos, coroutineNode.Add)
   // let gameInfoNode = GameInfoNode(Helper.SoloGame.gameInfoCenterPos)
 
+  let mutable inputEnabled = true
+
   let mutable time = 0.0f
 
   let initTime() =
     time <- 
       gameMode |> function
       | SoloGame.Mode.ScoreAttack sec ->
-        sec
+        float32 sec
       | SoloGame.Mode.TimeAttack _ ->
       0.0f
 
@@ -75,7 +77,12 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
       gameMode |> function
       | SoloGame.Mode.TimeAttack score ->
         if model.board.point > score then
-          gameInfoViewer.FinishGame(model.board.point, time)
+          // 終了
+          coroutineNode.Add(seq {
+            inputEnabled <- false
+            yield! Coroutine.sleep Consts.Board.tilesVanishInterval
+            gameInfoViewer.FinishGame(model, time)
+          })
           ()
       | _ -> ()
 
@@ -84,14 +91,16 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
     |> ignore
 
     (gameMode |> function
-    | SoloGame.Mode.ScoreAttack sec ->
-      time <- sec
+    | SoloGame.Mode.ScoreAttack _ ->
       seq {
         while true do
           time <- time - Engine.DeltaSecond
-          if sec < time then
-            gameInfoViewer.FinishGame(lastModel.Value.board.point, time)
-            gameInfoViewer.SetTime(sec)
+          if time < 0.0f then
+            // 終了
+            inputEnabled <- false
+            yield! Coroutine.sleep Consts.Board.tilesVanishInterval
+            gameInfoViewer.FinishGame(lastModel.Value, 0.0f)
+            gameInfoViewer.SetTime(0.0f)
           else
             gameInfoViewer.SetTime(time)
           yield()
@@ -115,6 +124,7 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
 #endif
 
         match lastModel with
+        | _ when not inputEnabled -> yield ()
         | ValueNone -> yield()
         | ValueSome model ->
           let input =
@@ -128,7 +138,7 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
               else
                 let s = sprintf "joystick '%s' is not found at %d" name index
                 Engine.Log.Warn(LogCategory.User, s)
-                // コントローラー選択画面
+                // todo:コントローラー選択画面
                 None
 
           match input with
@@ -181,6 +191,7 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
   override this.OnAdded() = this.Initialize()
 
   member __.Initialize() =
-    updater.Init(initModel, update) |> ignore
+    lastModel <- ValueSome <| updater.Init(initModel, update)
 
     initTime()
+    inputEnabled <- true

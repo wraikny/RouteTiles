@@ -13,6 +13,96 @@ open RouteTiles.Core.Effects
 open RouteTiles.Core.Utils
 
 
+
+module Config =
+  open System.IO
+  open System.Collections.Concurrent
+  open System.Runtime.Serialization
+  open System.Runtime.Serialization.Formatters.Binary
+
+  let [<Literal>] ConfigFile = @"Data/config.bat"
+
+  let dirName = Path.GetDirectoryName ConfigFile
+  let formatter = new BinaryFormatter()
+
+  let private write conf =
+    let exists = Directory.Exists(dirName)
+    if not exists then
+      Directory.CreateDirectory(dirName) |> ignore
+
+    use file = new FileStream(ConfigFile, FileMode.OpenOrCreate)
+    formatter.Serialize(file, conf)
+
+  let private writeQueue = ConcurrentQueue<Config>()
+
+  let save = writeQueue.Enqueue
+
+  let update = async {
+    let ctx = SynchronizationContext.Current
+    while true do
+      match writeQueue.TryDequeue() with
+      | true, conf ->
+        do! Async.SwitchToThreadPool()
+        write conf
+        do! Async.SwitchToContext ctx
+      | _ -> do! Async.Sleep 100
+  }
+
+  let mutable private config = ValueNone
+  let tryGetConfig() = config
+
+  let initialize =
+    2, fun (progress: unit -> int) -> async {
+      do! Async.SwitchToThreadPool()
+
+      let exists = Directory.Exists(dirName)
+      if not exists then
+        Directory.CreateDirectory(dirName) |> ignore
+
+      let fileExists = File.Exists(ConfigFile)
+
+      use file = new FileStream(ConfigFile, FileMode.OpenOrCreate)
+
+      progress() |> ignore
+
+      let createWrite() =
+        let c = Config.Create()
+        formatter.Serialize(file, c)
+        c
+
+      let c =
+        if fileExists then
+          let mutable c = Unchecked.defaultof<_>
+          let mutable res = ValueNone
+          try
+            res <- ValueSome <| formatter.Deserialize(file)
+          with :? SerializationException ->
+            c <- createWrite()
+
+          res |> ValueOption.iter(function
+            | :? Config as conf -> c <- conf
+            | _ -> c <- createWrite()
+          )
+
+          c
+
+        else 
+          createWrite()
+
+      config <- ValueSome c
+
+      progress() |> ignore
+    }
+
+
+module RankingServer =
+  let client =
+    new SimpleRankingsServer.Client(
+      ResourcesPassword.Server.url,
+      ResourcesPassword.Server.username,
+      ResourcesPassword.Server.password
+    )
+
 module MenuUtil =
   let getCurrentControllers() =
     [|
@@ -57,13 +147,33 @@ type MenuHandler = {
 
   static member inline Handle(GameRankingEffect param, k) =
     Eff.capture(fun h ->
-      h.Dispatch(Msg.RankingResult(Error "未実装です。"))
+      async {
+        let orderKey, isDescending = param.mode |> function
+          | SoloGame.Mode.TimeAttack _ -> "Time", false
+          | SoloGame.Mode.ScoreAttack _ -> "Point", true
+
+        let table = ResourcesPassword.Server.table
+
+        let! result =
+          async {
+            let! id = RankingServer.client.AsyncInsert(table, param.guid, param.result)
+            let! data = RankingServer.client.AsyncSelect<GameResult>(table, orderBy = orderKey, isDescending = isDescending, limit = 200)
+            let data = data |> Array.filter (fun x -> x.values.Kind = param.result.Kind)
+            return (id, data)
+          }
+          |> Async.Catch
+        match result with
+        | Choice1Of2 (id, data) ->
+          h.Dispatch(Msg.RankingResult <| Ok(id, data))
+        | Choice2Of2 e ->
+          h.Dispatch(Msg.RankingResult <| Error e.Message)
+        
+      } |> Async.StartImmediate
       k()
     )
 
 type MenuNode() =
   inherit Node()
-
   let mutable prevModel = ValueNone
   let updater = Updater<Model, Msg>()
 
@@ -148,8 +258,8 @@ type MenuNode() =
           let viewer = { new IGameInfoViewer with
             member __.SetPoint(m, p) = gameInfo.SetPoint(m, p)
             member __.SetTime(t) = gameInfo.SetTime(t)
-            member __.FinishGame(p, t) =
-              updater.Dispatch(Msg.FinishGame(p, t))
+            member __.FinishGame(model, t) =
+              updater.Dispatch(Msg.FinishGame(model, t))
               Engine.Pause(this)
           }
           let n = Game(gameMode, controller, viewer)
@@ -180,7 +290,9 @@ type MenuNode() =
 #endif
       newModel
 
+    let config = Config.tryGetConfig().Value
+
     prevModel <-
-      (initModel, update)
+      (initModel config, update)
       |> updater.Init
       |> ValueSome
