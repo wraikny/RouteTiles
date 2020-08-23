@@ -87,6 +87,27 @@ module RankingServer =
       ResourcesPassword.Server.password
     )
 
+  let urlMap = dict [|
+    SoloGameModeStrict.TimeAttack2000,
+    ResourcesPassword.Server.tableTime2000
+    
+    SoloGameModeStrict.TimeAttack5000,
+    ResourcesPassword.Server.tableTime5000
+    
+    SoloGameModeStrict.TimeAttack10000,
+    ResourcesPassword.Server.tableTime10000
+    
+    SoloGameModeStrict.ScoreAttack180,
+    ResourcesPassword.Server.tableScore180
+    
+    SoloGameModeStrict.ScoreAttack300,
+    ResourcesPassword.Server.tableScore300
+    
+    SoloGameModeStrict.ScoreAttack600,
+    ResourcesPassword.Server.tableScore600
+  |]
+
+
 module MenuUtil =
   let getCurrentControllers() =
     [|
@@ -133,19 +154,19 @@ type MenuHandler = {
   static member inline Handle(GameRankingEffect param, k) =
     Eff.capture(fun h ->
       async {
-        let table, orderKey, isDescending = param.mode |> function
-          | SoloGame.Mode.TimeAttack _ ->
-            ResourcesPassword.Server.tableTime, "Time", false
-          | SoloGame.Mode.ScoreAttack _ ->
-            ResourcesPassword.Server.tableScore, "Point", true
+        let orderKey, isDescending = param.mode |> function
+          | SoloGame.Mode.TimeAttack _ -> "Time", false
+          | SoloGame.Mode.ScoreAttack _ -> "Point", true
+
+        let table = RankingServer.urlMap.[param.mode |> SoloGameModeStrict.From]
 
         let! result =
           async {
             let! id = RankingServer.client.AsyncInsert(table, param.guid, param.result)
             let! data = RankingServer.client.AsyncSelect<GameResult>(table, orderBy = orderKey, isDescending = isDescending, limit = 10)
-            let data =
-              data
-              |> Array.filter (fun x -> x.values.Kind = param.result.Kind)
+            // let data =
+            //   data
+            //   |> Array.filter (fun x -> x.values.Kind = param.result.Kind)
             let data = if data.Length > 10 then data.[0..9] else data
             return (id, data)
           }
@@ -161,10 +182,8 @@ type MenuHandler = {
     )
 
   static member inline Handle(SaveConfig config, k) =
-    Eff.capture(fun h ->
-      Config.save config
-      k()
-    )
+    Config.save config
+    k()
 
 type MenuNode() =
   inherit Node()

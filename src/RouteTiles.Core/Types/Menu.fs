@@ -109,7 +109,7 @@ type GameResult = {
   Time: float32
   Point: int
   SlideCount: int
-  Kind: int
+  // Kind: int
 }
 
 [<RequireQualifiedAccess>]
@@ -195,6 +195,25 @@ type Msg =
 
 let [<Literal>] UsernameMaxLength = 16
 
+[<Struct; RequireQualifiedAccess>]
+type SoloGameModeStrict =
+  | TimeAttack2000
+  | TimeAttack5000
+  | TimeAttack10000
+  | ScoreAttack180
+  | ScoreAttack300
+  | ScoreAttack600
+with
+  static member From(x) = x |> function
+    | SoloGame.Mode.TimeAttack 2000 -> TimeAttack2000
+    | SoloGame.Mode.TimeAttack 5000 -> TimeAttack5000
+    | SoloGame.Mode.TimeAttack 10000 -> TimeAttack10000
+    | SoloGame.Mode.ScoreAttack 180 -> ScoreAttack180
+    | SoloGame.Mode.ScoreAttack 300 -> ScoreAttack300
+    | SoloGame.Mode.ScoreAttack 600 -> ScoreAttack600
+    | _ -> failwith "Unexpected SoloGame.Mode"
+
+
 let timeAttackScores = [|
   2000
   5000
@@ -205,9 +224,6 @@ let scoreAttackSecs = [|
   180
   300
   600
-#if DEBUG
-  20
-#endif
 |]
 
 [<Struct; RequireQualifiedAccess>]

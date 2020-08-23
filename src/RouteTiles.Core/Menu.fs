@@ -104,7 +104,7 @@ let inline update msg model = eff {
       Point = soloGameModel.board.point
       Time = time
       SlideCount = soloGameModel.board.slideCount
-      Kind = gameModeToInt.[mode]
+      // Kind = gameModeToInt.[mode]
     }
 
     // デフォルト名が設定されているかどうか
