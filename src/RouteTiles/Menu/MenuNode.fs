@@ -285,7 +285,6 @@ type MenuNode() =
             member __.SetTime(t) = gameInfo.SetTime(t)
             member __.FinishGame(model, t) =
               updater.Dispatch(Msg.FinishGame(model, t))
-              Engine.Pause(this)
           }
           let n = Game(gameMode, controller, viewer)
           n.AddChildNode(gameInfo)

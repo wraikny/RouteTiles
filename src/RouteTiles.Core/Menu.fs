@@ -129,6 +129,7 @@ let inline update msg model = eff {
     //   do! GameRankingEffect param
     //   return { model with state = State.GameResult(mode, result, GameRankingState.Waiting) }
     // | _ ->
+    do! GameControlEffect.Pause
     return { model with state = State.GameResult(mode, result, GameRankingState.InputName <| result.Name.ToCharArray()) }
   
   | _, { state = State.Game _ } -> return model
@@ -183,6 +184,7 @@ let inline update msg model = eff {
   | Msg.Select, { state = State.GameResult(_, _, GameRankingState.Success _) }
   | Msg.Select, { state = State.GameResult(_, _, GameRankingState.Error _) }
   | Msg.Back, { state = State.GameResult(_, _, _) } ->
+    do! GameControlEffect.Resume
     do! GameControlEffect.Quit
     do! SoundEffect.Select
     return { model with state = State.Menu }
