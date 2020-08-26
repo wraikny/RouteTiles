@@ -95,6 +95,7 @@ let inline update msg model = eff {
   match msg, model with
   // Game
   | Msg.Pause, { state = State.Game (gameMode, controller) } ->
+    do! GameControlEffect.Pause
     return { model with state = State.PauseGame (gameMode, controller, 0) }
 
   // ゲーム終了
@@ -207,11 +208,13 @@ let inline update msg model = eff {
     | Msg.Back ->
       do! GameControlEffect.Resume
       return { model with state = State.Game (gameMode, controller) }
+
     | Msg.Select ->
+      do! GameControlEffect.Resume
+
       match pauseSelects.[index] with
       // 再開
       | PauseSelect.Continue ->
-        do! GameControlEffect.Resume
         return { model with state = State.Game (gameMode, controller) }
 
       | PauseSelect.Restart ->

@@ -203,6 +203,9 @@ type SoloGameModeStrict =
   | ScoreAttack180
   | ScoreAttack300
   | ScoreAttack600
+#if DEBUG
+  | DebugMode
+#endif
 with
   static member From(x) = x |> function
     | SoloGame.Mode.TimeAttack 2000 -> TimeAttack2000
@@ -211,6 +214,7 @@ with
     | SoloGame.Mode.ScoreAttack 180 -> ScoreAttack180
     | SoloGame.Mode.ScoreAttack 300 -> ScoreAttack300
     | SoloGame.Mode.ScoreAttack 600 -> ScoreAttack600
+    | SoloGame.Mode.ScoreAttack 20 -> DebugMode
     | _ -> failwith "Unexpected SoloGame.Mode"
 
 
@@ -224,6 +228,9 @@ let scoreAttackSecs = [|
   180
   300
   600
+#if DEBUG
+  20
+#endif
 |]
 
 [<Struct; RequireQualifiedAccess>]

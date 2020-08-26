@@ -87,7 +87,7 @@ module RankingServer =
       ResourcesPassword.Server.password
     )
 
-  let urlMap = dict [|
+  let urlMap = Map.ofArray [|
     SoloGameModeStrict.TimeAttack2000,
     ResourcesPassword.Server.tableTime2000
     
@@ -158,31 +158,37 @@ type MenuHandler = {
   static member inline Handle(GameRankingEffect param as e, k) =
     printfn "Effect: %A" e
     Eff.capture(fun h ->
-      async {
-        let orderKey, isDescending = param.mode |> function
-          | SoloGame.Mode.TimeAttack _ -> "Time", false
-          | SoloGame.Mode.ScoreAttack _ -> "Point", true
+      let proc table =
+        async {
+          let orderKey, isDescending = param.mode |> function
+            | SoloGame.Mode.TimeAttack _ -> "Time", false
+            | SoloGame.Mode.ScoreAttack _ -> "Point", true
 
-        let table = RankingServer.urlMap.[param.mode |> SoloGameModeStrict.From]
 
-        let! result =
-          async {
-            let! id = RankingServer.client.AsyncInsert(table, param.guid, param.result)
-            let! data = RankingServer.client.AsyncSelect<GameResult>(table, orderBy = orderKey, isDescending = isDescending, limit = 10)
-            // let data =
-            //   data
-            //   |> Array.filter (fun x -> x.values.Kind = param.result.Kind)
-            let data = if data.Length > 10 then data.[0..9] else data
-            return (id, data)
-          }
-          |> Async.Catch
-        match result with
-        | Choice1Of2 (id, data) ->
-          h.Dispatch(Msg.RankingResult <| Ok(id, data))
-        | Choice2Of2 e ->
-          h.Dispatch(Msg.RankingResult <| Error e.Message)
-        
-      } |> Async.StartImmediate
+          let! result =
+            async {
+              let! id = RankingServer.client.AsyncInsert(table, param.guid, param.result)
+              let! data = RankingServer.client.AsyncSelect<GameResult>(table, orderBy = orderKey, isDescending = isDescending, limit = 10)
+              // let data =
+              //   data
+              //   |> Array.filter (fun x -> x.values.Kind = param.result.Kind)
+              let data = if data.Length > 10 then data.[0..9] else data
+              return (id, data)
+            }
+            |> Async.Catch
+          match result with
+          | Choice1Of2 (id, data) ->
+            h.Dispatch(Msg.RankingResult <| Ok(id, data))
+          | Choice2Of2 e ->
+            h.Dispatch(Msg.RankingResult <| Error e.Message)
+        } |> Async.StartImmediate
+
+      let table = RankingServer.urlMap |> Map.tryFind (param.mode |> SoloGameModeStrict.From)
+
+      table |> function
+      | Some table -> proc table
+      | None -> h.Dispatch (Msg.RankingResult <| Error "ゲームモードが見つかりませんでした。")
+
       k()
     )
 
