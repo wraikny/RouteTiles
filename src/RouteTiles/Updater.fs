@@ -4,49 +4,46 @@ open System
 open System.Threading
 open System.Collections.Generic
 
+[<Sealed>]
 type Updater<'model, 'msg>() =
   let mutable queue = Queue<'msg>()
   let mutable isUpdating = false
 
-  let mutable model = ValueNone
-  let mutable update' = Unchecked.defaultof<_>
+  let mutable model: 'model voption = ValueNone
+  let mutable update = Unchecked.defaultof<_>
 
   let modelEvent = Event<'model>()
 
-  member __.Init(initModel, update) =
-    update' <- update
+  let applyMsgs inModel =
+    let rec f model' =
+      queue.TryDequeue()|> function
+      | true, msg ->
+        let m = update msg model'
+        modelEvent.Trigger m
+        f m
+      | _ -> model'
 
-    let mutable m = initModel
-    modelEvent.Trigger(m)
+    isUpdating <- true
+    model <- ValueSome <| f inModel
+    isUpdating <- false
 
-    while queue.Count > 0 do
-      m <- update' (queue.Dequeue()) m
-      modelEvent.Trigger(m)
+  member __.Init(initModel, update') =
+    update <- update'
+    modelEvent.Trigger(initModel)
+    applyMsgs initModel
 
-    model <- ValueSome m
-    m
 
   member __.Dispatch(msg: 'msg) =
+    queue.Enqueue(msg)
+
     model |> function
     | ValueSome m when not isUpdating ->
-      isUpdating <- true
-      let mutable m = update' msg m
-      modelEvent.Trigger(m)
-
-      while queue.Count > 0 do
-        m <- update' (queue.Dequeue()) m
-        modelEvent.Trigger(m)
-
-      model <- ValueSome m
-      isUpdating <- false
-
-    | _ ->
-      queue.Enqueue(msg)
-
+      applyMsgs m
+    | _ -> ()
 
   member __.Model with get() = model
 
   interface IObservable<'model> with
     member __.Subscribe(observer) =
-      model |> ValueOption.iter(observer.OnNext >> ignore)
+      // model |> ValueOption.iter(observer.OnNext >> ignore)
       modelEvent.Publish.Subscribe(observer)

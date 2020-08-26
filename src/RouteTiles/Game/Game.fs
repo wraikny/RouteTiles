@@ -192,7 +192,8 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
     this.Initialize()
 
   member __.Initialize() =
-    lastModel <- ValueSome <| updater.Init(initModel, update)
+    updater.Init(initModel, update)
+    lastModel <- updater.Model
 
     initTime()
     inputEnabled <- true

@@ -310,7 +310,9 @@ type MenuNode() =
           failwith "invalid state for QuitGame"
     }
 
-    let update msg model =
+    let config = Config.tryGetConfig().Value
+
+    updater.Init(initModel config, fun msg model ->
       let newModel =
         update msg model
         |> Eff.handle handler
@@ -318,10 +320,6 @@ type MenuNode() =
       printfn "Msg: %A\nModel: %A\n" msg newModel
 #endif
       newModel
+    )
 
-    let config = Config.tryGetConfig().Value
-
-    prevModel <-
-      (initModel config, update)
-      |> updater.Init
-      |> ValueSome
+    prevModel <- updater.Model
