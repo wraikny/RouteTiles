@@ -1,6 +1,17 @@
 [<AutoOpen>]
 module RouteTiles.Core.Utils
 
+open System
+open System.Diagnostics
+
+type Utils =
+  [<Conditional("DEBUG")>]
+  static member DebugLogfn format = Printf.kprintf (printfn "%s") format
+
+  [<Obsolete; Conditional("DEBUG")>]
+  static member Todo(): 'a = raise <| NotImplementedException()
+
+
 let inline clamp minVal maxVal x =
   if x < minVal then minVal
   elif maxVal < x then maxVal

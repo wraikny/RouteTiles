@@ -18,11 +18,6 @@ type Joystick with
 
 let mutable time = 0.0f
 
-let rec private dumpNodes t (node: Node) =
-  printfn "%s%s" t (node.GetType().Name)
-  for child in node.Children do
-    dumpNodes (t + "  ") child
-
 type Engine with
   static member InitializeEx(title, size: Vector2I, config) =
     time <- 0.0f
@@ -30,12 +25,20 @@ type Engine with
       failwith "Failed to initialize the Altseed2"
 
   static member Run() =
+#if DEBUG
+    let rec dumpNodes t (node: Node) =
+      printfn "%s%s" t (node.GetType().Name)
+      for child in node.Children do
+        dumpNodes (t + "  ") child
+#endif
+
     let rec loop() =
       if Engine.DoEvents() then
+#if DEBUG
         if Engine.Keyboard.IsPushState(Key.Num1) then
           for n in Engine.GetNodes() do
             dumpNodes "" n
-
+#endif
         time <- time + Engine.DeltaSecond
         BoxUI.BoxUISystem.Update()
         Engine.Update() |> ignore

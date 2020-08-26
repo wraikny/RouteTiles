@@ -118,6 +118,7 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
   do
     coroutineNode.Add(seq {
       while true do
+
 #if DEBUG
         if Engine.Keyboard.IsPushState Key.Num0 then
           printfn "%A" lastModel
@@ -181,18 +182,16 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
       controller
     |> Eff.handle handler
 
-  let update msg model =
-#if DEBUG
-    printfn "Msg: %A" msg
-#endif
-    SoloGame.update msg model
-    |> Eff.handle handler
-
   override this.OnAdded() =
     this.Initialize()
 
   member __.Initialize() =
-    updater.Init(initModel, update)
+    updater.Init(initModel, fun msg model ->
+      Utils.DebugLogfn "Msg: %A" msg
+      SoloGame.update msg model
+      |> Eff.handle handler
+    )
+
     lastModel <- updater.Model
 
     initTime()
