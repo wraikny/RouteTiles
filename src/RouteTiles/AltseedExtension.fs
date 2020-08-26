@@ -18,6 +18,11 @@ type Joystick with
 
 let mutable time = 0.0f
 
+let rec private dumpNodes t (node: Node) =
+  printfn "%s%s" t (node.GetType().Name)
+  for child in node.Children do
+    dumpNodes (t + "  ") child
+
 type Engine with
   static member InitializeEx(title, size: Vector2I, config) =
     time <- 0.0f
@@ -27,6 +32,10 @@ type Engine with
   static member Run() =
     let rec loop() =
       if Engine.DoEvents() then
+        if Engine.Keyboard.IsPushState(Key.Num1) then
+          for n in Engine.GetNodes() do
+            dumpNodes "" n
+
         time <- time + Engine.DeltaSecond
         BoxUI.BoxUISystem.Update()
         Engine.Update() |> ignore

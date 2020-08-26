@@ -2,20 +2,21 @@ namespace RouteTiles.App
 
 open Altseed2
 
-type AnimationSpriteNode() =
+type AnimationSpriteNode(pushToPool) =
   inherit SpriteNode()
 
   let mutable time = 0.0f
-
-  member __.Reset() = time <- 0.0f
 
   member val IsUpdated = true with get, set
   member val Count = Vector2I(1, 1) with get, set
   member val IsLooping = true with get, set
   member val Second = 1.0f with get, set
 
-  abstract OnAnimationFinished: unit -> unit
-  default __.OnAnimationFinished() = ()
+  member this.Terminate() =
+    time <- 0.0f
+    this.IsUpdated <- false
+    this.IsDrawn <- false
+    pushToPool this
 
   override this.OnUpdate() =
     if this.IsUpdated && this.Texture <> null && (time < this.Second) then
@@ -30,8 +31,8 @@ type AnimationSpriteNode() =
       if time > this.Second then
         if this.IsLooping then
           time <- time % this.Second
-
-        this.OnAnimationFinished()
+        else
+          this.Terminate()
 
 open System.Collections.Generic
 
@@ -43,14 +44,7 @@ type EffectPool(initCount) =
 
   let stack = Stack<AnimationSpriteNode>()
 
-  let create() =
-    { new AnimationSpriteNode() with
-        member n.OnAnimationFinished() =
-          n.IsUpdated <- false
-          n.IsDrawn <- false
-          n.Reset()
-          stack.Push(n)
-      }
+  let create() = new AnimationSpriteNode(stack.Push)
 
   abstract InitEffect: AnimationSpriteNode -> unit
 
@@ -78,3 +72,10 @@ type EffectPool(initCount) =
       this.InitEffect(node)
       stack.Push(node)
       this.AddChildNode(node)
+
+  override this.OnRemoved() =
+    for child in this.Children do
+      child |> function
+      | :? AnimationSpriteNode as n ->
+        n.Terminate()
+      | _ -> ()
