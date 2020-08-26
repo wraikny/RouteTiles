@@ -132,10 +132,12 @@ type MenuHandler = {
 } with
   static member inline Handle(x) = x
 
-  static member inline Handle(_kind: SoundEffect, k) =
+  static member inline Handle(e: SoundEffect, k) =
+    printfn "Effect: %A" e
     k()
 
   static member inline Handle(e: GameControlEffect, k) =
+    printfn "Effect: %A" e
     Eff.capture(fun h ->
       e |> function
       | GameControlEffect.Pause -> h.Pause()
@@ -145,13 +147,16 @@ type MenuHandler = {
       k()
     )
 
-  static member inline Handle(CurrentControllers, k) =
+  static member inline Handle(CurrentControllers as e, k) =
+    printfn "Effect: %A" e
     MenuUtil.getCurrentControllers() |> k
 
-  static member inline Handle(GameStartEffect(x,y), k) =
+  static member inline Handle(GameStartEffect(x,y) as e, k) =
+    printfn "Effect: %A" e
     Eff.capture(fun h -> h.StartGame(x, y); k() )
 
-  static member inline Handle(GameRankingEffect param, k) =
+  static member inline Handle(GameRankingEffect param as e, k) =
+    printfn "Effect: %A" e
     Eff.capture(fun h ->
       async {
         let orderKey, isDescending = param.mode |> function
@@ -181,7 +186,8 @@ type MenuHandler = {
       k()
     )
 
-  static member inline Handle(SaveConfig config, k) =
+  static member inline Handle(SaveConfig config as e, k) =
+    printfn "Effect: %A" e
     Config.save config
     k()
 
@@ -283,7 +289,6 @@ type MenuNode() =
           gameNode <- ValueSome n
 
         | ValueSome n ->
-          n.Initialize()
           Engine.AddNode(n)
 
       QuitGame = fun () ->

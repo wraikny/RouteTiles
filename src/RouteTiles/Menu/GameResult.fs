@@ -106,7 +106,7 @@ let element(config: Config, mode, res: GameResult, state: GameRankingState) =
         yield textDesc "エラーが発生しました。"
         yield!
           e.ToCharArray()
-          |> Array.chunkBySize 20
+          |> Array.chunkBySize 40
           |> Array.map(fun cs -> new String(cs) |> textDesc)
       | GameRankingState.Success(id, data) ->
         yield ranking(config, mode, res, ValueSome id, data)

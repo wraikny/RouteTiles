@@ -188,7 +188,8 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
     SoloGame.update msg model
     |> Eff.handle handler
 
-  override this.OnAdded() = this.Initialize()
+  override this.OnAdded() =
+    this.Initialize()
 
   member __.Initialize() =
     lastModel <- ValueSome <| updater.Init(initModel, update)
