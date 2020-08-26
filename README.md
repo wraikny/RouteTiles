@@ -19,7 +19,7 @@ $ dotnet tool restore
 ```
 
 ### Download Altseed
-Download artifact `Altseed2-{commit id}` from [Altseed2-csharp](https://github.com/altseed/Altseed2-csharp/tree/febf00ee6bb92002a0de6132b26fc0a699f9923f), and place it as follows
+Download artifact `Altseed2-{commit id}` from [Altseed2-csharp](https://github.com/altseed/Altseed2-csharp/tree/fcfce90aa7f26e816ed970cf35bf309691fc2140), and place it as follows
 
 ```
 lib
