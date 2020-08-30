@@ -6,11 +6,6 @@ open RouteTiles.Core.Types
 open EffFs
 
 [<Struct>]
-type 'a RandomEffect = RandomEffect of Random.Generator<'a>
-with
-  static member Effect(_: 'a RandomEffect) = Eff.marker<'a>
-
-[<Struct>]
 type EmitVanishParticleEffect = EmitVanishParticleEffect of Set<Types.Board.RouteOrLoop>
 with
   static member Effect(_: EmitVanishParticleEffect) = Eff.marker<unit>
@@ -23,11 +18,6 @@ type GameControlEffect =
   | Quit
 with
   static member Effect(_) = Eff.marker<unit>
-
-[<Struct>]
-type LogEffect = LogEffect of string
-with
-  static member Effect(_: LogEffect) = Eff.marker<unit>
 
 type CurrentControllers = CurrentControllers with
   static member Effect(_) = Eff.marker<Controller[]>
@@ -67,8 +57,3 @@ with
 type SaveConfig = SaveConfig of Menu.Config
 with
   static member Effect(_) = Eff.marker<unit>
-
-[<AutoOpen>]
-module Utils =
-  let logEffect format = sprintf format >> LogEffect
-

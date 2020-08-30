@@ -8,6 +8,7 @@ open System
 open Affogato
 open Altseed2
 open EffFs
+open EffFs.Library
 
 type Handler = {
   rand: Random
@@ -15,10 +16,10 @@ type Handler = {
 } with
   static member Handle(x) = x
 
-  static member Handle(RandomEffect (Random.Generator f), k) =
+  static member Handle(Random.RandomEffect f, k) =
     Eff.capture(fun h -> f h.rand |> k)
 
-  static member Handle(LogEffect s, k) =
+  static member Handle(Log.LogEffect s, k) =
     Engine.Log.Warn(LogCategory.User, s)
     k ()
 

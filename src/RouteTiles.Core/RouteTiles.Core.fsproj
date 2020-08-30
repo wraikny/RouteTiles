@@ -19,7 +19,6 @@
     <Compile Include="Types/Board.fs" />
     <Compile Include="Types/SoloGame.fs" />
     <Compile Include="Types/Menu.fs" />
-    <Compile Include="Effects/Random.fs" />
     <Compile Include="Effects/Effect.fs" />
     <Compile Include="Board.fs" />
     <Compile Include="SoloGame.fs" />

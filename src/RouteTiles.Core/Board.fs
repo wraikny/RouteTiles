@@ -8,6 +8,7 @@ open RouteTiles.Core.Effects
 open Affogato
 
 open EffFs
+open EffFs.Library
 
 module TileDir =
   let primitiveTiles = [|
@@ -209,21 +210,21 @@ module Model =
     eff {
       let { nextCounts = _; size = size } = config
 
-      let! tiles, nextTiles = RandomEffect(random {
+      let! tiles, nextTiles = eff {
         let! tiles =
           TileDir.random
-          |> Random.seq (size.x * size.y)
+          |> Random.array (size.x * size.y)
 
         let! nextTiles1 =
           TileDir.primitiveTiles
-          |> Random.shuffle
+          |> Random.shuffleArray
 
         let! nextTiles2 =
           TileDir.primitiveTiles
-          |> Random.shuffle
+          |> Random.shuffleArray
 
         return tiles, (nextTiles1, nextTiles2)
-      })
+      }
 
       let tiles, nextTiles = initTiles tiles nextTiles size
 
@@ -366,8 +367,7 @@ module Update =
             eff {
               let! newNexts =
                 TileDir.primitiveTiles
-                |> Random.shuffle
-                |> RandomEffect
+                |> Random.shuffleArray
 
               let newNexts =
                 newNexts
