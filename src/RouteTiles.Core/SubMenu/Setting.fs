@@ -40,8 +40,12 @@ with
         background = ListSelector.State<_>.Init(initConfig.background, Background.items)
       }
 
+  static member StateOut(_: State) = Eff.marker<Config>
   static member StateEnter(s, k) = InputName (s, k)
-  static member StateOut(_) = Eff.marker<Config>
+
+  member x.IsStringInputMode = x |> function
+    | InputName _ -> true
+    | _ -> false
 
 
 
@@ -54,6 +58,7 @@ type Msg =
   | Decr
   | Incr
   | MsgOfInput of msgInput: StringInput.Msg
+
 
 let inline update msg state = eff {
   match state, msg with
@@ -112,14 +117,15 @@ let inline update msg state = eff {
     | ValueSome msg ->
       let! state = ListSelector.update msg s.background
 
-      return state |> function
-        | StateMachine.Pending x ->
-          Base { s with background = x }
+      return
+        state |> function
+          | StateMachine.Pending x ->
+            Base { s with background = x }
 
-        | StateMachine.Completed x ->
-          Base { s with config = { s.config with background = x } }
+          | StateMachine.Completed x ->
+            Base { s with config = { s.config with background = x } }
 
-      |> StateMachine.Pending
+        |> StateMachine.Pending
 
   | _ -> return state |> StateMachine.Pending
 }

@@ -58,12 +58,16 @@ module Array =
 
 
 module Array2D =
-  let inline tryGet x y (arr: 'a[,]) =
-    let (w, h) = Array2D.length1 arr, Array2D.length2 arr
+  let inline inside l1 l2 (arr: 'a[,]) =
+    let (al1, al2) = Array2D.length1 arr, Array2D.length2 arr
 
-    if 0 <= x && x < w && 0 <= y && y < h
-    then ValueSome arr.[x,y]
-    else ValueNone
+    0 <= l1 && l1 < al1 && 0 <= l2 && l2 < al2
+
+  let inline tryGet l1 l2 (arr: 'a[,]) =
+    if inside l1 l2 arr then
+      ValueSome arr.[l1,l2]
+    else
+      ValueNone
 
 
 module Seq =
