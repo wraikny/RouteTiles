@@ -60,7 +60,7 @@ Target.create "Clean" (fun _ ->
 Target.create "Build" (fun _ ->
   !! "src/**/*.*proj"
   ++ "tests/**/*.*proj"
-  ++ "lib/**/*.*proj"
+  // ++ "lib/**/*.*proj"
   |> Seq.iter (DotNet.build id)
 )
 
