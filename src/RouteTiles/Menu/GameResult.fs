@@ -6,6 +6,7 @@ open Altseed2
 open Altseed2.BoxUI
 open Altseed2.BoxUI.Elements
 
+open RouteTiles.Core
 open RouteTiles.Core.Types
 open RouteTiles.Core.Types.Menu
 open RouteTiles.App.BoxUIElements

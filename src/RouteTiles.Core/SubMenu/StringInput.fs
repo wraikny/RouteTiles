@@ -1,0 +1,64 @@
+module RouteTiles.Core.Types.SubMenu.StringInput
+open RouteTiles.Core
+
+[<Struct>]
+type State = {
+  inputs: char[]
+  current: string
+  initValue: string
+  maxLength: int
+} with
+  static member Init (str: string, length) = {
+    current = str
+    initValue = str
+    maxLength = length
+    inputs = str.ToCharArray()
+  }
+
+[<Struct>]
+type Msg =
+  | Input of char
+  | Delete
+  | Enter
+  | Cancel
+
+let setInputs inputs state =
+  { state with
+      inputs = inputs
+      current = System.String (inputs)
+  }
+
+open RouteTiles.Core.Effects
+open EffFs
+open EffFs.Library
+
+type State with
+  static member StateOut(_) = Eff.marker<string>
+
+let inline update msg state = eff {
+  match msg with
+  | Input c when state.inputs.Length < state.maxLength ->
+    let inputs = Array.addToHead c state.inputs
+    return
+      state
+      |> setInputs inputs
+      |> StateMachine.Pending
+
+  | Delete when state.inputs.Length > 0 ->
+    let (_, inputs) = state.inputs |> Array.tryPopLast
+    return
+      state
+      |> setInputs inputs
+      |> StateMachine.Pending
+
+  | Input _ | Delete ->
+    do! SoundEffect.Invalid
+    return state |> StateMachine.Pending
+
+  | Enter ->
+    do! SoundEffect.Select
+    return state.current |> StateMachine.Completed
+
+  | Cancel ->
+    return state.initValue |> StateMachine.Completed
+}

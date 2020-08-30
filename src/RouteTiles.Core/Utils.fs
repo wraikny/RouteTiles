@@ -37,11 +37,24 @@ module Array =
   let inline pushFrontPopBack (item: 'a) (array: 'a []): 'a[] * 'a =
     if Array.isEmpty array then Array.empty, item
     else
-      let span = array.AsSpan().Slice(0, array.Length - 1)
+      let span = array.AsSpan(0, array.Length - 1)
       let res = Array.zeroCreate array.Length
-      span.CopyTo(res.AsSpan().Slice(1, array.Length - 1))
+      span.CopyTo(res.AsSpan(1, array.Length - 1))
       res.[0] <- item
       res, Array.last array
+
+  let addToHead item (array: 'a[]) =
+    let res = Array.zeroCreate (array.Length + 1)
+    res.[0] <- item
+    array.AsSpan().CopyTo(res.AsSpan(1, array.Length))
+    res
+
+  let tryPopLast array =
+    if Array.isEmpty array then (ValueNone, array)
+    else
+      let res = Array.zeroCreate (array.Length - 1)
+      array.AsSpan(1, array.Length - 1).CopyTo(res.AsSpan())
+      ValueSome array.[0], array
 
 
 module Array2D =

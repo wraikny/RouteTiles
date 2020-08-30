@@ -5,6 +5,7 @@ open System.Threading
 open Altseed2
 open Altseed2.BoxUI
 
+open RouteTiles.Core
 open RouteTiles.Core.Types
 open RouteTiles.Core.Types.Menu
 open RouteTiles.Core.Menu

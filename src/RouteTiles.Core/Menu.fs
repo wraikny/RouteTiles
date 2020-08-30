@@ -292,7 +292,7 @@ let inline update msg model = eff {
         return model
       | SettingMode.Background ->
         let newVert = s.vertCursor + if dir = Dir.Down then +1 else -1
-        if newVert < 0 || backgrounds.Length <= newVert then
+        if newVert < 0 || Background.items.Length <= newVert then
           do! SoundEffect.Invalid
           return model
         else
@@ -310,7 +310,7 @@ let inline update msg model = eff {
     | SettingMode.Background ->
       return
         model
-        |> Model.mapConfig(fun c -> { c with background = backgrounds.[s.vertCursor] })
+        |> Model.mapConfig(fun c -> { c with background = Background.items.[s.vertCursor] })
 
     | SettingMode.Enter ->
       // 設定保存

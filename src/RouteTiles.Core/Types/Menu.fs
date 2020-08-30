@@ -1,26 +1,8 @@
 module RouteTiles.Core.Types.Menu
+open RouteTiles.Core
 open RouteTiles.Core.Types
 
 open Affogato
-
-[<Struct; RequireQualifiedAccess>]
-type Background =
-  | Wave
-
-let backgrounds = [|
-  Background.Wave
-|]
-
-type Config = {
-  guid: System.Guid
-  name: string voption
-  background: Background
-} with
-  static member Create() = {
-    guid = System.Guid.NewGuid()
-    name = ValueNone
-    background = Background.Wave
-}
 
 [<Struct; RequireQualifiedAccess>]
 type SoloGameMode = TimeAttack | ScoreAttack
@@ -141,7 +123,7 @@ type SettingState = {
     name = config.name |> function
       | ValueNone -> Array.empty
       | ValueSome s -> s.ToCharArray()
-    background = backgrounds |> Array.findIndex((=) config.background)
+    background = Background.items |> Array.findIndex((=) config.background)
     prevConfig = config
   }
 

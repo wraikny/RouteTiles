@@ -6,6 +6,7 @@ open Altseed2
 open Altseed2.BoxUI
 open Altseed2.BoxUI.Elements
 
+open RouteTiles.Core
 open RouteTiles.Core.Types
 open RouteTiles.Core.Types.Menu
 open RouteTiles.App.BoxUIElements
@@ -21,7 +22,7 @@ let private settingModeNames =
   )
 
 let private backgroundNames =
-  backgrounds |> Array.map(function
+  Background.items |> Array.map(function
     | Background.Wave -> "波"
   )
 

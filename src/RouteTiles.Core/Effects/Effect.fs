@@ -54,6 +54,6 @@ with
 //   static member Effect(_) = Eff.marker<unit>
 
 [<Struct>]
-type SaveConfig = SaveConfig of Menu.Config
+type SaveConfig = SaveConfig of Config
 with
   static member Effect(_) = Eff.marker<unit>
