@@ -2,6 +2,7 @@ module RouteTiles.Core.Types.MenuV2
 open RouteTiles.Core
 open RouteTiles.Core.Types
 open RouteTiles.Core.Types.SubMenu
+open RouteTiles.Core.Effects
 
 open EffFs
 open EffFs.Library
@@ -57,16 +58,16 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
           return state
 
         | MainMenu.Mode.Setting ->
-          // let! config = StateMachine.stateEnter <| Setting.State.Init (s.config)
-          // return (
-          //   if config = s.config then state
-          //   else MainManuState { s with config = config }
-          // )
-          return SettingMenuState (Setting.State.Init (s.config),
-            fun config ->
-              if config = s.config then state
-              else MainManuState { s with config = config }
+          let! config = StateMachine.stateEnter <| Setting.State.Init (s.config)
+          return (
+            if config = s.config then state
+            else MainManuState { s with config = config }
           )
+          // return SettingMenuState (Setting.State.Init (s.config),
+          //   fun config ->
+          //     if config = s.config then state
+          //     else MainManuState { s with config = config }
+          // )
 
         | _ ->
           return state
@@ -75,3 +76,12 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
     let msg = Msg.toSettingMsg msg
     return! StateMachine.stateMapEff (Setting.update msg) (s, k)
 }
+
+// type Handler = Handler with
+//   static member inline Handle(x) = x
+//   static member inline Handle(e, k) = StateMachine.handle (e, k)
+//   static member inline Handle(_: SoundEffect, k) = k ()
+
+// let update' msg state =
+//   update msg state
+//   |> Eff.handle Handler

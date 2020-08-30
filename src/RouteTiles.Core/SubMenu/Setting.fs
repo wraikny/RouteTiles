@@ -96,7 +96,6 @@ let inline update msg state = eff {
   | Base ({ mode = Mode.InputName; config = { name = name } } as s), Msg.Enter ->
     let name = name |> ValueOption.defaultValue ""
     let! inputName = StateMachine.stateEnter (StringInput.State.Init (name, NameMaxLength))
-
     return StateMachine.Pending (
       if inputName = name then state
       else Base { s with config = { s.config with name = ValueSome inputName } }
