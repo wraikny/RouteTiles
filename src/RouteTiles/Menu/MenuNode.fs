@@ -134,11 +134,11 @@ type MenuHandler = {
   static member inline Handle(x) = x
 
   static member inline Handle(e: SoundEffect, k) =
-    Utils.DebugLogfn "Effect: %A" e
+    Utils.DebugLogn (sprintf "Effect: %A" e)
     k()
 
   static member inline Handle(e: GameControlEffect, k) =
-    Utils.DebugLogfn "Effect: %A" e
+    Utils.DebugLogn (sprintf "Effect: %A" e)
     Eff.capture(fun h ->
       e |> function
       | GameControlEffect.Pause -> h.Pause()
@@ -149,15 +149,15 @@ type MenuHandler = {
     )
 
   static member inline Handle(CurrentControllers as e, k) =
-    Utils.DebugLogfn "Effect: %A" e
+    Utils.DebugLogn (sprintf "Effect: %A" e)
     MenuUtil.getCurrentControllers() |> k
 
   static member inline Handle(GameStartEffect(x,y) as e, k) =
-    Utils.DebugLogfn "Effect: %A" e
+    Utils.DebugLogn (sprintf "Effect: %A" e)
     Eff.capture(fun h -> h.StartGame(x, y); k() )
 
   static member inline Handle(GameRankingEffect param as e, k) =
-    Utils.DebugLogfn "Effect: %A" e
+    Utils.DebugLogn (sprintf "Effect: %A" e)
     Eff.capture(fun h ->
       let proc table =
         async {
@@ -194,7 +194,7 @@ type MenuHandler = {
     )
 
   static member inline Handle(SaveConfig config as e, k) =
-    Utils.DebugLogfn "Effect: %A" e
+    Utils.DebugLogn (sprintf "Effect: %A" e)
     Config.save config
     k()
 
@@ -318,7 +318,7 @@ type MenuNode() =
         update msg model
         |> Eff.handle handler
 
-      Utils.DebugLogfn "Msg: %A\nModel: %A\n" msg newModel
+      Utils.DebugLogn (sprintf "Msg: %A\nModel: %A\n" msg newModel)
 
       newModel
     )

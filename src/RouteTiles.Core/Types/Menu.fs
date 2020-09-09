@@ -196,7 +196,9 @@ with
     | SoloGame.Mode.ScoreAttack 180 -> ScoreAttack180
     | SoloGame.Mode.ScoreAttack 300 -> ScoreAttack300
     | SoloGame.Mode.ScoreAttack 600 -> ScoreAttack600
+#if DEBUG
     | SoloGame.Mode.ScoreAttack 20 -> DebugMode
+#endif
     | _ -> failwith "Unexpected SoloGame.Mode"
 
 

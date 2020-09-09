@@ -188,7 +188,7 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
 
   member __.Initialize() =
     updater.Init(initModel, fun msg model ->
-      Utils.DebugLogfn "Msg: %A" msg
+      Utils.DebugLogn (sprintf "Msg: %A" msg)
       SoloGame.update msg model
       |> Eff.handle handler
     )

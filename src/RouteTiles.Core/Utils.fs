@@ -6,7 +6,7 @@ open System.Diagnostics
 
 type Utils =
   [<Conditional("DEBUG")>]
-  static member DebugLogfn format = Printf.kprintf (printfn "%s") format
+  static member DebugLogn s = printfn "%s" s
 
   [<Obsolete; Conditional("DEBUG")>]
   static member Todo(): 'a = raise <| NotImplementedException()
