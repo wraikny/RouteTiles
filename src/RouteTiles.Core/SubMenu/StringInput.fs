@@ -5,12 +5,10 @@ open RouteTiles.Core
 type State = {
   inputs: char[]
   current: string
-  initValue: string
   maxLength: int
 } with
   static member Init (str: string, length) = {
     current = str
-    initValue = str
     maxLength = length
     inputs = str.ToCharArray()
   }
@@ -30,10 +28,10 @@ let setInputs inputs state =
 
 open RouteTiles.Core.Effects
 open EffFs
-open EffFs.Library
+open EffFs.Library.StateMachine
 
 type State with
-  static member StateOut(_) = Eff.marker<string>
+  static member StateOut(_) = Eff.marker<string voption>
 
 let inline update msg state = eff {
   match msg with
@@ -42,23 +40,23 @@ let inline update msg state = eff {
     return
       state
       |> setInputs inputs
-      |> StateMachine.Pending
+      |> Pending
 
   | Delete when state.inputs.Length > 0 ->
     let (_, inputs) = state.inputs |> Array.tryPopLast
     return
       state
       |> setInputs inputs
-      |> StateMachine.Pending
+      |> Pending
 
   | Input _ | Delete ->
     do! SoundEffect.Invalid
-    return state |> StateMachine.Pending
+    return state |> Pending
 
   | Enter ->
     do! SoundEffect.Select
-    return state.current |> StateMachine.Completed
+    return state.current |> ValueSome |> Completed
 
   | Cancel ->
-    return state.initValue |> StateMachine.Completed
+    return Completed ValueNone
 }

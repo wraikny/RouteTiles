@@ -8,8 +8,11 @@ type Utils =
   [<Conditional("DEBUG")>]
   static member DebugLogn s = printfn "%s" s
 
-  [<Obsolete; Conditional("DEBUG")>]
+  [<Obsolete>]
   static member Todo(): 'a = raise <| NotImplementedException()
+
+  [<Obsolete>]
+  static member Todo(a): 'a = printfn "TODO : %A" a; a
 
 
 let inline clamp minVal maxVal x =

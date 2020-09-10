@@ -1,11 +1,11 @@
 module RouteTiles.Core.Types.SubMenu.Setting
 
-open EffFs
-open EffFs.Library
-
 open RouteTiles.Core
 open RouteTiles.Core.Effects
 open RouteTiles.Core.Types.SubMenu
+
+open EffFs
+open EffFs.Library.StateMachine
 
 [<Struct; RequireQualifiedAccess>]
 type Mode =
@@ -22,109 +22,111 @@ let modes = [|
 let NameMaxLength = 12
 
 type SettingState = {
-  mode: Mode
   config: Config
-  initConfig: Config
-  background: ListSelector.State<Background>
+  selector: ListSelector.State<Mode>
+  // background: ListSelector.State<Background>
 }
 
-type State =
-  | InputName of StringInput.State * (string -> StateMachine.StateStatus<State, Config>)
+type OutStatus = StateStatus<State, Config voption>
+and State =
+  | InputName of StringInput.State * (string voption -> OutStatus)
+  | Background of ListSelector.State<Background> * (Background voption -> OutStatus)
   | Base of SettingState
 with
   static member Init (initConfig: Config) =
     Base
-      { mode = Mode.InputName
-        config = initConfig
-        initConfig = initConfig
-        background = ListSelector.State<_>.Init(initConfig.background, Background.items)
+      { config = initConfig
+        selector = ListSelector.State<Mode>.Init(0, modes, ValueNone)
+        // background = ListSelector.State<_>.Init(initConfig.background, Background.items, ValueSome initConfig.background)
       }
-
-  static member StateOut(_: State) = Eff.marker<Config>
-  static member StateEnter(s, k) = InputName (s, k)
 
   member x.IsStringInputMode = x |> function
     | InputName _ -> true
     | _ -> false
 
+  static member StateOut(_: State) = Eff.marker<Config voption>
+  static member StateEnter(s, k) = InputName (s, k)
+  static member StateEnter(s, k) = Background (s, k)
 
 
 [<Struct; RequireQualifiedAccess>]
 type Msg =
-  | PrevMode
-  | NextMode
+  // | PrevMode
+  // | NextMode
   | Enter
   | Cancel
   | Decr
   | Incr
   | MsgOfInput of msgInput: StringInput.Msg
 
+module Msg =
+  let toListSelector = function
+    | Msg.Incr -> ValueSome ListSelector.Msg.Incr
+    | Msg.Decr -> ValueSome ListSelector.Msg.Decr
+    | Msg.Enter -> ValueSome ListSelector.Enter
+    | Msg.Cancel -> ValueSome ListSelector.Cancel
+    | _ -> ValueNone
+
 
 let inline update msg state = eff {
   match state, msg with
-  // InputName
-  | InputName (s, k), Msg.MsgOfInput msg ->
-    return!
-      StateMachine.stateMapEff (StringInput.update msg) (s, k)
-  | InputName _,_ ->
-    return state |> StateMachine.Pending
+  | InputName (s, k), msg ->
+    let inline f msg = stateMapEff (StringInput.update msg) (s, k)
+    match msg with
+    | Msg.MsgOfInput msg -> return! f msg
+    | Msg.Cancel -> return! f StringInput.Msg.Cancel
+    | _ -> return Pending state
 
-  // Mode Change
-  | Base s, msg when msg = Msg.NextMode || msg = Msg.PrevMode ->
-    let index = modes |> Array.findIndex ((=) s.mode)
-    let newIndex =
-      (index + if msg = Msg.NextMode then +1 else -1)
-      |> max 0
-      |> min (modes.Length - 1)
-
-    let mode = modes.[newIndex]
-
-    return StateMachine.Pending (
-      if mode = s.mode then state
-      else Base { s with mode = mode }
-    )
+  | Background (s, k), msg ->
+    match Msg.toListSelector msg with
+    | ValueSome msg -> return! stateMapEff (ListSelector.update msg) (s, k)
+    | _ -> return Pending state
 
   // Cancelallation
-  | Base { initConfig = config }, Msg.Cancel ->
-    return StateMachine.Completed config
+  | Base _, Msg.Cancel ->
+    return Completed ValueNone
 
-  // Enter
-  | Base { mode = Mode.Enter; config = config }, Msg.Enter ->
-    return StateMachine.Completed config
-
-  // InputName
-  | Base ({ mode = Mode.InputName; config = { name = name } } as s), Msg.Enter ->
-    let name = name |> ValueOption.defaultValue ""
-    let! inputName = StateMachine.stateEnter (StringInput.State.Init (name, NameMaxLength))
-    return StateMachine.Pending (
-      if inputName = name then state
-      else Base { s with config = { s.config with name = ValueSome inputName } }
-    )
-
-  // Background
-  | Base s, msg when s.mode = Mode.Background ->
-    let msg = msg |> function
-      | Msg.Decr -> ValueSome ListSelector.Decr
-      | Msg.Incr -> ValueSome ListSelector.Incr
-      | Msg.Enter -> ValueSome ListSelector.Enter
-      | _ -> ValueNone
-
-    match msg with
-    | ValueNone ->
-      return state |> StateMachine.Pending
-
+  // Mode Change
+  | Base ({ config = config } as s), msg ->
+    match Msg.toListSelector msg with
+    | ValueNone -> return Pending state
     | ValueSome msg ->
-      let! state = ListSelector.update msg s.background
+      match!
+        s.selector
+        |> ListSelector.update msg with
+      | Completed ValueNone -> return failwith "unexpected"
 
-      return
-        state |> function
-          | StateMachine.Pending x ->
-            Base { s with background = x }
+      | Completed (ValueSome Mode.InputName) ->
+        let name = config.name |> ValueOption.defaultValue ""
 
-          | StateMachine.Completed x ->
-            Base { s with config = { s.config with background = x } }
+        match!
+          StringInput.State.Init (name, NameMaxLength)
+          |> stateEnter
+          with
+        | ValueNone -> return Pending state
+        | ValueSome inputName ->
+          return
+            { s with config = { s.config with name = ValueSome inputName }}
+            |> Base
+            |> Pending
 
-        |> StateMachine.Pending
+      | Completed (ValueSome Mode.Background) ->
+        match!
+          ListSelector.State<Background>.Init(config.background, Background.items, ValueSome config.background)
+          |> stateEnter with
+        | ValueNone -> return Pending state
+        | ValueSome background ->
+          return
+            { s with config = { s.config with background = background }}
+            |> Base
+            |> Pending
 
-  | _ -> return state |> StateMachine.Pending
+      | Completed (ValueSome Mode.Enter) ->
+        return Completed (ValueSome config)
+
+      | Pending selector ->
+        return
+          { s with selector = selector }
+          |> Base
+          |> Pending
 }
