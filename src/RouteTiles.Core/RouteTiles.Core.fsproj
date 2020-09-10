@@ -24,10 +24,10 @@
     <Compile Include="Board.fs" />
     <Compile Include="SoloGame.fs" />
     <Compile Include="Menu.fs" />
+    <Compile Include="SubMenu/ContextState.fs" />
     <Compile Include="SubMenu/ListSelector.fs" />
     <Compile Include="SubMenu/StringInput.fs" />
     <Compile Include="SubMenu/Setting.fs" />
-    <Compile Include="SubMenu/MainMenu.fs" />
     <Compile Include="MenuV2.fs" />
   </ItemGroup>
   <ItemGroup>

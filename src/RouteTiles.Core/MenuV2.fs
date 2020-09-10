@@ -5,27 +5,47 @@ open RouteTiles.Core.Types.SubMenu
 open RouteTiles.Core.Effects
 
 open EffFs
-open EffFs.Library
+open EffFs.Library.StateMachine
+
+[<Struct; RequireQualifiedAccess>]
+type Mode =
+  | GamePlay
+  | Ranking
+  | Setting
+
+module Mode =
+  let items = [|
+    Mode.GamePlay
+    Mode.Ranking
+    Mode.Setting
+  |]
 
 type GameMode =
   | TimeAttack2000
   | ScoreAttack180
 
+module GameMode =
+  let items = [|
+    TimeAttack2000
+    ScoreAttack180
+  |]
+
 type State =
-  | MainMenuState of MainMenu.State
-  // | GameModeSelectState
-  // | ControllerSelectState
+  | MainMenuState of Config * ListSelector.State<Mode>
+  | GameModeSelectState of ContextState.State<State, ListSelector.State<GameMode>> * (State * GameMode voption -> State)
+  | ControllerSelectState of ContextState.State<State, ListSelector.State<Controller>> * (State * Controller voption -> State)
   | SettingMenuState of Setting.State * (Config voption -> State)
 with
-  static member StateEnter(s, k) = SettingMenuState (s, k)
-
   member x.IsStringInputMode = x |> function
     | SettingMenuState (s, _) -> s.IsStringInputMode
     | _ -> false
 
   static member Init(config) =
-    MainMenuState <| MainMenu.State.Init(config, 0)
+    MainMenuState(config, ListSelector.State<_>.Init(0, Mode.items, ValueNone))
 
+  static member StateEnter(s, k) = GameModeSelectState (s, k)
+  static member StateEnter(s, k) = ControllerSelectState (s, k)
+  static member StateEnter(s, k) = SettingMenuState (s, k)
 
 [<Struct>]
 type Msg =
@@ -54,7 +74,7 @@ module Msg =
 
 let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
   match state with
-  | MainMenuState s ->
+  | MainMenuState(config, mainMenu) ->
     match Msg.toListSelectorMsg msg with
     // Cancelは拾う
     | ValueNone
@@ -62,37 +82,62 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
       return state
 
     | ValueSome msg ->
-      match! MainMenu.update msg s with
-      | StateMachine.Pending s -> return MainMenuState s
+      match! ListSelector.update msg mainMenu with
+      | Pending s -> return MainMenuState (config, s)
 
-      | StateMachine.Completed mode ->
+      | Completed mode ->
         match mode with
-        | ValueSome MainMenu.Mode.GamePlay ->
-          return Utils.Todo(state)
-
-        | ValueSome MainMenu.Mode.Ranking ->
-          return Utils.Todo(state)
-
-        | ValueSome MainMenu.Mode.Setting ->
+        | ValueSome Mode.GamePlay ->
           match!
-            Setting.State.Init (s.config)
-            |> StateMachine.stateEnter with
+            ListSelector.State<_>.Init(0, GameMode.items, ValueNone)
+            |> ContextState.State
+            |> stateEnter with
+          | _, ValueNone -> return state
+          | gameModeState, ValueSome gameMode ->
+            let! controllers = CurrentControllers
+            match!
+              ListSelector.State<_>.Init(0, controllers, ValueNone)
+              |> ContextState.State
+              |> stateEnter with
+            | _, ValueNone -> return gameModeState
+            | controllerState, ValueSome controller ->
+              return Utils.Todo(controllerState)
+
+        | ValueSome Mode.Ranking ->
+          return Utils.Todo(state)
+
+        | ValueSome Mode.Setting ->
+          match!
+            Setting.State.Init config
+            |> stateEnter with
           | ValueNone -> return state
-          | ValueSome config -> return MainMenuState { s with config = config }
+          | ValueSome c -> return MainMenuState (c, mainMenu)
 
         | _ ->
           return state
 
+  | GameModeSelectState (s, k) ->
+    match Msg.toListSelectorMsg msg with
+    | ValueNone -> return state
+    | ValueSome msg -> return! ContextState.mapEff state (ListSelector.update msg) (s, k)
+
+  | ControllerSelectState (s, k) ->
+    match Msg.toListSelectorMsg msg with
+    | ValueNone -> return state
+    | ValueSome msg -> return! ContextState.mapEff state (ListSelector.update msg) (s, k)
+
   | SettingMenuState (s, k) ->
     let msg = Msg.toSettingMsg msg
-    return! StateMachine.stateMapEff (Setting.update msg) (s, k)
+    return! stateMapEff (Setting.update msg) (s, k)
 }
 
 #if DEBUG
 type Handler = Handler with
   static member inline Handle(x) = x
-  static member inline Handle(e, k) = StateMachine.handle (e, k)
-  static member inline Handle(_: SoundEffect, k) = k ()
+  static member inline Handle(e, k) = handle (e, k)
+  static member inline Handle(_: SoundEffect, k) = failwith "" |> k
+  static member inline Handle(_: CurrentControllers, k) = failwith "" |> k
+  // static member inline Handle(_: GetStateEffect<'a>, k) = k Unchecked.defaultof<'a>
 
 let update' msg state =
   update msg state
