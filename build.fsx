@@ -28,6 +28,21 @@ open FSharp.Json
 
 let testProjects = []
 
+let runtimes = [ "linux-x64"; "win-x64"; "osx-x64" ]
+let publishOutput = sprintf "publish/RouteTiles.%s"
+
+let resourcesDirectory = @"Resources"
+
+let altseed2Dir = @"lib/Altseed2"
+
+let resourcesf fmt = Printf.kprintf (sprintf "%s%s" resourcesDirectory) fmt
+
+let dotnet cmd arg =
+  let res = DotNet.exec id cmd arg
+  if not res.OK then
+    failwithf "Failed 'dotnet %s %s'" cmd arg
+
+
 Target.create "Test" (fun _ ->
   [ for x in testProjects ->
       sprintf "tests/%s/bin/Release/**/%s.dll" x x
@@ -38,11 +53,6 @@ Target.create "Test" (fun _ ->
     Seq.fold (++) (!! x) xs
     |> Expecto.run id
 )
-
-let dotnet cmd arg =
-  let res = DotNet.exec id cmd arg
-  if not res.OK then
-    failwithf "Failed 'dotnet %s %s'" cmd arg
 
 Target.create "Tool" (fun _ ->
   dotnet "tool" "update paket"
@@ -63,17 +73,11 @@ Target.create "Clean" (fun _ ->
 Target.create "Build" (fun _ ->
   !! "src/**/*.*proj"
   ++ "tests/**/*.*proj"
-  // ++ "lib/**/*.*proj"
   |> Seq.iter (DotNet.build id)
 )
 
-let runtimes = [ "linux-x64"; "win-x64"; "osx-x64" ]
-let publishOutput = sprintf "publish/RouteTiles.%s"
-
-let resources = "Resources"
-
 Target.create "CopyShader" (fun _ ->
-  Shell.copyDir (sprintf "%s/Shader" resources) @"src/Shader" (fun _ -> true)
+  Shell.copyDir (resourcesf "/Shader") @"src/Shader" (fun _ -> true)
 )
 
 Target.create "Resources" (fun _ ->
@@ -82,39 +86,71 @@ Target.create "Resources" (fun _ ->
   let targetProject = "RouteTiles"
 
   // for Backup
-  !!(sprintf "%s/**" resources)
-  |> Zip.zip resources (sprintf "%s.zip" resources)
+  !!(resourcesf "/**")
+  |> Zip.zip resourcesDirectory (resourcesf ".zip")
 
   let outDir x = sprintf "src/%s/bin/%s/netcoreapp3.1" targetProject x
 
   // for Debug
-  let dir = outDir "Debug"
-  let target = sprintf "%s/%s" dir resources
-  Directory.ensure dir
-  Directory.delete target |> ignore
-  Shell.copyDir target resources (fun _ -> true)
-  // Shell.copyFile (sprintf "%s.pack" target) (sprintf "%s.pack" resources)
-  Trace.trace "Finished Copying Resources for Debug"
+  (
+    let dir = outDir "Debug"
+    let target = resourcesf "/%s" dir
+    Directory.ensure dir
+    Directory.delete target |> ignore
+    Shell.copyDir target resourcesDirectory (fun _ -> true)
+    Trace.trace "Finished Copying Resources for Debug"
+  )
 
-  let packedResources = sprintf "%s.pack" resources
-
-  [
-    yield!
-      runtimes
-      |> Seq.map (fun r ->
-        sprintf "%s/%s" (publishOutput r) packedResources
-      )
-    yield outDir "Release"
-  ] |> Seq.iter(fun target ->
+  // for Release
+  (
+    let packedResources = resourcesf ".pack"
+    let target = outDir "Release"
     Directory.ensure target
     packedResources
     |> Shell.copyFile target
   )
 )
 
+
 Target.create "Publish" (fun _ ->
+  Trace.tracefn "Clean 'publish'"
+  Directory.delete "publish"
+  Directory.create "publish"
+
   runtimes
   |> Seq.iter (fun target ->
+    Trace.tracefn "Start for '%s'" target
+
+    let outputPath = publishOutput target
+
+    Directory.ensure outputPath
+
+    // Copy Texts
+    "publishContents/README_PUB.md"
+    |> Shell.copyFile (sprintf "%s/README.txt" outputPath)
+
+    // LICENSES
+    [|
+      "RouteTiles", "LICENSE"
+      ".NET Core", "publishContents/LICENSES/dotnetcore.txt"
+      "FSharp.Json", "publishContents/LICENSES/fsharp.json.txt"
+      "SimpleRankingServer", "publishContents/LICENSES/simplerankingserver.txt"
+      "Affogato", "lib/Affogato/LICENSE"
+      "EffFs", "lib/EffFs/LICENSE"
+      "Altseed2", "lib/Altseed2/LICENSE"
+      "Altseed2.BoxUI", "lib/Altseed2.BoxUI/LICENSE"
+    |]
+    |> Array.map (fun (libname, path) -> sprintf "%s\n\n%s" libname (File.readAsString path))
+    |> String.concat (sprintf "\n%s\n" <| String.replicate 50 "-")
+    |> File.writeString false (sprintf "%s/LICENSE.txt" outputPath)
+
+    // Copy Resources
+    let packedResources = resourcesf ".pack"
+    Trace.tracefn "Copy %s" packedResources
+    packedResources
+    |> Shell.copyFile (sprintf "%s/%s" outputPath packedResources)
+
+    // Publish
     "src/RouteTiles/RouteTiles.fsproj"
     |> DotNet.publish (fun p ->
       { p with
@@ -128,13 +164,16 @@ Target.create "Publish" (fun _ ->
                 :: ("PublishTrimmed", "true")
                 :: p.MSBuildParams.Properties
           }
-          OutputPath = publishOutput target |> Some
+          OutputPath = outputPath |> Some
       }
     )
+
+    // Make zip
+    Trace.tracefn "Make %s.zip" outputPath
+    !! (sprintf "%s/**" outputPath)
+    |> Zip.zip "publish" (sprintf "%s.zip" outputPath)
   )
 )
-
-let altseed2Dir = @"lib/Altseed2"
 
 Target.create "CopyLib" (fun _ ->
   let outputDirs = [
@@ -215,10 +254,11 @@ let [<Literal>] password = ""
 
 Target.create "All" ignore
 
-"CopyShader" ==> "Resources"
+"CopyShader"
+  ==> "Resources"
+  ==> "Publish"
 
-"Clean"
-  ==> "Build"
+"Build"
   ==> "All"
 
 Target.runOrDefault "All"

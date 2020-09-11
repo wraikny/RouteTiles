@@ -11,9 +11,3 @@ The source code is distributed under the MIT License.
 - Tile Texture: wraikny
 - Tile Effect: wraikny
 - Menu Icons: https://icooon-mono.com/
-
-### .NET Core
-https://github.com/dotnet/core/blob/master/LICENSE.TXT
-
-### Altseed2
-see LICENSE_ALTSEED2.txt

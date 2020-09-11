@@ -2,6 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OtherFlags>--warnon:1182</OtherFlags>
@@ -9,6 +10,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\lib\Affogato\src\Affogato\Affogato.fsproj" />
     <ProjectReference Include="..\..\lib\EffFs\src\EffFs\EffFs.fsproj" />
