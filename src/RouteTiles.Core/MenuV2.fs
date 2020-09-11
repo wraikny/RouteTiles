@@ -149,16 +149,20 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
           return state
 
   | PauseGame, GameState (config, controller, gameMode) ->
+    do! GameControlEffect.Pause
+
     match!
       ListSelector.State<_>.Init(0, PauseSelect.items, ValueNone)
       |> WithContext
       |> stateEnter
       with
     | _, ValueNone
-    | _, ValueSome Continue -> return state
+    | _, ValueSome Continue ->
+      do! GameControlEffect.Resume
+      return state
 
     | _, ValueSome Restart ->
-      do! GameControlEffect.Restart
+      do! GameControlEffect.Resume
       return state
 
     | _, ValueSome Quit ->

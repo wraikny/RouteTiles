@@ -12,6 +12,8 @@ with
 
 [<Struct; RequireQualifiedAccess>]
 type GameControlEffect =
+  | Pause
+  | Resume
   | Start of SoloGame.Mode * Controller
   | Restart
   | Quit
