@@ -122,6 +122,7 @@ let inline update msg state = eff {
             |> Pending
 
       | Completed (ValueSome Mode.Enter) ->
+        do! SaveConfig (config)
         return Completed (ValueSome config)
 
       | Pending selector ->

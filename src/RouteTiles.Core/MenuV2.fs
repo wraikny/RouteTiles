@@ -143,7 +143,9 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
             Setting.State.Init config
             |> stateEnter with
           | ValueNone -> return state
-          | ValueSome c -> return MainMenuState (c, mainMenu)
+          | ValueSome c ->
+
+            return MainMenuState (c, mainMenu)
 
         | _ ->
           return state
@@ -221,6 +223,7 @@ type Handler = Handler with
   static member inline Handle(_: SoundEffect, k) = failwith "" |> k
   static member inline Handle(_: CurrentControllers, k) = failwith "" |> k
   static member inline Handle(_: GameControlEffect, k) = failwith "" |> k
+  static member inline Handle(_: SaveConfig, k) = failwith "" |> k
   // static member inline Handle(_: GetStateEffect<'a>, k) = k Unchecked.defaultof<'a>
 
 let update' msg state =
