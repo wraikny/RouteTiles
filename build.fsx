@@ -126,7 +126,7 @@ Target.create "Publish" (fun _ ->
     Directory.ensure outputPath
 
     // Copy Texts
-    "publishContents/README_PUB.md"
+    "publishContents/README.md"
     |> Shell.copyFile (sprintf "%s/README.txt" outputPath)
 
     // LICENSES
