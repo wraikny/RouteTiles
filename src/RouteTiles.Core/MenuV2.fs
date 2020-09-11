@@ -32,8 +32,8 @@ module GameMode =
 
 type State =
   | MainMenuState of Config * ListSelector.State<Mode>
-  | GameModeSelectState of ContextState.State<State, ListSelector.State<GameMode>> * (State * GameMode voption -> State)
-  | ControllerSelectState of ContextState.State<State, ListSelector.State<Controller>> * (State * Controller voption -> State)
+  | GameModeSelectState of WithContext<State, ListSelector.State<GameMode>> * (State * GameMode voption -> State)
+  | ControllerSelectState of WithContext<State, ListSelector.State<Controller>> * (State * Controller voption -> State)
   | SettingMenuState of Setting.State * (Config voption -> State)
 with
   member x.IsStringInputMode = x |> function
@@ -90,14 +90,14 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
         | ValueSome Mode.GamePlay ->
           match!
             ListSelector.State<_>.Init(0, GameMode.items, ValueNone)
-            |> ContextState.State
+            |> WithContext
             |> stateEnter with
           | _, ValueNone -> return state
           | gameModeState, ValueSome gameMode ->
             let! controllers = CurrentControllers
             match!
               ListSelector.State<_>.Init(0, controllers, ValueNone)
-              |> ContextState.State
+              |> WithContext
               |> stateEnter with
             | _, ValueNone -> return gameModeState
             | controllerState, ValueSome controller ->
@@ -119,12 +119,12 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
   | GameModeSelectState (s, k) ->
     match Msg.toListSelectorMsg msg with
     | ValueNone -> return state
-    | ValueSome msg -> return! ContextState.mapEff state (ListSelector.update msg) (s, k)
+    | ValueSome msg -> return! WithContext.mapEff state (ListSelector.update msg) (s, k)
 
   | ControllerSelectState (s, k) ->
     match Msg.toListSelectorMsg msg with
     | ValueNone -> return state
-    | ValueSome msg -> return! ContextState.mapEff state (ListSelector.update msg) (s, k)
+    | ValueSome msg -> return! WithContext.mapEff state (ListSelector.update msg) (s, k)
 
   | SettingMenuState (s, k) ->
     let msg = Msg.toSettingMsg msg
