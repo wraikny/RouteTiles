@@ -14,7 +14,6 @@ nuget FSharp.Json //"
 #r "netstandard"
 
 open System
-
 open Fake.Core
 open Fake.DotNet
 open Fake.DotNet.Testing
@@ -23,17 +22,16 @@ open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open Fake.Core.TargetOperators
 open Fake.Net
-
 open FSharp.Json
+
+let altseed2CommitId = "f3d5c7b1a0698a594823604da191f7457ce0be6a"
+let runtimes = [ "linux-x64"; "win-x64"; "osx-x64" ]
+let resourcesDirectory = @"Resources"
+let altseed2Dir = @"lib/Altseed2"
 
 let testProjects = []
 
-let runtimes = [ "linux-x64"; "win-x64"; "osx-x64" ]
 let publishOutput = sprintf "publish/RouteTiles.%s"
-
-let resourcesDirectory = @"Resources"
-
-let altseed2Dir = @"lib/Altseed2"
 
 let resourcesf fmt = Printf.kprintf (sprintf "%s%s" resourcesDirectory) fmt
 
@@ -55,7 +53,6 @@ Target.create "Test" (fun _ ->
 )
 
 Target.create "Tool" (fun _ ->
-  dotnet "tool" "update paket"
   dotnet "tool" "update fake-cli"
 )
 
@@ -85,20 +82,16 @@ Target.create "Resources" (fun _ ->
 
   let targetProject = "RouteTiles"
 
-  // for Backup
-  !!(resourcesf "/**")
-  |> Zip.zip resourcesDirectory (resourcesf ".zip")
-
   let outDir x = sprintf "src/%s/bin/%s/netcoreapp3.1" targetProject x
 
   // for Debug
   (
     let dir = outDir "Debug"
-    let target = resourcesf "/%s" dir
+    let target = sprintf "%s/%s" dir resourcesDirectory
     Directory.ensure dir
     Directory.delete target |> ignore
     Shell.copyDir target resourcesDirectory (fun _ -> true)
-    Trace.trace "Finished Copying Resources for Debug"
+    Trace.tracefn "Finished copying %s to %s" resourcesDirectory target
   )
 
   // for Release
@@ -106,16 +99,19 @@ Target.create "Resources" (fun _ ->
     let packedResources = resourcesf ".pack"
     let target = outDir "Release"
     Directory.ensure target
-    packedResources
-    |> Shell.copyFile target
+    Shell.copyFile target packedResources
+    Trace.tracefn "Finished copying %s to %s" packedResources target
   )
+
+  // for Backup
+  !!(resourcesf "/**")
+  |> Zip.zip resourcesDirectory (resourcesf ".zip")
 )
 
 
 Target.create "Publish" (fun _ ->
   Trace.tracefn "Clean 'publish'"
-  Directory.delete "publish"
-  Directory.create "publish"
+  Shell.cleanDir "publish"
 
   runtimes
   |> Seq.iter (fun target ->
@@ -176,17 +172,15 @@ Target.create "Publish" (fun _ ->
 )
 
 Target.create "CopyLib" (fun _ ->
-  let outputDirs = [
+  [|
     @"lib/Altseed2.BoxUI/lib/Altseed2"
-  ]
-  outputDirs |> Seq.iter (fun dir ->
+  |]
+  |> Seq.iter (fun dir ->
     Shell.copyDir dir altseed2Dir (fun _ -> true)
   )
 )
 
 Target.create "Download" (fun _ ->
-  let commitId = "f3d5c7b1a0698a594823604da191f7457ce0be6a"
-
   let token = Environment.GetEnvironmentVariable("GITHUB_TOKEN")
   let url = @"https://api.github.com/repos/altseed/altseed2-csharp/actions/artifacts"
 
@@ -194,7 +188,7 @@ Target.create "Download" (fun _ ->
   client.DefaultRequestHeaders.UserAgent.ParseAdd("wraikny.RouteTiles")
   client.DefaultRequestHeaders.Authorization <- Net.Http.Headers.AuthenticationHeaderValue("Bearer", token)
 
-  let downloadName = sprintf "Altseed2-%s" commitId
+  let downloadName = sprintf "Altseed2-%s" altseed2CommitId
 
   let rec getArchiveUrl page = async {
     Trace.tracefn "page %d" page
