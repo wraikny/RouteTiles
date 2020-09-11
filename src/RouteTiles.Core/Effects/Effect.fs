@@ -12,10 +12,10 @@ with
 
 [<Struct; RequireQualifiedAccess>]
 type GameControlEffect =
-  | Pause
-  | Resume
+  | Start of SoloGame.Mode * Controller
   | Restart
   | Quit
+  | SetController of Controller
 with
   static member Effect(_) = Eff.marker<unit>
 

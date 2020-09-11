@@ -30,10 +30,36 @@ module GameMode =
     ScoreAttack180
   |]
 
-type State =
+  let into = function
+    | TimeAttack2000 -> SoloGame.Mode.TimeAttack 2000
+    | ScoreAttack180 -> SoloGame.Mode.ScoreAttack 180
+
+
+[<Struct>]
+type PauseSelect =
+  | Continue
+  | ChangeController
+  | Restart
+  | Quit
+
+module PauseSelect =
+  let items = [|
+    Continue
+    ChangeController
+    Restart
+    Quit
+  |]
+
+type WithState<'s> = WithContext<State, 's>
+
+and WSListSelector<'item> = WithState<ListSelector.State<'item>>
+
+and State =
   | MainMenuState of Config * ListSelector.State<Mode>
-  | GameModeSelectState of WithContext<State, ListSelector.State<GameMode>> * (State * GameMode voption -> State)
-  | ControllerSelectState of WithContext<State, ListSelector.State<Controller>> * (State * Controller voption -> State)
+  | GameModeSelectState of WSListSelector<GameMode> * (State * GameMode voption -> State)
+  | ControllerSelectState of WSListSelector<Controller> * (State * Controller voption -> State)
+  | GameState of Config * Controller * GameMode
+  | PauseState of WSListSelector<PauseSelect> * (State * PauseSelect voption -> State)
   | SettingMenuState of Setting.State * (Config voption -> State)
 with
   member x.IsStringInputMode = x |> function
@@ -45,6 +71,7 @@ with
 
   static member StateEnter(s, k) = GameModeSelectState (s, k)
   static member StateEnter(s, k) = ControllerSelectState (s, k)
+  static member StateEnter(s, k) = PauseState (s, k)
   static member StateEnter(s, k) = SettingMenuState (s, k)
 
 [<Struct>]
@@ -54,15 +81,19 @@ type Msg =
   | Enter
   | Cancel
   | MsgOfInput of msgInput:StringInput.Msg
+  | PauseGame
+  | QuitGame
+  | UpdateControllers of Controller[]
 
 
 module Msg =
   let toSettingMsg = function
-    | Decr -> Setting.Msg.Decr
-    | Incr -> Setting.Msg.Incr
-    | Enter -> Setting.Msg.Enter
-    | Cancel -> Setting.Msg.Cancel
-    | MsgOfInput m -> Setting.Msg.MsgOfInput m
+    | Decr -> ValueSome Setting.Msg.Decr
+    | Incr -> ValueSome Setting.Msg.Incr
+    | Enter -> ValueSome Setting.Msg.Enter
+    | Cancel -> ValueSome Setting.Msg.Cancel
+    | MsgOfInput m -> ValueSome <| Setting.Msg.MsgOfInput m
+    | _ -> ValueNone
 
   let toListSelectorMsg = function
     | Incr -> ValueSome ListSelector.Msg.Incr
@@ -73,8 +104,8 @@ module Msg =
 
 
 let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
-  match state with
-  | MainMenuState(config, mainMenu) ->
+  match msg, state with
+  | _, MainMenuState(config, mainMenu) ->
     match Msg.toListSelectorMsg msg with
     // Cancelは拾う
     | ValueNone
@@ -100,8 +131,9 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
               |> WithContext
               |> stateEnter with
             | _, ValueNone -> return gameModeState
-            | controllerState, ValueSome controller ->
-              return Utils.Todo(controllerState)
+            | _, ValueSome controller ->
+              do! GameControlEffect.Start(gameMode |> GameMode.into, controller)
+              return GameState (config, controller, gameMode)
 
         | ValueSome Mode.Ranking ->
           return Utils.Todo(state)
@@ -116,19 +148,66 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
         | _ ->
           return state
 
-  | GameModeSelectState (s, k) ->
+  | PauseGame, GameState (config, controller, gameMode) ->
+    match!
+      ListSelector.State<_>.Init(0, PauseSelect.items, ValueNone)
+      |> WithContext
+      |> stateEnter
+      with
+    | _, ValueNone
+    | _, ValueSome Continue -> return state
+
+    | _, ValueSome Restart ->
+      do! GameControlEffect.Restart
+      return state
+
+    | _, ValueSome Quit ->
+      do! GameControlEffect.Quit
+      return State.Init (config)
+
+    | pauseState, ValueSome ChangeController ->
+      let! controllers = CurrentControllers
+      match!
+        ListSelector.State<_>.Init(controller, controllers,ValueSome controller)
+        |> WithContext
+        |> stateEnter
+        with
+      | _, ValueNone -> return pauseState
+      | _, ValueSome controller ->
+        do! GameControlEffect.SetController controller
+        return GameState (config, controller, gameMode)
+
+  | QuitGame, GameState (config, _, _) ->
+    return State.Init (config)
+
+  | _, GameState _ ->
+    return state
+
+  | _, GameModeSelectState (s, k) ->
     match Msg.toListSelectorMsg msg with
     | ValueNone -> return state
     | ValueSome msg -> return! WithContext.mapEff state (ListSelector.update msg) (s, k)
 
-  | ControllerSelectState (s, k) ->
+  | UpdateControllers controllers, ControllerSelectState (WithContext s, k) ->
+    let cursorItem = s.selection.[s.cursor]
+    let currentItem = s.current |> ValueOption.map(fun i -> s.selection.[i])
+    let listSelector = ListSelector.State<_>.Init(cursorItem, controllers, currentItem)
+    return ControllerSelectState ((WithContext listSelector), k)
+
+  | _, ControllerSelectState (s, k) ->
     match Msg.toListSelectorMsg msg with
     | ValueNone -> return state
     | ValueSome msg -> return! WithContext.mapEff state (ListSelector.update msg) (s, k)
 
-  | SettingMenuState (s, k) ->
-    let msg = Msg.toSettingMsg msg
-    return! stateMapEff (Setting.update msg) (s, k)
+  | _, PauseState (s, k) ->
+    match Msg.toListSelectorMsg msg with
+    | ValueNone -> return state
+    | ValueSome msg -> return! WithContext.mapEff state (ListSelector.update msg) (s, k)
+
+  | _, SettingMenuState (s, k) ->
+    match Msg.toSettingMsg msg with
+    | ValueNone -> return state
+    | ValueSome msg -> return! stateMapEff (Setting.update msg) (s, k)
 }
 
 #if DEBUG
@@ -137,6 +216,7 @@ type Handler = Handler with
   static member inline Handle(e, k) = handle (e, k)
   static member inline Handle(_: SoundEffect, k) = failwith "" |> k
   static member inline Handle(_: CurrentControllers, k) = failwith "" |> k
+  static member inline Handle(_: GameControlEffect, k) = failwith "" |> k
   // static member inline Handle(_: GetStateEffect<'a>, k) = k Unchecked.defaultof<'a>
 
 let update' msg state =

@@ -4,8 +4,8 @@ open RouteTiles.Core
 [<Struct>]
 type State<'item> = {
   cursor: int
-  selection: 'item[]
   current: int voption
+  selection: 'item[]
 } with
   static member Init (cursor, selection, current) = {
     cursor = cursor
@@ -14,10 +14,10 @@ type State<'item> = {
   }
 
   static member Init (cursorItem, selection, currentItem) =
-    let cursor = Array.findIndex ((=) cursorItem) selection
+    let cursor = Array.tryFindIndex ((=) cursorItem) selection |> Option.defaultValue 0
     let current =
       currentItem
-      |> ValueOption.map (fun x -> Array.findIndex ((=) x) selection)
+      |> ValueOption.map (fun x -> Array.tryFindIndex ((=) x) selection |> Option.defaultValue 0)
 
     {
       cursor = cursor
@@ -44,9 +44,11 @@ type State<'a> with
 let inline update msg state = eff {
   match msg with
   | Msg.Decr when state.cursor > 0 ->
+    do! SoundEffect.Move
     return { state with cursor = state.cursor - 1 } |> Pending
 
   | Msg.Incr when state.cursor < state.selection.Length - 1 ->
+    do! SoundEffect.Move
     return { state with cursor = state.cursor + 1 } |> Pending
 
   | Msg.Decr | Msg.Incr ->
@@ -54,6 +56,7 @@ let inline update msg state = eff {
     return state |> Pending
 
   | Msg.Enter ->
+    do! SoundEffect.Select
     return state.selection.[state.cursor] |> ValueSome |> Completed
 
   | Msg.Cancel ->
