@@ -1,7 +1,6 @@
 [![](https://github.com/wraikny/RouteTiles/workflows/CI/badge.svg)](https://github.com/wraikny/RouteTiles/actions?workflow=CI)
 
 # RouteTiles
-distributed under [MIT License](/LICENSE)
 
 ## Requirements
 .NET Core 3.1  
