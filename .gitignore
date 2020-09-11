@@ -356,6 +356,7 @@ MigrationBackup/
 **/Log.txt
 
 /Resources/**
+/Fonts/**
 
 Resources.pack
 Resources.zip

@@ -39,7 +39,10 @@ Target.create "Test" (fun _ ->
     |> Expecto.run id
 )
 
-let dotnet cmd arg = DotNet.exec id cmd arg |> ignore
+let dotnet cmd arg =
+  let res = DotNet.exec id cmd arg
+  if not res.OK then
+    failwithf "Failed 'dotnet %s %s'" cmd arg
 
 Target.create "Tool" (fun _ ->
   dotnet "tool" "update paket"
@@ -74,8 +77,11 @@ Target.create "CopyShader" (fun _ ->
 )
 
 Target.create "Resources" (fun _ ->
+  dotnet "fsi" "--exec pack.fsx"
+
   let targetProject = "RouteTiles"
 
+  // for Backup
   !!(sprintf "%s/**" resources)
   |> Zip.zip resources (sprintf "%s.zip" resources)
 
@@ -89,8 +95,6 @@ Target.create "Resources" (fun _ ->
   Shell.copyDir target resources (fun _ -> true)
   // Shell.copyFile (sprintf "%s.pack" target) (sprintf "%s.pack" resources)
   Trace.trace "Finished Copying Resources for Debug"
-
-  dotnet "fsi" "--exec pack.fsx"
 
   let packedResources = sprintf "%s.pack" resources
 

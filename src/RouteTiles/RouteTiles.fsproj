@@ -38,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="TextMap.fs" />
     <Compile Include="Updater.fs" />
     <Compile Include="Affogato.fs" />
     <Compile Include="AltseedExtension.fs" />
