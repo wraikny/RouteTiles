@@ -30,6 +30,8 @@ type SoundEffect =
   | Select
   | Move
   | Invalid
+  | InputChar
+  | DeleteChar
 with
   static member Effect(_) = Eff.marker<unit>
 

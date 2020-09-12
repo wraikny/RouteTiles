@@ -4,20 +4,20 @@ open RouteTiles.Core
 [<Struct>]
 type State<'item> = {
   cursor: int
-  current: int voption
+  current: int option
   selection: 'item[]
 } with
-  static member Init (cursor, selection, current) = {
+  static member Init (cursor, selection, ?current) = {
     cursor = cursor
     selection = selection
     current = current
   }
 
-  static member Init (cursorItem, selection, currentItem) =
+  static member Init (cursorItem, selection, ?currentItem) =
     let cursor = Array.tryFindIndex ((=) cursorItem) selection |> Option.defaultValue 0
     let current =
       currentItem
-      |> ValueOption.map (fun x -> Array.tryFindIndex ((=) x) selection |> Option.defaultValue 0)
+      |> Option.map (fun x -> Array.tryFindIndex ((=) x) selection |> Option.defaultValue 0)
 
     {
       cursor = cursor

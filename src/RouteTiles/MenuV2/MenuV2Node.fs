@@ -108,21 +108,23 @@ type MenuV2Node() =
 
   let getKeyboardInput = InputControl.getKeyboardInput InputControl.MenuV2.keyboard
   let getJoystickInput = InputControl.getJoystickInput InputControl.MenuV2.joystick
+  let getCharacterInput = InputControl.getKeyboardInput InputControl.MenuV2.characterInput
+
+  let getJoysticksInputs() =
+    let count = Engine.Joystick.ConnectedJoystickCount
+    seq {
+      for i in 0..count-1 do
+        let info = Engine.Joystick.GetJoystickInfo(i)
+        if info <> null && info.IsGamepad then
+          match getJoystickInput i with
+          | Some x -> yield x
+          | _ -> ()
+    }
+    |> Seq.tryHead
 
   let getInput() =
     getKeyboardInput ()
-    |> Option.alt(fun () ->
-      let count = Engine.Joystick.ConnectedJoystickCount
-      seq {
-        for i in 0..count-1 do
-          let info = Engine.Joystick.GetJoystickInfo(i)
-          if info <> null && info.IsGamepad then
-            match getJoystickInput i with
-            | Some x -> yield x
-            | _ -> ()
-      }
-      |> Seq.tryHead
-    )
+    |> Option.alt getJoysticksInputs
 
   override this.OnAdded() =
     let handler = {
@@ -175,7 +177,11 @@ type MenuV2Node() =
       if InputControl.pauseInput controller then
         updater.Dispatch MenuV2.Msg.PauseGame
 
+    | MenuV2.SettingMenuState(SubMenu.Setting.State.InputName _, _) ->
+      getCharacterInput ()
+      |> Option.alt getJoysticksInputs
+      |> Option.iter updater.Dispatch
+
     | _ ->
       getInput()
       |> Option.iter updater.Dispatch
-    ()

@@ -178,8 +178,6 @@ module MenuV2 =
       [| Key.Enter, ButtonState.Push |], StringInput.Enter
       [| Key.Backspace, ButtonState.Push |], StringInput.Delete
       [| Key.Delete, ButtonState.Push |], StringInput.Delete
+      [| Key.Escape, ButtonState.Push |], StringInput.Cancel
     |]
     |> Array.map (fun (keys, c) -> (keys, Msg.MsgOfInput c))
-    |> Array.append [|
-      [| Key.Escape, ButtonState.Push |], Msg.Cancel
-    |]

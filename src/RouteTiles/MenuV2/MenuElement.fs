@@ -16,6 +16,7 @@ type Container (textMap: TextMap.TextMap) =
   member val MaskTexture = Texture2D.LoadStrict(@"Menu/background_mask.png")
   member val TitleTexture = Texture2D.LoadStrict(@"Menu/title.png")
   member val ButtonBackground = Texture2D.LoadStrict(@"Menu/button-metalic-dark-highlight-320x80.png")
+  member val InputUsernameBackground = Texture2D.LoadStrict(@"Menu/input_username.png")
   member val Font = Font.LoadStaticFontStrict(@"Font/Makinas-4-Square-32/font.a2f")
 
   member val MainMenuButtons =
@@ -76,10 +77,10 @@ let rightArea() =
   :> Element
 
 
-let buttons (container: Container) (selections: string[]) (cursor: int, current: int voption) =
+let buttons (container: Container) (selections: string[]) (cursor: int, current: int option) =
   let size = Vector2F(320.0f, 80.0f)
 
-  let current = current |> ValueOption.defaultValue -1
+  let current = current |> Option.defaultValue -1
 
   ItemList.Create(itemMargin = 40.0f)
   |> BoxUI.withChildren (
@@ -162,7 +163,7 @@ let createTitle (container: Container) =
     , zOrder = ZOrder.Menu.title
     )
   |> BoxUI.marginTop (LengthScale.Fixed, 80.0f)
-  // |> BoxUI.debug
+  |> BoxUI.debug
   :> Element
 
 let createButtons (container: Container) (selections: string[]) param =
@@ -192,7 +193,7 @@ let createDesc (container: Container) text =
       , zOrder = ZOrder.Menu.description
       )
     |> BoxUI.alignY Align.Max
-    // |> BoxUI.debug
+    |> BoxUI.debug
   )
 
 let createMainMenu (container: Container) (state: SubMenu.ListSelector.State<MenuV2.Mode>) =
@@ -221,6 +222,35 @@ let createSetting (container: Container) (state: SubMenu.Setting.State) =
       createBackground container
       createButtons container container.SettingMenuButtons (selector.cursor, selector.current)
       rightArea().With(createDesc container (container.SettingModeDescription selector.cursor))
+    |]
+  | SubMenu.Setting.State.InputName (state, _) ->
+    [|
+      Sprite.Create
+        ( aspect = Aspect.Fixed
+        , texture = container.InputUsernameBackground
+        )
+      |> BoxUI.alignCenter
+      :> Element
+      |> BoxUI.withChild(
+        empty()
+        |> BoxUI.debug
+        |> BoxUI.marginBottom (LengthScale.Fixed, 80.0f)
+        |> BoxUI.withChild(
+          let text, color =
+            if state.current = ""
+            then "username", Color(100uy, 100uy, 100uy)
+            else state.current, Color(0uy, 0uy, 0uy)
+
+          Text.Create
+            ( font = container.Font
+            , text = text
+            , color = Nullable(color)
+            )
+          |> BoxUI.alignX Align.Center
+          |> BoxUI.alignY Align.Max
+          |> BoxUI.debug
+        )
+      )
     |]
   | _ -> Array.empty
 

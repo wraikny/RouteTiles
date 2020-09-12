@@ -36,14 +36,18 @@ type State with
 let inline update msg state = eff {
   match msg with
   | Input c when state.inputs.Length < state.maxLength ->
-    let inputs = Array.addToHead c state.inputs
+    do! SoundEffect.InputChar
+
+    let inputs = [| yield! state.inputs; yield c |]
     return
       state
       |> setInputs inputs
       |> Pending
 
   | Delete when state.inputs.Length > 0 ->
-    let (_, inputs) = state.inputs |> Array.tryPopLast
+    do! SoundEffect.DeleteChar
+
+    let inputs = state.inputs.[0..state.inputs.Length-2]
     return
       state
       |> setInputs inputs

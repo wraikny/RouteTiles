@@ -38,7 +38,7 @@ with
   static member Init (initConfig: Config) =
     Base
       { config = initConfig
-        selector = ListSelector.State<Mode>.Init(0, Mode.items, ValueNone)
+        selector = ListSelector.State<Mode>.Init(0, Mode.items)
         // background = ListSelector.State<_>.Init(initConfig.background, Background.items, ValueSome initConfig.background)
       }
 
@@ -85,6 +85,7 @@ let inline update msg state = eff {
     | Msg.Cancel -> return! f StringInput.Msg.Cancel
     | _ -> return Pending state
 
+
   | Background (s, k), msg ->
     match Msg.toListSelector msg with
     | ValueSome msg -> return! stateMapEff (ListSelector.update msg) (s, k)
@@ -120,7 +121,7 @@ let inline update msg state = eff {
 
       | Completed (ValueSome Mode.Background) ->
         match!
-          ListSelector.State<Background>.Init(config.background, Background.items, ValueSome config.background)
+          ListSelector.State<Background>.Init(config.background, Background.items, currentItem=config.background)
           |> stateEnter with
         | ValueNone -> return Pending state
         | ValueSome background ->
@@ -130,7 +131,6 @@ let inline update msg state = eff {
             |> Pending
 
       | Completed (ValueSome Mode.Enter) ->
-        do! SaveConfig (config)
         return Completed (ValueSome config)
 
       | Pending selector ->
