@@ -18,8 +18,8 @@ let main _ =
   let initializers = [|
     Config.initialize
 // #if !DEBUG
-    Consts.initialize
-    MenuView.initialize
+    // Consts.initialize
+    // MenuView.initialize
 // #endif
   |]
 
@@ -46,12 +46,12 @@ let main _ =
     }
 
   let initGame() =
-    Engine.AddNode(PostEffect.Wave(ZOrder = ZOrder.posteffect))
+    // Engine.AddNode(PostEffect.Wave(ZOrder = ZOrder.posteffect))
 
     async {
       do! initLoading()
       let! _ = Async.StartChild (Config.update)
-      Engine.AddNode(MenuNode())
+      Engine.AddNode(MenuV2.MenuV2Node())
     }
     |> Async.StartImmediate
 

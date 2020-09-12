@@ -1,4 +1,4 @@
-module RouteTiles.Core.Types.SubMenu.ListSelector
+module RouteTiles.Core.SubMenu.ListSelector
 open RouteTiles.Core
 
 [<Struct>]

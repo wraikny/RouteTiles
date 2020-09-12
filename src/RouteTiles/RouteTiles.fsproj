@@ -57,6 +57,7 @@
     <Compile Include="Game/Game.fs" />
     <Compile Include="Game/GameInfo.fs" />
     <Compile Include="../../ResourcesPassword.fs" />
+    <Compile Include="Config.fs" />
     <Compile Include="Menu/Common.fs" />
     <Compile Include="Menu/Main.fs" />
     <Compile Include="Menu/GameSetting.fs" />
@@ -65,6 +66,8 @@
     <Compile Include="Menu/Setting.fs" />
     <Compile Include="Menu/MenuView.fs" />
     <Compile Include="Menu/MenuNode.fs" />
+    <Compile Include="MenuV2/MenuElement.fs" />
+    <Compile Include="MenuV2/MenuV2Node.fs" />
     <Compile Include="PostEffect/Wave.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

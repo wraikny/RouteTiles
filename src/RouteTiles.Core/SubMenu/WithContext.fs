@@ -1,4 +1,4 @@
-namespace RouteTiles.Core.Types.SubMenu
+namespace RouteTiles.Core.SubMenu
 open RouteTiles.Core
 
 open EffFs

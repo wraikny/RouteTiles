@@ -1,7 +1,8 @@
-module RouteTiles.Core.Types.MenuV2
+module RouteTiles.Core.MenuV2
+
 open RouteTiles.Core
 open RouteTiles.Core.Types
-open RouteTiles.Core.Types.SubMenu
+open RouteTiles.Core.SubMenu
 open RouteTiles.Core.Effects
 
 open EffFs
@@ -34,6 +35,13 @@ module GameMode =
     | TimeAttack2000 -> SoloGame.Mode.TimeAttack 2000
     | ScoreAttack180 -> SoloGame.Mode.ScoreAttack 180
 
+
+type GameResult = {
+  Name: string
+  Time: float32
+  Point: int
+  SlideCount: int
+}
 
 [<Struct>]
 type PauseSelect =
@@ -73,6 +81,15 @@ with
   static member StateEnter(s, k) = ControllerSelectState (s, k)
   static member StateEnter(s, k) = PauseState (s, k)
   static member StateEnter(s, k) = SettingMenuState (s, k)
+
+let equal a b = (a, b) |> function
+  | MainMenuState(a1, a2), MainMenuState(b1, b2) -> (a1, a2) = (b1, b2)
+  | GameModeSelectState(a, _), GameModeSelectState(b, _) -> a = b
+  | ControllerSelectState(a, _), ControllerSelectState(b, _) -> a = b
+  | GameState(a1, a2, a3), GameState(b1, b2, b3) -> (a1, a2, a3) = (b1, b2, b3)
+  | PauseState(a, _), PauseState(b, _) -> a = b
+  | SettingMenuState(a, _), SettingMenuState(b, _) -> Setting.equal a b
+  | _ -> false
 
 [<Struct>]
 type Msg =
@@ -168,6 +185,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
       return state
 
     | _, ValueSome Quit ->
+      do! GameControlEffect.Resume
       do! GameControlEffect.Quit
       return State.Init (config)
 

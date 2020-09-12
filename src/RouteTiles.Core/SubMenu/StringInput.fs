@@ -1,4 +1,4 @@
-module RouteTiles.Core.Types.SubMenu.StringInput
+module RouteTiles.Core.SubMenu.StringInput
 open RouteTiles.Core
 
 [<Struct>]

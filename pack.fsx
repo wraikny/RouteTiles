@@ -31,10 +31,10 @@ let fonts = [|
   , ([|
         yield! primitiveCharacters
         yield!
-          TextMap.Japanese.buttons
+          TextMap.textMapJapanese.buttons
           |> getStringPropertyCharacters
         yield!
-          TextMap.Japanese.descriptions
+          TextMap.textMapJapanese.descriptions
           |> getStringPropertyCharacters
     |] |> Array.distinct |> fun cs -> new String(cs))
   )
@@ -50,9 +50,13 @@ if not <| Engine.Initialize("Pack", 1, 1, Configuration(ConsoleLoggingEnabled=tr
 
 for (fontname, size, chars) in fonts do
   let inPath = sprintf "%s/%s" fontDir fontname
-  let outPath = sprintf "%s/font/%s-%d/font.a2f" target (IO.Path.GetFileNameWithoutExtension (fontname)) size
+  let outDir = sprintf "%s/Font/%s-%d" target (IO.Path.GetFileNameWithoutExtension (fontname)) size
+  let outPath = sprintf "%s/font.a2f" outDir
 
-  IO.Directory.CreateDirectory(IO.Path.GetDirectoryName(outPath)) |> ignore
+  if IO.Directory.Exists(outDir) then
+    IO.Directory.Delete(outDir, true)
+
+  IO.Directory.CreateDirectory(outDir) |> ignore
 
   let msg =
     sprintf """GenerateFontFile

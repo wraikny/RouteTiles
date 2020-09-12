@@ -120,3 +120,66 @@ module Menu =
     |> Array.append [|
       [| Key.Escape, ButtonState.Push |], Msg.Back
     |]
+
+module MenuV2 =
+  open RouteTiles.Core.SubMenu
+  open RouteTiles.Core.MenuV2
+
+  let keyboard =
+    [|
+      yield [|Key.W, ButtonState.Push|], Msg.Decr
+      yield [|Key.S, ButtonState.Push|], Msg.Incr
+      yield [|Key.Space, ButtonState.Push|], Msg.Enter
+      yield [|Key.Enter, ButtonState.Push|], Msg.Enter
+      yield [|Key.Escape, ButtonState.Push|], Msg.Cancel
+    |]
+
+  let joystick = [|
+    yield (JoystickButton.DPadUp, ButtonState.Push), Msg.Decr
+    yield (JoystickButton.DPadDown, ButtonState.Push), Msg.Incr
+    yield (JoystickButton.RightRight, ButtonState.Push), Msg.Enter
+    yield (JoystickButton.RightDown, ButtonState.Push), Msg.Cancel
+    yield (JoystickButton.Guide, ButtonState.Push), Msg.Cancel
+  |]
+
+  let keys (a: Key) (b: Key) = [| for i in (int a)..(int b) -> enum<Key> i |]
+  let chars (a: char) (b: char) = [| a .. b|]
+
+  let characterInput =
+    [|
+      yield!
+        Array.zip3
+          (keys Key.A Key.Z)
+          (chars 'a' 'z')
+          (chars 'A' 'Z')
+        |> Array.map(fun (key, c, C) ->
+          [|
+            [| Key.RightShift, ButtonState.Hold;  key, ButtonState.Push |], C
+            [| Key.LeftShift, ButtonState.Hold;  key, ButtonState.Push |], C
+            [| key, ButtonState.Push|], c
+          |]
+        )
+        |> Array.concat
+
+      yield!
+        Array.zip
+          (keys Key.Num0 Key.Num9)
+          (chars '0' '9')
+        |> Array.map (fun (key, c) -> [| key, ButtonState.Push |], c)
+
+      yield!
+        Array.zip
+          (keys Key.Keypad0 Key.Keypad9)
+          (chars '0' '9')
+        |> Array.map(fun (key, c) -> [| key, ButtonState.Push |], c)
+    |]
+    |> Array.map (fun (keys, c) -> (keys, StringInput.Input c))
+    |> Array.append [|
+      [| Key.Enter, ButtonState.Push |], StringInput.Enter
+      [| Key.Backspace, ButtonState.Push |], StringInput.Delete
+      [| Key.Delete, ButtonState.Push |], StringInput.Delete
+    |]
+    |> Array.map (fun (keys, c) -> (keys, Msg.MsgOfInput c))
+    |> Array.append [|
+      [| Key.Escape, ButtonState.Push |], Msg.Cancel
+    |]

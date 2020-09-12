@@ -1,8 +1,8 @@
-module RouteTiles.Core.Types.SubMenu.Setting
+module RouteTiles.Core.SubMenu.Setting
 
 open RouteTiles.Core
 open RouteTiles.Core.Effects
-open RouteTiles.Core.Types.SubMenu
+open RouteTiles.Core.SubMenu
 
 open EffFs
 open EffFs.Library.StateMachine
@@ -13,11 +13,12 @@ type Mode =
   | Background
   | Enter
 
-let modes = [|
-  Mode.InputName
-  Mode.Background
-  Mode.Enter
-|]
+module Mode =
+  let items = [|
+    Mode.InputName
+    Mode.Background
+    Mode.Enter
+  |]
 
 let NameMaxLength = 12
 
@@ -28,6 +29,7 @@ type SettingState = {
 }
 
 type OutStatus = StateStatus<State, Config voption>
+
 and State =
   | InputName of StringInput.State * (string voption -> OutStatus)
   | Background of ListSelector.State<Background> * (Background voption -> OutStatus)
@@ -36,7 +38,7 @@ with
   static member Init (initConfig: Config) =
     Base
       { config = initConfig
-        selector = ListSelector.State<Mode>.Init(0, modes, ValueNone)
+        selector = ListSelector.State<Mode>.Init(0, Mode.items, ValueNone)
         // background = ListSelector.State<_>.Init(initConfig.background, Background.items, ValueSome initConfig.background)
       }
 
@@ -47,6 +49,12 @@ with
   static member StateOut(_: State) = Eff.marker<Config voption>
   static member StateEnter(s, k) = InputName (s, k)
   static member StateEnter(s, k) = Background (s, k)
+
+let equal a b = (a, b) |> function
+  | InputName (a, _), InputName (b, _) -> a = b
+  | Background (a, _), Background (b, _) -> a = b
+  | Base a, Base b -> a = b
+  | _ -> false
 
 
 [<Struct; RequireQualifiedAccess>]

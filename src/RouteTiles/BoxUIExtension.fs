@@ -31,3 +31,14 @@ let inline alignCenter (e: #Element) =
 let inline onUpdate f (e: ^e) =
   (^e: (member add_OnUpdateEvent: System.Action<'n> -> unit) e, System.Action<_>(f))
   e
+
+open System
+
+let debug e =
+#if DEBUG
+  e |> withChild (
+    Elements.Rectangle.Create(zOrder = Int32.MaxValue, color = Nullable(Color(255, 0, 0, 100)))
+  )
+#else
+  e
+#endif

@@ -69,13 +69,16 @@ module Consts =
     let modeHeaderRatio = 0.08f
 
     [<Literal>]
+    let offsetAnimationPeriod = 0.2f
+
+    [<Literal>]
     let selectedTimePeriod = 2.0f
 
     let elementBackground = Nullable <| Color(200uy, 200uy, 200uy, 150uy)
     
     let iconColor = Nullable <| Color(50uy, 50uy, 50uy, 255uy)
     let cursorColor = Color(255uy, 255uy, 0uy, 150uy)
-    let cursorAlphaMinMax = (0.2f, 0.6f)
+    let cursorAlphaMinMax = (0.2f, 1.0f)
     let currentColor = Color(50uy, 50uy, 200uy, 200uy)
 
     let textColor = Nullable <| Color(0uy, 0uy, 0uy)
@@ -241,6 +244,12 @@ module Helper =
       let y = boardViewPos.Y + boardViewSize.Y * 0.5f
       Vector2F(x, y)
 
+module CameraGroup =
+  let display = 1 <<< 1
+  let game = 1 <<< 2
+  let menuitems = 1 <<< 3
+  let modal = 1 <<< 4
+  
 
 module ZOrder =
   let posteffect = -100
@@ -266,15 +275,24 @@ module ZOrder =
   module Menu =
     let offset = (|||) (100 <<< 16)
     let background = offset 0
+    let backgroundMask = offset 1
+
+    let buttonBackground = offset 20
+    let buttonHighlight = offset 21
+    let buttonText = offset 23
+    let description = offset 30
+    let title = offset 100
 
     let footer = offset 10
     let iconBackground = offset 20
     let iconCurrent = offset 22
     
     let icon = offset 23
-    let buttonText = offset 23
 
     let iconSelected = offset 24
 
     let sideMenuBackground = offset 31
     let sideMenuText = offset 32
+
+
+  let debug = (1 <<< 30)
