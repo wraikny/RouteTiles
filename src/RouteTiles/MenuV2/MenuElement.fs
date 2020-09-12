@@ -6,12 +6,14 @@ open Altseed2.BoxUI
 open Altseed2.BoxUI.Elements
 
 open RouteTiles.Core
+open RouteTiles.Core.SubMenu
 open RouteTiles.Core.Types
 open RouteTiles.Core.Effects
 open RouteTiles.App
 open RouteTiles.App.BoxUIElements
 
 type Container (textMap: TextMap.TextMap) =
+  member val TextMap = textMap
   member val BackgroundTexture = Texture2D.LoadStrict(@"Menu/background_dark.png")
   member val MaskTexture = Texture2D.LoadStrict(@"Menu/background_mask.png")
   member val TitleTexture = Texture2D.LoadStrict(@"Menu/title.png")
@@ -47,18 +49,18 @@ type Container (textMap: TextMap.TextMap) =
 
 
   member val SettingMenuButtons =
-    SubMenu.Setting.Mode.items
+    Setting.Mode.items
     |> Array.map (function
-      | SubMenu.Setting.Mode.InputName -> textMap.buttons.namesetting
-      | SubMenu.Setting.Mode.Background -> textMap.buttons.backgroundsetting
-      | SubMenu.Setting.Mode.Enter -> textMap.buttons.save
+      | Setting.Mode.InputName -> textMap.buttons.namesetting
+      | Setting.Mode.Background -> textMap.buttons.backgroundsetting
+      | Setting.Mode.Enter -> textMap.buttons.save
     )
 
   member __.SettingModeDescription(cursor) =
-    SubMenu.Setting.Mode.items.[cursor] |> function
-    | SubMenu.Setting.Mode.InputName -> textMap.descriptions.namesetting
-    | SubMenu.Setting.Mode.Background -> textMap.descriptions.backgroundsetting
-    | SubMenu.Setting.Mode.Enter -> textMap.descriptions.settingsave
+    Setting.Mode.items.[cursor] |> function
+    | Setting.Mode.InputName -> textMap.descriptions.namesetting
+    | Setting.Mode.Background -> textMap.descriptions.backgroundsetting
+    | Setting.Mode.Enter -> textMap.descriptions.settingsave
 
 
 
@@ -196,7 +198,7 @@ let createDesc (container: Container) text =
     |> BoxUI.debug
   )
 
-let createMainMenu (container: Container) (state: SubMenu.ListSelector.State<MenuV2.Mode>) =
+let createMainMenu (container: Container) (state: ListSelector.State<MenuV2.Mode>) =
   [|
     createBackground container
     createButtons container container.MainMenuButtons (state.cursor, state.current)
@@ -208,22 +210,22 @@ let createMainMenu (container: Container) (state: SubMenu.ListSelector.State<Men
     |]
   |]
 
-let createGamemodeSelect (container: Container) (state: SubMenu.ListSelector.State<MenuV2.GameMode>) =
+let createGamemodeSelect (container: Container) (state: ListSelector.State<MenuV2.GameMode>) =
   [|
     createBackground container
     createButtons container container.GameModeButtons (state.cursor, state.current)
     rightArea().With(createDesc container (container.GameModeDescription state.cursor))
   |]
 
-let createSetting (container: Container) (state: SubMenu.Setting.State) =
+let createSetting (container: Container) (state: Setting.State) =
   state |> function
-  | SubMenu.Setting.Base { selector = selector } ->
+  | Setting.Base { selector = selector } ->
     [|
       createBackground container
       createButtons container container.SettingMenuButtons (selector.cursor, selector.current)
       rightArea().With(createDesc container (container.SettingModeDescription selector.cursor))
     |]
-  | SubMenu.Setting.State.InputName (state, _) ->
+  | Setting.State.InputName (state, _) ->
     [|
       Sprite.Create
         ( aspect = Aspect.Fixed
@@ -255,6 +257,20 @@ let createSetting (container: Container) (state: SubMenu.Setting.State) =
   | _ -> Array.empty
 
 
+let createControllerSelect (container: Container) (MenuV2.ControllerSelect (_cancellable, state)) =
+  let controllers =
+    state.selection
+    |> Array.map(function
+      | Controller.Keyboard -> "キーボード"
+      | Controller.Joystick(_, name, _) -> name
+    )
+  [|
+    createBackground container
+    createButtons container controllers (state.cursor, state.current)
+    rightArea().With(createDesc container (container.TextMap.descriptions.selectController))
+  |]
+
+
 let create (container: Container) (state: MenuV2.State) =
   fixedArea(Vector2F(), Consts.ViewCommon.windowSize.To2F())
   |> BoxUI.withChildren (
@@ -262,11 +278,14 @@ let create (container: Container) (state: MenuV2.State) =
     | MenuV2.State.MainMenuState (_, state) ->
       createMainMenu container state
 
-    | MenuV2.State.GameModeSelectState (SubMenu.WithContext state, _) ->
+    | MenuV2.State.GameModeSelectState (WithContext state, _) ->
       createGamemodeSelect container state
 
     | MenuV2.State.SettingMenuState (state, _) ->
       createSetting container state
+
+    | MenuV2.State.ControllerSelectState(state, _) ->
+      createControllerSelect container state
 
     | _ -> Array.empty
   )

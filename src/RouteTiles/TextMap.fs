@@ -13,6 +13,7 @@ type Buttons = {
   cancel: string
   start: string
   back: string
+  others: string
 }
 
 type Descriptions = {
@@ -25,6 +26,7 @@ type Descriptions = {
   namesetting: string
   backgroundsetting: string
   settingsave: string
+  selectController: string
 }
 
 type TextMap = {
@@ -37,8 +39,8 @@ let textMapJapanese = {
     play = "プレイ"
     ranking = "ランキング"
     setting = "設定"
-    timeattack2000 = "タイムアタック2000"
-    scoreattack180 = "スコアアタック180"
+    timeattack2000 = "タイム2000"
+    scoreattack180 = "スコア180"
     tutorial = "チュートリアル"
     namesetting = "お名前"
     backgroundsetting = "背景"
@@ -46,6 +48,7 @@ let textMapJapanese = {
     cancel = "キャンセル"
     start = "スタート"
     back = "戻る"
+    others = "キーボード"
   }
 
   descriptions = {
@@ -58,5 +61,6 @@ let textMapJapanese = {
     namesetting = "ランキングで使う名前を設定します"
     backgroundsetting = "背景を設定します"
     settingsave = "設定を保存します"
+    selectController = "使用するコントローラを選びます"
   }
 }

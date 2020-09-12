@@ -245,11 +245,12 @@ module Helper =
       Vector2F(x, y)
 
 module CameraGroup =
-  let display = 1 <<< 1
-  let game = 1 <<< 2
-  let menuitems = 1 <<< 3
-  let modal = 1 <<< 4
-  
+  let background = 1uL <<< 0
+  let game = 1uL <<< 1
+  let menu = 1uL <<< 2
+  let modal = 1uL <<< 3
+  let display = 1uL <<< 16
+
 
 module ZOrder =
   let posteffect = -100
