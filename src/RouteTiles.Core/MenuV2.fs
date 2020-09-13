@@ -58,7 +58,6 @@ module PauseSelect =
     Quit
   |]
 
-
 [<Struct>]
 type ControllerSelect = ControllerSelect of cancellable:bool * ListSelector.State<Controller> with
   static member Init(cancellable: bool, cursor: int, selection, ?current) =
@@ -131,7 +130,9 @@ type Msg =
   | MsgOfInput of msgInput:StringInput.Msg
   | PauseGame
   | QuitGame
+  | FinishGame of SoloGame.Model * time:float32
   | UpdateControllers of Controller[]
+  | SelectController
 
 
 module Msg =
@@ -224,7 +225,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
     | pauseState, ValueSome ChangeController ->
       let! controllers = CurrentControllers
       match!
-        ControllerSelect.Init(false, controller, controllers,currentItem=controller)
+        ControllerSelect.Init(true, controller, controllers,currentItem=controller)
         |> stateEnter
         with
       | ValueNone -> return pauseState
@@ -235,6 +236,18 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
   | QuitGame, GameState (config, _, _) ->
     return State.Init (config)
 
+  | SelectController, GameState (_, controller, _) ->
+    let! controllers = CurrentControllers
+    let! selectedController =
+      ControllerSelect.Init(false, controller, controllers,currentItem=controller)
+      |> stateEnter
+
+    /// force unwrap
+    do! GameControlEffect.SetController selectedController.Value
+
+    return state
+
+  // todo: when controller is rejected
   | _, GameState _ ->
     return state
 

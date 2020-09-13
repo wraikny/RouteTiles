@@ -13,6 +13,10 @@ type Buttons = {
   cancel: string
   start: string
   back: string
+  continueGame: string
+  restartGame: string
+  quitGame: string
+  changeController: string
   others: string
 }
 
@@ -27,6 +31,10 @@ type Descriptions = {
   backgroundsetting: string
   settingsave: string
   selectController: string
+  continueGame: string
+  restartGame: string
+  quitGame: string
+  changeController: string
 }
 
 type TextMap = {
@@ -48,6 +56,10 @@ let textMapJapanese = {
     cancel = "キャンセル"
     start = "スタート"
     back = "戻る"
+    continueGame = "再開"
+    restartGame = "はじめから"
+    quitGame = "ゲームをやめる"
+    changeController = "コントローラ切替"
     others = "キーボード"
   }
 
@@ -62,5 +74,9 @@ let textMapJapanese = {
     backgroundsetting = "背景を設定します"
     settingsave = "設定を保存します"
     selectController = "使用するコントローラを選びます"
+    continueGame = "ゲームを再開します"
+    restartGame = "ゲームを始めからやりなおします"
+    quitGame = "ゲームをやめてタイトルに戻ります"
+    changeController = "使用するコントローラを切り替えます"
   }
 }

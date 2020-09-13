@@ -19,48 +19,64 @@ type Container (textMap: TextMap.TextMap) =
   member val TitleTexture = Texture2D.LoadStrict(@"Menu/title.png")
   member val ButtonBackground = Texture2D.LoadStrict(@"Menu/button-metalic-dark-highlight-320x80.png")
   member val InputUsernameBackground = Texture2D.LoadStrict(@"Menu/input_username.png")
-  member val Font = Font.LoadStaticFontStrict(@"Font/Makinas-4-Square-32/font.a2f")
+  // member val Font = Font.LoadStaticFontStrict(@"Font/Makinas-4-Square-32/font.a2f")
+  member val Font = Font.LoadDynamicFontStrict(@"mplus-1c-bold.ttf", 32)
 
   member val MainMenuButtons =
-    MenuV2.Mode.items
-    |> Array.map (function
+    MenuV2.Mode.items |> Array.map (function
       | MenuV2.Mode.GamePlay -> textMap.buttons.play
       | MenuV2.Mode.Ranking -> textMap.buttons.ranking
       | MenuV2.Mode.Setting -> textMap.buttons.setting
     )
 
-  member __.MainMenuDescription(cursor) =
-    MenuV2.Mode.items.[cursor] |> function
-    | MenuV2.Mode.GamePlay -> textMap.descriptions.play
+  member val MainMenuDescriptions =
+    MenuV2.Mode.items |> Array.map (function
+      | MenuV2.Mode.GamePlay -> textMap.descriptions.play
       | MenuV2.Mode.Ranking -> textMap.descriptions.ranking
       | MenuV2.Mode.Setting -> textMap.descriptions.setting
+    )
 
   member val GameModeButtons =
-    MenuV2.GameMode.items
-    |> Array.map(function
+    MenuV2.GameMode.items |> Array.map(function
       | MenuV2.GameMode.TimeAttack2000 -> textMap.buttons.timeattack2000
       | MenuV2.GameMode.ScoreAttack180 -> textMap.buttons.scoreattack180
     )
 
-  member __.GameModeDescription(cursor) =
-    MenuV2.GameMode.items.[cursor] |> function
+  member val GameModeDescriptions =
+    MenuV2.GameMode.items |> Array.map (function
     | MenuV2.GameMode.TimeAttack2000 -> textMap.descriptions.timeattack2000
     | MenuV2.GameMode.ScoreAttack180 -> textMap.descriptions.scoreattack180
-
+  )
 
   member val SettingMenuButtons =
-    Setting.Mode.items
-    |> Array.map (function
+    Setting.Mode.items |> Array.map (function
       | Setting.Mode.InputName -> textMap.buttons.namesetting
       | Setting.Mode.Background -> textMap.buttons.backgroundsetting
       | Setting.Mode.Enter -> textMap.buttons.save
     )
 
-  member __.SettingModeDescription(cursor) =
-    Setting.Mode.items.[cursor] |> function
-    | Setting.Mode.InputName -> textMap.descriptions.namesetting
-    | Setting.Mode.Background -> textMap.descriptions.backgroundsetting
-    | Setting.Mode.Enter -> textMap.descriptions.settingsave
+  member val SettingModeDescriptions =
+    Setting.Mode.items |> Array.map (function
+      | Setting.Mode.InputName -> textMap.descriptions.namesetting
+      | Setting.Mode.Background -> textMap.descriptions.backgroundsetting
+      | Setting.Mode.Enter -> textMap.descriptions.settingsave
+    )
+
+  member val PauseModeButtons =
+    MenuV2.PauseSelect.items |> Array.map (function
+      | MenuV2.Continue -> textMap.buttons.continueGame
+      | MenuV2.ChangeController -> textMap.buttons.changeController
+      | MenuV2.Restart -> textMap.buttons.restartGame
+      | MenuV2.Quit -> textMap.buttons.quitGame
+    )
+
+  member val PauseModeDescriptions =
+    MenuV2.PauseSelect.items |> Array.map (function
+      | MenuV2.Continue -> textMap.descriptions.continueGame
+      | MenuV2.ChangeController -> textMap.descriptions.changeController
+      | MenuV2.Restart -> textMap.descriptions.restartGame
+      | MenuV2.Quit -> textMap.descriptions.quitGame
+    )
 
 
 
@@ -206,7 +222,7 @@ let createMainMenu (container: Container) (state: ListSelector.State<MenuV2.Mode
     rightArea()
     |> BoxUI.withChildren [|
       createTitle container
-      createDesc container (container.MainMenuDescription state.cursor)
+      createDesc container container.MainMenuDescriptions.[state.cursor]
     |]
   |]
 
@@ -214,7 +230,7 @@ let createGamemodeSelect (container: Container) (state: ListSelector.State<MenuV
   [|
     createBackground container
     createButtons container container.GameModeButtons (state.cursor, state.current)
-    rightArea().With(createDesc container (container.GameModeDescription state.cursor))
+    rightArea().With(createDesc container container.GameModeDescriptions.[state.cursor])
   |]
 
 let createSetting (container: Container) (state: Setting.State) =
@@ -223,10 +239,12 @@ let createSetting (container: Container) (state: Setting.State) =
     [|
       createBackground container
       createButtons container container.SettingMenuButtons (selector.cursor, selector.current)
-      rightArea().With(createDesc container (container.SettingModeDescription selector.cursor))
+      rightArea().With(createDesc container container.SettingModeDescriptions.[selector.cursor])
     |]
   | Setting.State.InputName (state, _) ->
     [|
+      // todo: blur
+
       Sprite.Create
         ( aspect = Aspect.Fixed
         , texture = container.InputUsernameBackground
@@ -257,7 +275,7 @@ let createSetting (container: Container) (state: Setting.State) =
   | _ -> Array.empty
 
 
-let createControllerSelect (container: Container) (MenuV2.ControllerSelect (_cancellable, state)) =
+let createControllerSelect (container: Container) (MenuV2.ControllerSelect (_, state)) =
   let controllers =
     state.selection
     |> Array.map(function
@@ -265,10 +283,20 @@ let createControllerSelect (container: Container) (MenuV2.ControllerSelect (_can
       | Controller.Joystick(_, name, _) -> name
     )
   [|
-    createBackground container
+    // createBackground container
+    // todo: blur
     createButtons container controllers (state.cursor, state.current)
     rightArea().With(createDesc container (container.TextMap.descriptions.selectController))
   |]
+
+let createPause (container: Container) (state: ListSelector.State<MenuV2.PauseSelect>) =
+  [|
+    // createBackground container
+    // todo: blur
+    createButtons container container.PauseModeButtons (state.cursor, state.current)
+    rightArea().With(createDesc container container.PauseModeDescriptions.[state.cursor])
+  |]
+
 
 
 let create (container: Container) (state: MenuV2.State) =
@@ -286,6 +314,9 @@ let create (container: Container) (state: MenuV2.State) =
 
     | MenuV2.State.ControllerSelectState(state, _) ->
       createControllerSelect container state
+
+    | MenuV2.State.PauseState(WithContext state, _) ->
+      createPause container state
 
     | _ -> Array.empty
   )

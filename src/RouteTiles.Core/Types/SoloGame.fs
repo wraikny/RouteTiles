@@ -8,7 +8,7 @@ type Mode =
   | ScoreAttack of sec:int
 
 type Model = {
-  controller: Controller
+  // controller: Controller
   mode: Mode
   board: Board.Model
 }

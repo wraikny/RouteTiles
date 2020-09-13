@@ -106,6 +106,8 @@ type MenuV2Node() =
 
     ) |> ignore
 
+  let mutable lastControllerCount = Engine.Joystick.ConnectedJoystickCount
+
   let getKeyboardInput = InputControl.getKeyboardInput InputControl.MenuV2.keyboard
   let getJoystickInput = InputControl.getJoystickInput InputControl.MenuV2.joystick
   let getCharacterInput = InputControl.getKeyboardInput InputControl.MenuV2.characterInput
@@ -137,13 +139,13 @@ type MenuV2Node() =
           | ValueSome n -> Engine.AddNode(n)
           | ValueNone ->
             let gameInfo = GameInfoNode(Position = Helper.SoloGame.gameInfoCenterPos)
-            let viewer = { new IGameInfoViewer with
+            let viewer = { new IGameHandler with
               member __.SetPoint(m, p) = gameInfo.SetPoint(m, p)
               member __.SetTime(t) = gameInfo.SetTime(t)
               member __.FinishGame(model, t) =
-                // updater.Dispatch(MenuV2.Msg.FinishGame(model, t))
-                Utils.Todo()
+                MenuV2.Msg.FinishGame(model, t)
                 |> updater.Dispatch
+              member __.SelectController() = ()
             }
             let n = Game(gameMode, controller, viewer)
             n.AddChildNode(gameInfo)
@@ -158,7 +160,8 @@ type MenuV2Node() =
         | GameControlEffect.Restart ->
           gameNode |> ValueOption.iter (fun n -> n.Initialize())
 
-        | GameControlEffect.SetController(controller) -> Utils.Todo()
+        | GameControlEffect.SetController(controller) ->
+          gameNode.Value.Controller <- controller
     }
 
     let config = Config.tryGetConfig().Value
@@ -180,6 +183,16 @@ type MenuV2Node() =
     | MenuV2.SettingMenuState(SubMenu.Setting.State.InputName _, _) ->
       getCharacterInput ()
       |> Option.alt getJoysticksInputs
+      |> Option.iter updater.Dispatch
+
+    | MenuV2.ControllerSelectState _ ->
+      let curretConnectedCount = Engine.Joystick.ConnectedJoystickCount
+      if curretConnectedCount <> lastControllerCount then
+        lastControllerCount <- curretConnectedCount
+        let controllers = MenuUtil.getCurrentControllers()
+        updater.Dispatch(MenuV2.UpdateControllers controllers) |> ignore
+
+      getInput()
       |> Option.iter updater.Dispatch
 
     | _ ->

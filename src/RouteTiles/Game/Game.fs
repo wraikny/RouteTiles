@@ -29,13 +29,16 @@ type Handler = {
       k()
     )
 
-type IGameInfoViewer =
+type IGameHandler =
   abstract SetPoint: SoloGame.Mode * int -> unit
   abstract SetTime: float32 -> unit
-  abstract FinishGame: SoloGame.Model * float32 -> unit
+  abstract FinishGame: SoloGame.Model * time:float32 -> unit
+  abstract SelectController: unit -> unit
 
-type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
+type Game(gameMode, controller, gameInfoViewer: IGameHandler) =
   inherit Node()
+
+  let mutable controller = controller
 
   let mutable lastModel: SoloGame.Model voption = ValueNone
   let updater = Updater<SoloGame.Model, _>()
@@ -125,12 +128,9 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
           printfn "%A" lastModel
 #endif
 
-        match lastModel with
-        | _ when not inputEnabled -> yield ()
-        | ValueNone -> yield()
-        | ValueSome model ->
+        if inputEnabled then
           let input =
-            model.controller |> function
+            controller |> function
             | Controller.Keyboard ->
               InputControl.SoloGame.getKeyboardInput()
             | Controller.Joystick (index, name, guid) ->
@@ -141,6 +141,7 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
                 let s = sprintf "joystick '%s' is not found at %d" name index
                 Engine.Log.Warn(LogCategory.User, s)
                 // todo:コントローラー選択画面
+                gameInfoViewer.SelectController()
                 None
 
           match input with
@@ -156,8 +157,8 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
               yield! Coroutine.sleep Consts.Board.tilesVanishInterval
               updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
 
-          | Some msg ->
-            updater.Dispatch(msg) |> ignore
+          // | Some msg ->
+          //   updater.Dispatch(msg) |> ignore
 
           yield()
     })
@@ -180,8 +181,10 @@ type Game(gameMode, controller, gameInfoViewer: IGameInfoViewer) =
     SoloGame.init
       config
       gameMode
-      controller
+      // controller
     |> Eff.handle handler
+
+  member val Controller = controller with get, set
 
   override this.OnAdded() =
     this.Initialize()
