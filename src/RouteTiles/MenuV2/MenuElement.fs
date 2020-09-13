@@ -285,6 +285,7 @@ let createControllerSelect (container: Container) (MenuV2.ControllerSelect (_, s
   [|
     // createBackground container
     // todo: blur
+    // todo: modal
     createButtons container controllers (state.cursor, state.current)
     rightArea().With(createDesc container (container.TextMap.descriptions.selectController))
   |]
