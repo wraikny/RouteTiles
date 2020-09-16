@@ -130,18 +130,14 @@ let createTitle (container: Container) =
   :> Element
 
 let createButtons (container: Container) (selections: string[]) param =
-  let size = Vector2F(320.0f, float32 selections.Length * 80.0f + float32 (selections.Length - 1) * 40.0f)
   leftArea()
   |> BoxUI.withChild (
     empty()
     |> BoxUI.marginBottom (LengthScale.Fixed, 80.0f)
     |> BoxUI.withChild(
-      FixedSize.Create(size)
+      buttons container (32.0f, true) selections param
       |> BoxUI.alignX Align.Center
       |> BoxUI.alignY Align.Max
-      |> BoxUI.withChild(
-        buttons container (32.0f, true) selections param
-      )
     )
     // |> BoxUI.debug
   )
