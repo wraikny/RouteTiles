@@ -30,7 +30,7 @@ type Handler = {
     )
 
 type IGameHandler =
-  abstract SetPoint: SoloGame.Mode * int -> unit
+  abstract SetModel: SoloGame.Model -> unit
   abstract SetTime: float32 -> unit
   abstract FinishGame: SoloGame.Model * time:float32 -> unit
   abstract SelectController: unit -> unit
@@ -44,8 +44,8 @@ type Game(gameMode, controller, gameInfoViewer: IGameHandler) =
   let updater = Updater<SoloGame.Model, _>()
 
   let coroutineNode = CoroutineNode()
-  let boardNode = BoardNode(Helper.SoloGame.boardViewPos, coroutineNode.Add)
-  let nextTilesNode = NextTilesNode(Helper.SoloGame.nextsViewPos, coroutineNode.Add)
+  let boardNode = BoardNode(coroutineNode.Add, Position = Helper.SoloGame.boardViewPos)
+  let nextTilesNode = NextTilesNode(coroutineNode.Add, Position = Helper.SoloGame.nextsViewPos)
   // let gameInfoNode = GameInfoNode(Helper.SoloGame.gameInfoCenterPos)
 
   let mutable inputEnabled = true
@@ -53,12 +53,11 @@ type Game(gameMode, controller, gameInfoViewer: IGameHandler) =
   let mutable time = 0.0f
 
   let initTime() =
-    time <- 
-      gameMode |> function
+    time <- gameMode |> function
       | SoloGame.Mode.ScoreAttack sec ->
         float32 sec
       | SoloGame.Mode.TimeAttack _ ->
-      0.0f
+        0.0f
 
   /// Binding Children
   do
@@ -72,7 +71,7 @@ type Game(gameMode, controller, gameInfoViewer: IGameHandler) =
     |> Observable.subscribe(fun model ->
       boardNode.OnNext(model.board)
       nextTilesNode.OnNext(model.board)
-      gameInfoViewer.SetPoint(model.mode, model.board.point)
+      gameInfoViewer.SetModel(model)
     )
     |> ignore
 

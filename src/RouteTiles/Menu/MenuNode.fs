@@ -216,7 +216,7 @@ type MenuNode() =
           // todo
           let gameInfo = GameInfoNode(Position = Helper.SoloGame.gameInfoCenterPos)
           let viewer = { new IGameHandler with
-            member __.SetPoint(m, p) = gameInfo.SetPoint(m, p)
+            member __.SetModel (_) = () // gameInfo.SetPoint(m, p)
             member __.SetTime(t) = gameInfo.SetTime(t)
             member __.FinishGame(model, t) =
               updater.Dispatch(Msg.FinishGame(model, t))

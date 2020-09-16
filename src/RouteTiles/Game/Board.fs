@@ -55,12 +55,12 @@ module BoardHelper =
         yield()
       }
 
-type BoardNode(boardPosition, addCoroutine) =
-  inherit Node()
+type BoardNode(addCoroutine) =
+  inherit TransformNode()
 
   let updateTile = BoardHelper.updateTile >> addCoroutine
 
-  let transform = RectangleNode(Position = boardPosition) :> TransformNode
+  // let transform = TransformNode(Position = boardPosition)
   
   let tilesBackground =
     RectangleNode(
@@ -124,20 +124,19 @@ type BoardNode(boardPosition, addCoroutine) =
         yield (x, y, Vector2F(0.0f, float32 <| sign y))
     |]
 
+    let markerSize = Vector2F(1.0f, 1.0f) * 20.0f
     for (x, y, offset) in markers do
       let node =
         RectangleNode(
-          Position = 20.0f * -offset + Helper.Board.calcTilePosCenter (Vector2.init x y),
-          RectangleSize = Vector2F(1.0f, 1.0f) * 20.0f,
+          Position = -20.0f * offset + Helper.Board.calcTilePosCenter (Vector2.init x y),
+          CenterPosition = markerSize * 0.5f,
+          RectangleSize = markerSize,
           Color = Color(255, 255, 100, 255),
           Angle = 45.0f,
           ZOrder = ZOrder.Board.tiles
         )
-      
-      // node.AdjustSize()
-      node.CenterPosition <- node.ContentSize / 2.0f
 
-      tilesBackground.AddChildNode(node)
+      base.AddChildNode(node)
 
   let vanishmentEffectPool =
     { new EffectPool((Consts.Core.boardSize.x * Consts.Core.boardSize.y) / 2) with
@@ -162,12 +161,11 @@ type BoardNode(boardPosition, addCoroutine) =
     )
 
   do
-    base.AddChildNode(transform)
-    transform.AddChildNode(tilesBackground)
-    transform.AddChildNode(cursorX)
-    transform.AddChildNode(cursorY)
-    transform.AddChildNode(tilesPool)
-    transform.AddChildNode(vanishmentEffectPool)
+    base.AddChildNode(tilesBackground)
+    base.AddChildNode(cursorX)
+    base.AddChildNode(cursorY)
+    base.AddChildNode(tilesPool)
+    base.AddChildNode(vanishmentEffectPool)
 
   member __.EmitVanishmentParticle(particleSet) =
     for x in particleSet do

@@ -64,4 +64,5 @@ type Model = {
   routesAndLoops: Set<RouteOrLoop>
   routesHistory: Set<int<TileId>> list
   loopsHistory: Set<int<TileId>> list
+  vanishedTilesCount: int
 }

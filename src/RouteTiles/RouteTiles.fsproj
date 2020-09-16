@@ -69,6 +69,7 @@
     <Compile Include="MenuV2/Container.fs" />
     <Compile Include="MenuV2/MenuElement.fs" />
     <Compile Include="MenuV2/MenuModalElement.fs" />
+    <Compile Include="MenuV2/GameInfoElement.fs" />
     <Compile Include="MenuV2/MenuV2Node.fs" />
     <Compile Include="PostEffect/Wave.fs" />
     <Compile Include="Program.fs" />

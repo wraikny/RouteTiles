@@ -10,16 +10,10 @@ open System.Threading.Tasks
 open Affogato
 open Altseed2
 
-type NextTilesNode(position, addCoroutine) =
-  inherit Node()
+type NextTilesNode(addCoroutine) =
+  inherit TransformNode(Scale = Vector2F(1.0f, 1.0f) * Consts.Board.nextsScale)
 
   let updateTile = BoardHelper.updateTile >> addCoroutine
-
-  let transform =
-    RectangleNode(
-      Position = position,
-      Scale = Vector2F(1.0f, 1.0f) * Consts.Board.nextsScale
-    ) :> TransformNode
 
   let nextsPool =
     { new NodePool<int<TileId>, _, _>() with
@@ -36,9 +30,8 @@ type NextTilesNode(position, addCoroutine) =
     )
 
   do
-    base.AddChildNode(transform)
-    transform.AddChildNode(nextsBackground)
-    transform.AddChildNode(nextsPool)
+    base.AddChildNode(nextsBackground)
+    base.AddChildNode(nextsPool)
 
   
   member __.OnNext(board) =

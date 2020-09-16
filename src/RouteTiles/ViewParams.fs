@@ -61,8 +61,12 @@ module Consts =
     let [<Literal>] lineWidth = 5.0f
     let [<Literal>] fontSize = 120
 
+    let nameColor = Nullable (Color (255, 255, 255, 255))
+    let dataColor = Nullable (Color (0, 0, 0, 255))
+
   module SoloGame =
-    let [<Literal>] nextsBoardMergin = 200.0f
+    let [<Literal>] nextsBoardMergin = 50.0f
+    let [<Literal>] boardLeftPos = 220.0f
 
   module Menu =
     let mainMenuRatio = 10.0f / 16.0f
@@ -209,7 +213,7 @@ module Helper =
 
     let boardViewSize = calcTilePos boardSize
 
-    let private flipNexts: int Vector2 -> _ = Vector.yx
+    let private flipNexts: int Vector2 -> _ = Vector.xy
 
     let nextsIndexToCoordinate index =
       Vector2.init 0 index
@@ -235,11 +239,11 @@ module Helper =
 
     let boardViewPos =
       let p = (windowSize.To2F() - boardViewSize) * 0.5f
-      Vector2F(150.0f, p.Y)
+      Vector2F(boardLeftPos, p.Y)
 
     let nextsViewPos =
       boardViewPos
-      + Vector2F(nextsBoardMergin + boardViewSize.X, 0.0f)
+      + Vector2F(-nextsBoardMergin - nextsViewSize.X, 0.0f)
     
     let gameInfoCenterPos =
       let x = nextsViewPos.X + nextsViewSize.X * 0.5f * nextsScale
@@ -290,6 +294,9 @@ module ZOrder =
     let buttonText = offset 23
     let description = offset 30
     let title = offset 100
+
+    let gameInfoFrame = offset 200
+    let gameInfoText = offset 210
 
     let footer = offset 10
     let iconBackground = offset 20

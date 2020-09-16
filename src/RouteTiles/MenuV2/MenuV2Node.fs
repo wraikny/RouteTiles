@@ -96,17 +96,17 @@ type MenuV2Node() =
   let mutable lastState = ValueNone
   let updater = Updater<MenuV2.State, MenuV2.Msg>()
 
-  let uiRoot = BoxUIRootNode()
+  let uiRootMenu = BoxUIRootNode()
   let uiRootModal = BoxUIRootNode()
+
+  let container = Container(TextMap.textMapJapanese)
 
   let mutable gameNode = ValueNone
 
   do
-    base.AddChildNode uiRoot
+    base.AddChildNode uiRootMenu
     base.AddChildNode uiRootModal
 
-
-    let container = Container(TextMap.textMapJapanese)
 
     updater.Subscribe (fun state ->
       lastState |> function
@@ -120,9 +120,9 @@ type MenuV2Node() =
         | ValueSome elem ->
           uiRootModal.SetElement elem
         | _ ->
-          uiRoot.ClearElement()
+          uiRootMenu.ClearElement()
           let elem = MenuElement.create container state
-          uiRoot.SetElement elem
+          uiRootMenu.SetElement elem
     ) |> ignore
 
   let mutable lastControllerCount = Engine.Joystick.ConnectedJoystickCount
@@ -149,11 +149,13 @@ type MenuV2Node() =
 
   let isAvailableController = function
     | Controller.Keyboard -> true
-    | Controller.Joystick (index, name, guid) ->
+    | Controller.Joystick (index, _, guid) ->
       let info = Engine.Joystick.GetJoystickInfo(index)
       info <> null && info.GUID = guid
 
   override this.OnAdded() =
+    
+
     let handler = {
       dispatch = updater.Dispatch
       handleGameControlEffect = function
@@ -163,10 +165,16 @@ type MenuV2Node() =
           gameNode |> function
           | ValueSome n -> Engine.AddNode(n)
           | ValueNone ->
-            let gameInfo = GameInfoNode(Position = Helper.SoloGame.gameInfoCenterPos)
+            let uiRootGameInfo = BoxUIRootNode()
+            let gameInfoElement, gameInfoScoreUpdater, gameInfoTimeUpdater =
+              GameInfoElement.createSologameInfoElement container
+
+            uiRootGameInfo.SetElement gameInfoElement
+            // let gameInfo = GameInfoNode(Position = Helper.SoloGame.gameInfoCenterPos)
             let viewer = { new IGameHandler with
-              member __.SetPoint(m, p) = gameInfo.SetPoint(m, p)
-              member __.SetTime(t) = gameInfo.SetTime(t)
+              member __.SetModel(model) = gameInfoScoreUpdater model
+              member __.SetTime(second) = gameInfoTimeUpdater second
+
               member __.FinishGame(model, t) =
                 MenuV2.Msg.FinishGame(model, t)
                 |> updater.Dispatch
@@ -175,8 +183,7 @@ type MenuV2Node() =
                 |> updater.Dispatch
             }
             let n = Game(gameMode, controller, viewer)
-            n.AddChildNode(gameInfo)
-
+            n.AddChildNode uiRootGameInfo
             Engine.AddNode(n)
 
             gameNode <- ValueSome n

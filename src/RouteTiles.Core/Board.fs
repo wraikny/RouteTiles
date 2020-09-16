@@ -244,6 +244,8 @@ module Model =
           routesAndLoops = Set.empty
           routesHistory = List.empty
           loopsHistory = List.empty
+
+          vanishedTilesCount = 0
         }
         |> routeTiles
 
@@ -309,8 +311,18 @@ module Update =
   let vanish board =
     let routesAndLoops = board.routesAndLoops
 
-    let extractAndAppend f =
-      List.append(routesAndLoops |> Seq.filterMapV f |> Seq.map (Set.map snd) |> Seq.toList)
+    let extractRouteOrLoopBy f = routesAndLoops |> Seq.filterMapV f |> Seq.map (Set.map snd) |> Seq.toList
+
+    let vanishedRoutes = extractRouteOrLoopBy RouteOrLoop.getRoute
+    let vanishedLoops = extractRouteOrLoopBy RouteOrLoop.getLoop
+
+    let vanishedCount =
+      seq {
+        for route in vanishedRoutes do yield! route
+        for loop in vanishedLoops do yield! loop
+      }
+      |> Seq.distinct
+      |> Seq.length
 
     { board with
         point = board.point + calculatePoint routesAndLoops
@@ -328,8 +340,9 @@ module Update =
           )
         routesAndLoops = Set.empty
 
-        routesHistory = board.routesHistory |> extractAndAppend RouteOrLoop.getRoute
-        loopsHistory = board.routesHistory |> extractAndAppend RouteOrLoop.getLoop
+        routesHistory = board.routesHistory |> List.append vanishedRoutes
+        loopsHistory = board.routesHistory |> List.append vanishedLoops
+        vanishedTilesCount = board.vanishedTilesCount + vanishedCount
     }
 
   let inline update (msg: Msg) (board: Model) =
