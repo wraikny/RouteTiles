@@ -295,7 +295,6 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
       | _ ->
         return failwithf "Invalid State of ControllerSelectState Context: %A" controllerState
 
-  // todo: when controller is rejected
   | _, GameState _ ->
     return state
 

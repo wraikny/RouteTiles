@@ -92,58 +92,7 @@ module internal Consts =
     let pauseBackgroundColor = Nullable <| Color(100uy, 100uy, 100uy, 255uy)
 
     let blurDarkColor = Nullable (Color(0, 0, 0, 80))
-    
-    let [<Literal>] timeAttackTexture = @"menu/stopwatch.png"
-    let [<Literal>] scoreAttackTexture = @"menu/hourglass.png"
-    let [<Literal>] questionTexture = @"menu/question.png"
-    let [<Literal>] rankingTexture = @"menu/crown.png"
-    let [<Literal>] achievementTexture = @"menu/trophy.png"
-    let [<Literal>] settingTexture = @"menu/gear.png"
 
-  open System.Threading
-
-  let initialize =
-    let textures =
-      [| Board.tileTexturePath
-         Board.tileVanishmentEffectTexturePath
-         Menu.timeAttackTexture
-         Menu.scoreAttackTexture
-         Menu.questionTexture
-         Menu.rankingTexture
-         Menu.achievementTexture
-         Menu.settingTexture
-      |]
-
-    let gameInfoChars = "0123456789:"
-
-    let pSum = 1 + textures.Length + gameInfoChars.Length
-
-    pSum, fun (progress: unit -> int) -> async {
-    let ctx = SynchronizationContext.Current
-    do! Async.SwitchToThreadPool()
-
-    let! texturesLoad =
-      async {
-        textures
-        |> Seq.iter(fun (path) ->
-          path |> Texture2D.Load |> ignore
-          progress() |> ignore
-        )
-      } |> Async.StartChild
-
-    let gameInfoFont = Font.LoadDynamicFont(ViewCommon.font, GameInfo.fontSize)
-    progress() |> ignore
-
-    do! Async.SwitchToContext ctx
-
-    let Step = 10
-    for c in gameInfoChars do
-      gameInfoFont.GetGlyph(int c) |> ignore
-      if progress () % Step = 0 then
-        do! Async.Sleep 1
-
-    do! texturesLoad
-  }
 
 module internal Binding =
   module Board =
