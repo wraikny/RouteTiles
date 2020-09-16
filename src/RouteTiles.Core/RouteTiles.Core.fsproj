@@ -16,14 +16,13 @@
     <Compile Include="Utils.fs" />
     <Compile Include="SimpleRankingsServer.fs" />
     <Compile Include="Config.fs" />
+    <Compile Include="Types/RankingData.fs" />
     <Compile Include="Types/Common.fs" />
     <Compile Include="Types/Board.fs" />
     <Compile Include="Types/SoloGame.fs" />
-    <Compile Include="Types/Menu.fs" />
     <Compile Include="Effects/Effect.fs" />
     <Compile Include="Board.fs" />
     <Compile Include="SoloGame.fs" />
-    <Compile Include="Menu.fs" />
     <Compile Include="SubMenu/WithContext.fs" />
     <Compile Include="SubMenu/SinglePage.fs" />
     <Compile Include="SubMenu/ListSelector.fs" />

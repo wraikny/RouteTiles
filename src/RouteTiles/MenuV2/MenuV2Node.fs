@@ -33,7 +33,14 @@ module internal RankingServer =
       | MenuV2.GameMode.ScoreAttack180 -> "Point", true
     async {
       let! id = client.AsyncInsert(param.table, param.guid, param.result)
-      let! data = client.AsyncSelect<MenuV2.GameResult>(param.table, orderBy = orderKey, isDescending = isDescending, limit = param.limit)
+      let! data =
+        client.AsyncSelect<MenuV2.GameResult>
+          ( param.table
+          , orderBy = orderKey
+          , isDescending = isDescending
+          , limit = param.limit
+          )
+
       return (id, data)
     } |> Async.Catch
 

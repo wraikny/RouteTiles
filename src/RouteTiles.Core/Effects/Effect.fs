@@ -46,16 +46,9 @@ with
 
 [<Struct>]
 type GameRankingEffect<'msg> =
-  GameRankingEffect of
-    {|
-      mode: SoloGame.Mode
-      guid: System.Guid
-      result: Menu.GameResult
-      onSuccess: int64 * SimpleRankingsServer.Data<Menu.GameResult>[] -> 'msg
-      onError: string -> 'msg
-    |}
+  GameRankingEffect of SoloGame.Mode * Config * Ranking.Data
 with
-  static member Effect(_) = Eff.marker<unit>
+  static member Effect(_) = Eff.marker<Result<int64 * SimpleRankingsServer.Data<Ranking.Data>[], exn>>
 
 // type AsyncEffect<'msg> = AsyncEffect of Async<'msg>
 // with
