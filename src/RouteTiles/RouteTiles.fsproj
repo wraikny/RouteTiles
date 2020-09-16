@@ -58,14 +58,6 @@
     <Compile Include="Game/GameInfo.fs" />
     <Compile Include="../../ResourcesPassword.fs" />
     <Compile Include="Config.fs" />
-    <Compile Include="Menu/Common.fs" />
-    <Compile Include="Menu/Main.fs" />
-    <Compile Include="Menu/GameSetting.fs" />
-    <Compile Include="Menu/Pause.fs" />
-    <Compile Include="Menu/GameResult.fs" />
-    <Compile Include="Menu/Setting.fs" />
-    <Compile Include="Menu/MenuView.fs" />
-    <Compile Include="Menu/MenuNode.fs" />
     <Compile Include="MenuV2/Container.fs" />
     <Compile Include="MenuV2/MenuElement.fs" />
     <Compile Include="MenuV2/MenuModalElement.fs" />
