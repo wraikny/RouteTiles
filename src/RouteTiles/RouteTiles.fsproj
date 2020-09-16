@@ -66,7 +66,9 @@
     <Compile Include="Menu/Setting.fs" />
     <Compile Include="Menu/MenuView.fs" />
     <Compile Include="Menu/MenuNode.fs" />
+    <Compile Include="MenuV2/Container.fs" />
     <Compile Include="MenuV2/MenuElement.fs" />
+    <Compile Include="MenuV2/MenuModalElement.fs" />
     <Compile Include="MenuV2/MenuV2Node.fs" />
     <Compile Include="PostEffect/Wave.fs" />
     <Compile Include="Program.fs" />

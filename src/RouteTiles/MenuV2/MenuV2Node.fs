@@ -85,14 +85,16 @@ type MenuV2Node() =
   let updater = Updater<MenuV2.State, MenuV2.Msg>()
 
   let uiRoot = BoxUIRootNode()
+  let uiRootModal = BoxUIRootNode()
 
   let mutable gameNode = ValueNone
 
   do
     base.AddChildNode uiRoot
+    base.AddChildNode uiRootModal
 
 
-    let container = MenuElement.Container(TextMap.textMapJapanese)
+    let container = Container(TextMap.textMapJapanese)
 
     updater.Subscribe (fun state ->
       lastState |> function
@@ -100,10 +102,15 @@ type MenuV2Node() =
       | _ ->
         lastState <- ValueSome state
 
-        uiRoot.ClearElement()
-        let elem = MenuElement.create container state
-        uiRoot.SetElement elem
-
+        uiRootModal.ClearElement()
+        MenuModalElement.createModal container state
+        |> function
+        | ValueSome elem ->
+          uiRootModal.SetElement elem
+        | _ ->
+          uiRoot.ClearElement()
+          let elem = MenuElement.create container state
+          uiRoot.SetElement elem
     ) |> ignore
 
   let mutable lastControllerCount = Engine.Joystick.ConnectedJoystickCount

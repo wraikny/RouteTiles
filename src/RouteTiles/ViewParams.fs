@@ -278,6 +278,10 @@ module ZOrder =
     let background = offset 0
     let backgroundMask = offset 1
 
+    let blur = offset 2
+
+    let frameBackground = offset 10
+
     let buttonBackground = offset 20
     let buttonHighlight = offset 21
     let buttonText = offset 23
@@ -295,5 +299,15 @@ module ZOrder =
     let sideMenuBackground = offset 31
     let sideMenuText = offset 32
 
+  module MenuModal =
+    let offset = (|||) (300 <<< 16)
+    let blur = offset 0
+    let background = offset 1
+
+    let frame = offset 10
+    let framehighlight = offset 11
+
+    let text = offset 20
+    
 
   let debug = (1 <<< 30)

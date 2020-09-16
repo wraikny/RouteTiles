@@ -59,32 +59,47 @@ module PauseSelect =
   |]
 
 [<Struct>]
-type ControllerSelect = ControllerSelect of cancellable:bool * ListSelector.State<Controller> with
-  static member Init(cancellable: bool, cursor: int, selection, ?current) =
-    let state = ListSelector.State<_>.Init(cursor, selection, ?current=current)
-    
-    ControllerSelect(cancellable, state)
-
-  static member Init(cancellable: bool, cursorItem, selection, ?currentItem) =
-    let state = ListSelector.State<_>.Init(cursorItem, selection, ?currentItem=currentItem)
-    
-    ControllerSelect(cancellable, state)
-
+type ControllerSelect =
+  | ControllerSelectToPlay of toPlay:ListSelector.State<Controller>
+  | ControllerSelectFromPause of fromPause:ListSelector.State<Controller>
+  | ControllerSelectWhenRejected of rejected:ListSelector.State<Controller>
+with
   static member StateOut(_) = Eff.marker<Controller voption>
 
-module ControllerSelect =
-  let inline map f (ControllerSelect(cancellable, state)) =
-    ControllerSelect(cancellable, f state)
+  member s.Value = s |> function
+    | ControllerSelectToPlay state -> state
+    | ControllerSelectFromPause state -> state
+    | ControllerSelectWhenRejected state -> state
 
-  let inline update (msg: ListSelector.Msg) (ControllerSelect (cancellable, s) as state) = eff {
-    if not cancellable && msg = ListSelector.Msg.Cancel then
+module ControllerSelect =
+  let map f state =
+    match state with
+    | ControllerSelectToPlay state ->
+      f state |> ControllerSelectToPlay
+
+    | ControllerSelectFromPause state ->
+      f state |> ControllerSelectFromPause
+
+    | ControllerSelectWhenRejected state ->
+      f state |> ControllerSelectWhenRejected
+
+  let inline update (msg: ListSelector.Msg) (state) = eff {
+    let inline apply f state =
+      ListSelector.update msg state
+      |> Eff.map (StateStatus.mapPending f)
+
+    match state with
+    | ControllerSelectWhenRejected _ when msg = ListSelector.Msg.Cancel ->
       return state |> Pending
-    else
-      let! res = ListSelector.update msg s
-      return
-        res |> StateStatus.mapPending(fun state ->
-          ControllerSelect(cancellable, state)
-        )
+
+    | ControllerSelectToPlay state ->
+      return! state |> apply ControllerSelectToPlay
+
+    | ControllerSelectFromPause state ->
+      return! state |> apply ControllerSelectFromPause
+
+    | ControllerSelectWhenRejected state ->
+      return! state |> apply ControllerSelectWhenRejected
   }
 
 
@@ -176,7 +191,8 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
           | gameModeState, ValueSome gameMode ->
             let! controllers = CurrentControllers
             match!
-              ControllerSelect.Init(true, 0, controllers)
+              ListSelector.State<_>.Init(0, controllers)
+              |> ControllerSelectToPlay
               |> stateEnter with
             | ValueNone -> return gameModeState
             | ValueSome controller ->
@@ -214,6 +230,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
       return state
 
     | _, ValueSome Restart ->
+      do! GameControlEffect.Restart
       do! GameControlEffect.Resume
       return state
 
@@ -225,7 +242,8 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
     | pauseState, ValueSome ChangeController ->
       let! controllers = CurrentControllers
       match!
-        ControllerSelect.Init(true, controller, controllers,currentItem=controller)
+        ListSelector.State<_>.Init(controller, controllers,currentItem=controller)
+        |> ControllerSelectFromPause
         |> stateEnter
         with
       | ValueNone -> return pauseState
@@ -239,7 +257,8 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
   | SelectController, GameState (_, controller, _) ->
     let! controllers = CurrentControllers
     let! selectedController =
-      ControllerSelect.Init(false, controller, controllers,currentItem=controller)
+      ListSelector.State<_>.Init(controller, controllers,currentItem=controller)
+      |> ControllerSelectWhenRejected
       |> stateEnter
 
     /// force unwrap

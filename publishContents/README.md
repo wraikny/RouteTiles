@@ -15,6 +15,5 @@
 その他依存ライブラリのライセンスは LICENSE.txt を御覧ください。
 
 ## Resources
-- [アイコン (c) TopeconHeroes](https://icooon-mono.com/)
 - [マキナス Square 4 (c) もじワク研究](https://moji-waku.com/makinas/)
 - [M+ FONT](https://mplus-fonts.osdn.jp/)

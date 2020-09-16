@@ -36,6 +36,57 @@ type FixedHeight private () =
       child.Resize(area)
 
 [<AllowNullLiteral; Sealed; AutoSerializable(true)>]
+type GaussianBlur private () =
+  inherit Element()
+
+  let mutable node: PostEffectGaussianBlurNode = null
+
+  let mutable onUpdateEvent: Event<PostEffectGaussianBlurNode> voption = ValueNone
+
+  member val private intensity = Unchecked.defaultof<float32> with get, set
+  member val private zOrder = Unchecked.defaultof<int> with get, set
+  member val private cameraGroup = Unchecked.defaultof<uint64> with get, set
+  member __.Node with get() = node and set(v) = node <- v
+
+  member __.OnUpdateEvent with get() =
+    onUpdateEvent |> function
+    | ValueSome e -> e.Publish
+    | _ ->
+      let e = Event<_>()
+      onUpdateEvent <- ValueSome e
+      e.Publish
+
+
+  static member Create(?intensity: float32, ?zOrder: int, ?cameraGroup: uint64) =
+    let elem = BoxUISystem.RentOrNull<GaussianBlur>() |? GaussianBlur()
+    elem.intensity <- defaultArg intensity 5.0f
+    elem.zOrder <- defaultArg zOrder 0
+    elem.cameraGroup <- defaultArg cameraGroup 0uL
+    elem
+
+  override this.ReturnSelf() =
+    this.Root.Return(node)
+    node <- null
+    onUpdateEvent <- ValueNone
+    BoxUISystem.Return(this)
+
+  override this.OnAdded() =
+    node <- this.Root.RentOrCreate<PostEffectGaussianBlurNode>()
+    node.Intensity <- this.intensity
+    node.ZOrder <- this.zOrder
+    node.CameraGroup <- this.cameraGroup
+
+  override this.OnUpdate() =
+    onUpdateEvent |> ValueOption.iter(fun e -> e.Trigger(node))
+
+  override this.CalcSize(size) = size
+
+  override this.OnResize(size) =
+    for child in this.Children do
+      child.Resize(size)
+
+
+[<AllowNullLiteral; Sealed; AutoSerializable(true)>]
 type ItemList private() =
   inherit Element()
 
