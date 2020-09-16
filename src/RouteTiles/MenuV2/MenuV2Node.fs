@@ -19,30 +19,30 @@ module internal RankingServer =
       ResourcesPassword.Server.password
     )
 
-  type Param = {
-    mode: MenuV2.GameMode
-    table: string
-    guid: Guid
-    result: MenuV2.GameResult
-    limit: int
-  }
+  // type Param = {
+  //   mode: MenuV2.GameMode
+  //   table: string
+  //   guid: Guid
+  //   result: MenuV2.GameResult
+  //   limit: int
+  // }
 
-  let insertSelect (param: Param) =
-    let orderKey, isDescending = param.mode |> function
-      | MenuV2.GameMode.TimeAttack2000 -> "Time", false
-      | MenuV2.GameMode.ScoreAttack180 -> "Point", true
-    async {
-      let! id = client.AsyncInsert(param.table, param.guid, param.result)
-      let! data =
-        client.AsyncSelect<MenuV2.GameResult>
-          ( param.table
-          , orderBy = orderKey
-          , isDescending = isDescending
-          , limit = param.limit
-          )
+  // let insertSelect (param: Param) =
+  //   let orderKey, isDescending = param.mode |> function
+  //     | MenuV2.GameMode.TimeAttack2000 -> "Time", false
+  //     | MenuV2.GameMode.ScoreAttack180 -> "Point", true
+  //   async {
+  //     let! id = client.AsyncInsert(param.table, param.guid, param.result)
+  //     let! data =
+  //       client.AsyncSelect<MenuV2.GameResult>
+  //         ( param.table
+  //         , orderBy = orderKey
+  //         , isDescending = isDescending
+  //         , limit = param.limit
+  //         )
 
-      return (id, data)
-    } |> Async.Catch
+  //     return (id, data)
+  //   } |> Async.Catch
 
 
 module internal MenuUtil =

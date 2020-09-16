@@ -36,13 +36,6 @@ module GameMode =
     | ScoreAttack180 -> SoloGame.Mode.ScoreAttack 180
 
 
-type GameResult = {
-  Name: string
-  Time: float32
-  Point: int
-  SlideCount: int
-}
-
 [<Struct>]
 type PauseSelect =
   | Continue

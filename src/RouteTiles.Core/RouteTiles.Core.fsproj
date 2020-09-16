@@ -16,7 +16,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="SimpleRankingsServer.fs" />
     <Compile Include="Config.fs" />
-    <Compile Include="Types/RankingData.fs" />
+    <Compile Include="Types/Ranking.fs" />
     <Compile Include="Types/Common.fs" />
     <Compile Include="Types/Board.fs" />
     <Compile Include="Types/SoloGame.fs" />
@@ -28,6 +28,7 @@
     <Compile Include="SubMenu/ListSelector.fs" />
     <Compile Include="SubMenu/StringInput.fs" />
     <Compile Include="SubMenu/Setting.fs" />
+    <Compile Include="SubMenu/GameResult.fs" />
     <Compile Include="MenuV2.fs" />
   </ItemGroup>
   <ItemGroup>

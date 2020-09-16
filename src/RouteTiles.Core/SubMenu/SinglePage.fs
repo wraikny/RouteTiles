@@ -14,8 +14,7 @@ with
 [<Struct; RequireQualifiedAccess>]
 type Msg = Enter
 
-let inline update msg _state: Eff<StateStatus<State<'a>, unit>, ^h> = eff {
+let inline update msg _state =
   match msg with
-  | Msg.Enter -> return Completed ()
-}
+  | Msg.Enter -> Completed ()
 

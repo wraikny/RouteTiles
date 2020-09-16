@@ -46,7 +46,7 @@ with
 
 [<Struct>]
 type GameRankingEffect<'msg> =
-  GameRankingEffect of SoloGame.Mode * Config * Ranking.Data
+  GameRankingEffect of System.Guid * SoloGame.Mode * Ranking.Data
 with
   static member Effect(_) = Eff.marker<Result<int64 * SimpleRankingsServer.Data<Ranking.Data>[], exn>>
 
