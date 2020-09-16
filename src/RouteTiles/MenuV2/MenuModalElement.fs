@@ -106,15 +106,4 @@ let createModal (container: Container) (state: MenuV2.State) =
       )
       |> ValueSome
 
-    | MenuV2.State.ControllerSelectState (MenuV2.ControllerSelectWhenRejected state, _) ->
-      createBase ()
-      |> BoxUI.withChild (
-        GaussianBlur.Create(intensity = 5.0f, zOrder = ZOrder.MenuModal.blur) :> Element
-        empty()
-      )
-      |> BoxUI.withChildren (
-        createControllerSelect container state
-      )
-      |> ValueSome
-
     | _ -> ValueNone

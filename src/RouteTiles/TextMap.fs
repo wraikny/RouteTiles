@@ -34,7 +34,6 @@ type Descriptions = {
   continueGame: string
   restartGame: string
   quitGame: string
-  changeController: string
   changeUsername: string
 }
 
@@ -78,7 +77,6 @@ let textMapJapanese = {
     continueGame = "ゲームを再開します"
     restartGame = "ゲームを始めからやりなおします"
     quitGame = "ゲームをやめてタイトルに戻ります"
-    changeController = "使用するコントローラを切り替えます"
     changeUsername = "ユーザ名を変更します"
   }
 }

@@ -102,7 +102,27 @@ type ItemList private() =
   override this.ReturnSelf() =
     BoxUISystem.Return(this)
 
-  override this.CalcSize(size) = size
+  override this.CalcSize(size) =
+    let folder = this.ItemHeight |> function
+      | None ->
+        let itemSize = Vector2F(size.X, size.X)
+
+        (fun (x, y) (child: Element) ->
+          let csize = child.GetSize(itemSize)
+          (max x csize.X, y + csize.Y + this.ItemMargin)
+        )
+
+      | Some itemHeight ->
+        let itemSize = Vector2F(size.X, itemHeight)
+
+        (fun (x, y) child ->
+          let csize = child.GetSize(itemSize)
+          (max x csize.X, y + itemHeight + this.ItemMargin)
+        )
+
+    this.Children
+    |> Seq.fold folder (0.0f, 0.0f)
+    |> Vector2F
 
   override this.OnResize(area) =
     this.ItemHeight |> function

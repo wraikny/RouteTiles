@@ -42,6 +42,11 @@ module MenuUtil =
   let getCurrentControllers() =
     [|
       yield Controller.Keyboard
+      #if DEBUG
+      yield Controller.Joystick(-1, "AAAAA", "")
+      yield Controller.Joystick(-1, "BBBBB", "")
+      yield Controller.Joystick(-1, "CCCCC", "")
+      #endif
       for i in 0..15 do
         let info = Engine.Joystick.GetJoystickInfo i
         if info <> null && info.IsGamepad then
@@ -152,7 +157,9 @@ type MenuV2Node() =
               member __.FinishGame(model, t) =
                 MenuV2.Msg.FinishGame(model, t)
                 |> updater.Dispatch
-              member __.SelectController() = ()
+              member __.SelectController() =
+                MenuV2.Msg.SelectController
+                |> updater.Dispatch
             }
             let n = Game(gameMode, controller, viewer)
             n.AddChildNode(gameInfo)
@@ -168,6 +175,7 @@ type MenuV2Node() =
           gameNode |> ValueOption.iter (fun n -> n.Initialize())
 
         | GameControlEffect.SetController(controller) ->
+          
           gameNode.Value.Controller <- controller
     }
 

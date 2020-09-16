@@ -73,7 +73,7 @@ type Container (textMap: TextMap.TextMap) =
   member val PauseModeDescriptions =
     MenuV2.PauseSelect.items |> Array.map (function
       | MenuV2.Continue -> textMap.descriptions.continueGame
-      | MenuV2.ChangeController -> textMap.descriptions.changeController
+      | MenuV2.ChangeController -> textMap.descriptions.selectController
       | MenuV2.Restart -> textMap.descriptions.restartGame
       | MenuV2.Quit -> textMap.descriptions.quitGame
     )

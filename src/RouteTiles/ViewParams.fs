@@ -69,7 +69,7 @@ module Consts =
     let modeHeaderRatio = 0.08f
 
     [<Literal>]
-    let offsetAnimationPeriod = 0.2f
+    let offsetAnimationPeriod = 0.3f
 
     [<Literal>]
     let selectedTimePeriod = 2.0f

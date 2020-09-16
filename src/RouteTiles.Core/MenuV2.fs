@@ -255,6 +255,8 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
     return State.Init (config)
 
   | SelectController, GameState (_, controller, _) ->
+    do! GameControlEffect.Pause
+
     let! controllers = CurrentControllers
     let! selectedController =
       ListSelector.State<_>.Init(controller, controllers,currentItem=controller)
@@ -263,6 +265,8 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
 
     /// force unwrap
     do! GameControlEffect.SetController selectedController.Value
+
+    do! GameControlEffect.Resume
 
     return state
 
