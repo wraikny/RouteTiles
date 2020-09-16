@@ -6,7 +6,7 @@ open System
 open System.Collections.Generic
 open Altseed2
 
-module Coroutine =
+module internal Coroutine =
   let milliseconds (ms: int<millisec>) =
     seq {
       let msf = float32 ms
@@ -22,7 +22,7 @@ module Coroutine =
     seq { while true do yield! coroutine }
 
 [<Sealed>]
-type CoroutineNode(?capacity) =
+type internal CoroutineNode(?capacity) =
   inherit Node()
 
   let coroutines = List<IEnumerator<unit>>(defaultArg capacity 0)

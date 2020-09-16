@@ -6,7 +6,7 @@ open Affogato
 
 open RouteTiles.Core.Utils
 
-module Consts =
+module internal Consts =
   // -- Core --
   module Core =
     let [<Literal>] nextsCount = 5
@@ -145,7 +145,7 @@ module Consts =
     do! texturesLoad
   }
 
-module Binding =
+module internal Binding =
   module Board =
     open Consts.Board
     open RouteTiles.Core.Types.Board
@@ -192,7 +192,7 @@ module Binding =
       | TileDir.UpLeft -> 270.0f
 
 
-module Helper =
+module internal Helper =
   let inline toSecond (x: int<millisec>) = float32 x / 1000.0f
 
   let lerpColor (x: Color) (y: Color) (t: float32) =
@@ -250,7 +250,7 @@ module Helper =
       let y = boardViewPos.Y + boardViewSize.Y * 0.5f
       Vector2F(x, y)
 
-module CameraGroup =
+module internal CameraGroup =
   let background = 1uL <<< 0
   let game = 1uL <<< 1
   let menu = 1uL <<< 2
@@ -258,7 +258,7 @@ module CameraGroup =
   let display = 1uL <<< 16
 
 
-module ZOrder =
+module internal ZOrder =
   let posteffect = -100
 
   module Board =

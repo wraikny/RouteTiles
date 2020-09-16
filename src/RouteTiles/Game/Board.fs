@@ -10,7 +10,7 @@ open System.Threading.Tasks
 open Affogato
 open Altseed2
 
-module BoardHelper =
+module internal BoardHelper =
   let createTile() =
     let node =
       SpriteNode(
@@ -55,7 +55,7 @@ module BoardHelper =
         yield()
       }
 
-type BoardNode(addCoroutine) =
+type internal BoardNode(addCoroutine) =
   inherit TransformNode()
 
   let updateTile = BoardHelper.updateTile >> addCoroutine

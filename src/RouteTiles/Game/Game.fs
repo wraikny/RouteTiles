@@ -29,13 +29,13 @@ type Handler = {
       k()
     )
 
-type IGameHandler =
+type internal IGameHandler =
   abstract SetModel: SoloGame.Model -> unit
   abstract SetTime: float32 -> unit
   abstract FinishGame: SoloGame.Model * time:float32 -> unit
   abstract SelectController: unit -> unit
 
-type Game(gameMode, controller, gameInfoViewer: IGameHandler) =
+type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
   inherit Node()
 
   let mutable controller = controller

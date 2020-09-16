@@ -1,4 +1,4 @@
-module RouteTiles.App.TextMap
+module internal RouteTiles.App.TextMap
 
 type Buttons = {
   play: string

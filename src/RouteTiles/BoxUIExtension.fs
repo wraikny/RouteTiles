@@ -1,4 +1,4 @@
-module RouteTiles.App.BoxUI
+module internal RouteTiles.App.BoxUI
 
 open Altseed2
 open Altseed2.BoxUI

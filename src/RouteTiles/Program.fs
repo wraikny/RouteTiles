@@ -9,49 +9,19 @@ open RouteTiles.Core.Types
 open RouteTiles.App.Consts.ViewCommon
 
 [<EntryPoint; System.STAThread>]
-let main _ =
+let private main _ =
   let inline init(config) =
     Engine.InitializeEx("RouteTiles", windowSize, config)
 
     Engine.ClearColor <- clearColor
 
-  let initializers = [|
-    Config.initialize
-// #if !DEBUG
-    // Consts.initialize
-    // MenuView.initialize
-// #endif
-  |]
-
-  let initLoading() =
-    let progressSum = initializers |> Seq.sumBy fst
-
-    let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.125f)
-    let loading =
-      Loading(progressSum, loadingSize, 0, 1,
-        Position = (Engine.WindowSize.To2F() - loadingSize) * 0.5f
-      )
-
-    let loader =
-      initializers
-      |> Array.map(fun (_, i) -> i loading.Progress)
-      |> Async.Parallel
-      |> Async.Ignore
-
-    Engine.AddNode(loading)
-
-    async {
-      do! loader
-      Engine.RemoveNode(loading)
-    }
-
   let initGame() =
     // Engine.AddNode(PostEffect.Wave(ZOrder = ZOrder.posteffect))
 
     async {
-      do! initLoading()
+      let! config = Config.initialize
       let! _ = Async.StartChild (Config.update)
-      Engine.AddNode(MenuV2.MenuV2Node())
+      Engine.AddNode (MenuV2.MenuV2Node(config))
     }
     |> Async.StartImmediate
 

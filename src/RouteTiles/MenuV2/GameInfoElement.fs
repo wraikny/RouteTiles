@@ -1,4 +1,4 @@
-module RouteTiles.App.MenuV2.GameInfoElement
+module internal RouteTiles.App.MenuV2.GameInfoElement
 
 open System
 open Altseed2

@@ -1,4 +1,4 @@
-module RouteTiles.App.BoxUIElements
+module internal RouteTiles.App.BoxUIElements
 
 open System
 open System.Runtime.InteropServices

@@ -5,7 +5,7 @@ open Altseed2
 
 open RouteTiles.App
 
-type Wave() =
+type internal Wave() =
   inherit PostEffectNode()
 
   let file = StaticFile.CreateStrict(Consts.PostEffect.wavepath)

@@ -11,7 +11,7 @@ open RouteTiles.App
 
 open EffFs
 
-module RankingServer =
+module internal RankingServer =
   let client =
     new SimpleRankingsServer.Client(
       ResourcesPassword.Server.url,
@@ -38,7 +38,7 @@ module RankingServer =
     } |> Async.Catch
 
 
-module MenuUtil =
+module internal MenuUtil =
   let getCurrentControllers() =
     [|
       yield Controller.Keyboard
@@ -80,7 +80,7 @@ type MenuV2Handler = {
       h.handleSetController controller |> k
     )
 
-  static member inline Handle(CurrentControllers as e, k) =
+  static member Handle(CurrentControllers as e, k) =
     Utils.DebugLogn (sprintf "Effect: %A" e)
     MenuUtil.getCurrentControllers() |> k
 
@@ -90,7 +90,7 @@ type MenuV2Handler = {
     k()
 
 
-type MenuV2Node() =
+type internal MenuV2Node(config: Config) =
   inherit Node()
 
   let mutable lastState = ValueNone
@@ -202,7 +202,7 @@ type MenuV2Node() =
           false
     }
 
-    let config = Config.tryGetConfig().Value
+    // let config = Config.tryGetConfig().Value
 
     updater.Init(MenuV2.State.Init (config), fun msg state ->
       let newState = MenuV2.update msg state |> Eff.handle handler

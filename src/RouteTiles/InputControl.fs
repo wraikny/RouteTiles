@@ -1,4 +1,4 @@
-module RouteTiles.App.InputControl
+module internal RouteTiles.App.InputControl
 
 open RouteTiles.Core.Types
 open Altseed2

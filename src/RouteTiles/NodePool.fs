@@ -4,7 +4,7 @@ open System.Collections.Generic
 open Altseed2
 
 [<AbstractClass>]
-type NodePool<'key, 'node, 'arg when 'key : equality and 'node :> Node>() =
+type internal NodePool<'key, 'node, 'arg when 'key : equality and 'node :> Node>() =
   inherit Node()
 
   let objects = Dictionary<'key, 'node>()

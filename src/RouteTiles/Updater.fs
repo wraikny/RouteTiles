@@ -5,7 +5,7 @@ open System.Threading
 open System.Collections.Generic
 
 [<Sealed>]
-type Updater<'model, 'msg>() =
+type internal Updater<'model, 'msg>() =
   let mutable queue = Queue<'msg>()
   let mutable isUpdating = false
 

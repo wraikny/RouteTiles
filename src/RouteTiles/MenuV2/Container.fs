@@ -6,7 +6,7 @@ open RouteTiles.App
 
 open Altseed2
 
-type Container (textMap: TextMap.TextMap) =
+type internal Container (textMap: TextMap.TextMap) =
   member val TextMap = textMap
   member val BackgroundTexture = Texture2D.LoadStrict(@"Menu/background_dark.png")
   member val MaskTexture = Texture2D.LoadStrict(@"Menu/background_mask.png")

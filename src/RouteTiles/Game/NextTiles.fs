@@ -10,7 +10,7 @@ open System.Threading.Tasks
 open Affogato
 open Altseed2
 
-type NextTilesNode(addCoroutine) =
+type internal NextTilesNode(addCoroutine) =
   inherit TransformNode(Scale = Vector2F(1.0f, 1.0f) * Consts.Board.nextsScale)
 
   let updateTile = BoardHelper.updateTile >> addCoroutine

@@ -55,7 +55,6 @@
     <Compile Include="Game/Board.fs" />
     <Compile Include="Game/NextTiles.fs" />
     <Compile Include="Game/Game.fs" />
-    <Compile Include="Game/GameInfo.fs" />
     <Compile Include="../../ResourcesPassword.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="MenuV2/Container.fs" />

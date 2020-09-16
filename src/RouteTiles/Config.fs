@@ -40,29 +40,29 @@ let update = async {
 let mutable private config = ValueNone
 let tryGetConfig() = config
 
-let initialize =
-  1, fun (progress: unit -> int) -> async {
-    do! Async.SwitchToThreadPool()
+let initialize = async {
+  do! Async.SwitchToThreadPool()
 
-    let exists = Directory.Exists(dirName)
-    if not exists then
-      Directory.CreateDirectory(dirName) |> ignore
+  let exists = Directory.Exists(dirName)
+  if not exists then
+    Directory.CreateDirectory(dirName) |> ignore
 
-    let fileExists = File.Exists(ConfigFile)
+  let fileExists = File.Exists(ConfigFile)
 
-    let createNew() =
-      let config' = Config.Create()
-      save config'
-      config <- ValueSome config'
-
-    if fileExists then
-      try
-        use file = new FileStream(ConfigFile, FileMode.OpenOrCreate)
-        config <- formatter.Deserialize(file) |> unbox<Config> |> ValueSome
-      with :? SerializationException ->
-        createNew()
-    else
-      createNew()
-
-    progress() |> ignore
-  }
+  let createNew() =
+    let config' = Config.Create()
+    save config'
+    config <- ValueSome config'
+    config'
+  
+  if fileExists then
+    try
+      use file = new FileStream(ConfigFile, FileMode.OpenOrCreate)
+      let res = formatter.Deserialize(file) |> unbox<Config>
+      config <- ValueSome res
+      return res
+    with :? SerializationException ->
+      return createNew()
+  else
+    return createNew()
+}

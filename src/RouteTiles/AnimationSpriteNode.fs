@@ -2,7 +2,7 @@ namespace RouteTiles.App
 
 open Altseed2
 
-type AnimationSpriteNode(pushToPool) =
+type internal AnimationSpriteNode(pushToPool) =
   inherit SpriteNode()
 
   let mutable time = 0.0f
@@ -37,7 +37,7 @@ type AnimationSpriteNode(pushToPool) =
 open System.Collections.Generic
 
 [<AbstractClass>]
-type EffectPool(initCount) =
+type internal EffectPool(initCount) =
   inherit Node()
 
   let mutable initCount = initCount

@@ -1,4 +1,4 @@
-module RouteTiles.App.MenuV2.MenuModalElement
+module internal RouteTiles.App.MenuV2.MenuModalElement
 
 open System
 open Altseed2
