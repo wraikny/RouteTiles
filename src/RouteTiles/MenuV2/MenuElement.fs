@@ -284,13 +284,13 @@ let create (container: Container) (state: MenuV2.State) =
     | MenuV2.State.SettingMenuState (state, _) ->
       createSetting container state
 
-    | MenuV2.State.ControllerSelectState (MenuV2.ControllerSelectToPlay state, _) ->
+    | MenuV2.State.ControllerSelectState (WithContext(MenuV2.ControllerSelectToPlay state), _) ->
       [|
         createBackground container
         yield!
           createControllerSelect container state
       |]
-    | MenuV2.State.ControllerSelectState (state, _) ->
+    | MenuV2.State.ControllerSelectState (WithContext state, _) ->
       [|
         GaussianBlur.Create(intensity = 5.0f, zOrder = ZOrder.Menu.blur) :> Element
         yield!

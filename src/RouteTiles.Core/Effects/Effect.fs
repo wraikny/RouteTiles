@@ -17,9 +17,13 @@ type GameControlEffect =
   | Start of SoloGame.Mode * Controller
   | Restart
   | Quit
-  | SetController of Controller
 with
   static member Effect(_) = Eff.marker<unit>
+
+[<Struct>]
+type SetControllerEffect = SetController of Controller
+with
+  static member Effect(_) = Eff.marker<bool>
 
 type CurrentControllers = CurrentControllers with
   static member Effect(_) = Eff.marker<Controller[]>

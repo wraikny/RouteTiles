@@ -57,6 +57,7 @@ module MenuUtil =
 type MenuV2Handler = {
   dispatch: MenuV2.Msg -> unit
   handleGameControlEffect: GameControlEffect -> unit
+  handleSetController: Controller -> bool
 } with
   static member Handle(x) = x
 
@@ -71,6 +72,12 @@ type MenuV2Handler = {
     Eff.capture (fun h ->
       h.handleGameControlEffect e
       k()
+    )
+
+  static member inline Handle(SetController controller, k) =
+    Utils.DebugLogn (sprintf "SetControllerEffect: %A" controller)
+    Eff.capture ( fun h ->
+      h.handleSetController controller |> k
     )
 
   static member inline Handle(CurrentControllers as e, k) =
@@ -140,6 +147,12 @@ type MenuV2Node() =
     getKeyboardInput ()
     |> Option.alt getJoysticksInputs
 
+  let isAvailableController = function
+    | Controller.Keyboard -> true
+    | Controller.Joystick (index, name, guid) ->
+      let info = Engine.Joystick.GetJoystickInfo(index)
+      info <> null && info.GUID = guid
+
   override this.OnAdded() =
     let handler = {
       dispatch = updater.Dispatch
@@ -174,9 +187,12 @@ type MenuV2Node() =
         | GameControlEffect.Restart ->
           gameNode |> ValueOption.iter (fun n -> n.Initialize())
 
-        | GameControlEffect.SetController(controller) ->
-          
+      handleSetController = fun controller ->
+        if isAvailableController controller then
           gameNode.Value.Controller <- controller
+          true
+        else
+          false
     }
 
     let config = Config.tryGetConfig().Value

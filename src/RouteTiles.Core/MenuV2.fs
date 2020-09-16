@@ -110,7 +110,7 @@ and WSListSelector<'item> = WithState<ListSelector.State<'item>>
 and State =
   | MainMenuState of Config * ListSelector.State<Mode>
   | GameModeSelectState of WSListSelector<GameMode> * (State * GameMode voption -> State)
-  | ControllerSelectState of ControllerSelect * (Controller voption -> State)
+  | ControllerSelectState of WithState<ControllerSelect> * (State * Controller voption -> State)
   | GameState of Config * Controller * GameMode
   | PauseState of WSListSelector<PauseSelect> * (State * PauseSelect voption -> State)
   | SettingMenuState of Setting.State * (Config voption -> State)
@@ -193,9 +193,10 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
             match!
               ListSelector.State<_>.Init(0, controllers)
               |> ControllerSelectToPlay
+              |> WithContext
               |> stateEnter with
-            | ValueNone -> return gameModeState
-            | ValueSome controller ->
+            | _, ValueNone -> return gameModeState
+            | _, ValueSome controller ->
               do! GameControlEffect.Start(gameMode |> GameMode.into, controller)
               return GameState (config, controller, gameMode)
 
@@ -244,12 +245,16 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
       match!
         ListSelector.State<_>.Init(controller, controllers,currentItem=controller)
         |> ControllerSelectFromPause
+        |> WithContext
         |> stateEnter
         with
-      | ValueNone -> return pauseState
-      | ValueSome controller ->
-        do! GameControlEffect.SetController controller
-        return GameState (config, controller, gameMode)
+      | _, ValueNone -> return pauseState
+      | controllerState, ValueSome controller ->
+        let! res = SetController controller
+        if res then
+          return GameState (config, controller, gameMode)
+        else
+          return controllerState
 
   | QuitGame, GameState (config, _, _) ->
     return State.Init (config)
@@ -258,17 +263,37 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
     do! GameControlEffect.Pause
 
     let! controllers = CurrentControllers
-    let! selectedController =
+    let! controllerState, selectedController =
       ListSelector.State<_>.Init(controller, controllers,currentItem=controller)
       |> ControllerSelectWhenRejected
+      |> WithContext
       |> stateEnter
 
     /// force unwrap
-    do! GameControlEffect.SetController selectedController.Value
+    let! res = SetController selectedController.Value
 
-    do! GameControlEffect.Resume
+    if res then
+      do! GameControlEffect.Resume
+      return state
+    else
+      do! SoundEffect.Invalid
 
-    return state
+      // あまりスマートではない
+      match controllerState with
+      | State.ControllerSelectState (WithContext s, k) ->
+        let! controllers = CurrentControllers
+
+        let controllerSelect =
+          s |> ControllerSelect.map(fun s ->
+            let cursorItem = s.selection.[s.cursor]
+            let currentItem = s.current |> Option.map(fun i -> s.selection.[i])
+            ListSelector.State<_>.Init(cursorItem, controllers, ?currentItem=currentItem)
+          )
+          |> WithContext
+
+        return State.ControllerSelectState (controllerSelect, k)
+      | _ ->
+        return failwithf "Invalid State of ControllerSelectState Context: %A" controllerState
 
   // todo: when controller is rejected
   | _, GameState _ ->
@@ -279,18 +304,20 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
     | ValueNone -> return state
     | ValueSome msg -> return! WithContext.mapEff state (ListSelector.update msg) (s, k)
 
-  | UpdateControllers controllers, ControllerSelectState (s, k) ->
-    let controllerSelect = s |> ControllerSelect.map(fun s ->
-      let cursorItem = s.selection.[s.cursor]
-      let currentItem = s.current |> Option.map(fun i -> s.selection.[i])
-      ListSelector.State<_>.Init(cursorItem, controllers, ?currentItem=currentItem)
-    )
+  | UpdateControllers controllers, ControllerSelectState (WithContext s, k) ->
+    let controllerSelect =
+      s |> ControllerSelect.map(fun s ->
+        let cursorItem = s.selection.[s.cursor]
+        let currentItem = s.current |> Option.map(fun i -> s.selection.[i])
+        ListSelector.State<_>.Init(cursorItem, controllers, ?currentItem=currentItem)
+      )
+      |> WithContext
     return ControllerSelectState (controllerSelect, k)
 
   | _, ControllerSelectState (s, k) ->
     match Msg.toListSelectorMsg msg with
     | ValueNone -> return state
-    | ValueSome msg -> return! stateMapEff (ControllerSelect.update msg) (s, k)
+    | ValueSome msg -> return! WithContext.mapEff state (ControllerSelect.update msg) (s, k)
 
   | _, PauseState (s, k) ->
     match Msg.toListSelectorMsg msg with
@@ -310,6 +337,7 @@ type Handler = Handler with
   static member inline Handle(_: SoundEffect, k) = failwith "" |> k
   static member inline Handle(_: CurrentControllers, k) = failwith "" |> k
   static member inline Handle(_: GameControlEffect, k) = failwith "" |> k
+  static member inline Handle(_: SetControllerEffect, k) = failwith "" |> k
   static member inline Handle(_: SaveConfig, k) = failwith "" |> k
   // static member inline Handle(_: GetStateEffect<'a>, k) = k Unchecked.defaultof<'a>
 
