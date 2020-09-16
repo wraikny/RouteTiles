@@ -13,11 +13,21 @@ open RouteTiles.App
 open RouteTiles.App.BoxUIElements
 open RouteTiles.App.MenuV2.MenuElement
 
+let private createBlur () =
+  [|
+    GaussianBlur.Create(intensity = 5.0f, zOrder = ZOrder.MenuModal.blur) :> Element
+    Rectangle.Create
+      ( zOrder = ZOrder.MenuModal.darkMask
+      , color = Consts.Menu.blurDarkColor
+      )
+    :> Element
+  |]
+
 let createInputUsernameModal (container: Container) (state: StringInput.State) =
   let frameSize = Vector2F(520.0f, 80.0f)
 
   [|
-    GaussianBlur.Create(intensity = 5.0f, zOrder = ZOrder.MenuModal.blur) :> Element
+    yield! createBlur ()
     Sprite.Create
       ( aspect = Aspect.Fixed
       , texture = container.InputBackground

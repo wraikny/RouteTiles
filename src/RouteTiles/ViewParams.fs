@@ -86,6 +86,8 @@ module Consts =
     let resultBackgroundColor = Nullable <| Color(100uy, 100uy, 100uy, 220uy)
 
     let pauseBackgroundColor = Nullable <| Color(100uy, 100uy, 100uy, 255uy)
+
+    let blurDarkColor = Nullable (Color(0, 0, 0, 80))
     
     let [<Literal>] timeAttackTexture = @"menu/stopwatch.png"
     let [<Literal>] scoreAttackTexture = @"menu/hourglass.png"
@@ -279,6 +281,7 @@ module ZOrder =
     let backgroundMask = offset 1
 
     let blur = offset 2
+    let darkMask = offset 3
 
     let frameBackground = offset 10
 
@@ -302,7 +305,10 @@ module ZOrder =
   module MenuModal =
     let offset = (|||) (300 <<< 16)
     let blur = offset 0
-    let background = offset 1
+    let darkMask = offset 1
+
+
+    let background = offset 5
 
     let frame = offset 10
     let framehighlight = offset 11

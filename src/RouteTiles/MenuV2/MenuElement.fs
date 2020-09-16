@@ -140,7 +140,7 @@ let createButtons (container: Container) (selections: string[]) param =
       |> BoxUI.alignX Align.Center
       |> BoxUI.alignY Align.Max
       |> BoxUI.withChild(
-        buttons container (40.0f, true) selections param
+        buttons container (32.0f, true) selections param
       )
     )
     // |> BoxUI.debug
@@ -262,9 +262,20 @@ let createControllerSelect (container: Container) (state: ListSelector.State<Con
   |]
 
 
-let createPause (container: Container) (state: ListSelector.State<MenuV2.PauseSelect>) =
+let private createBlur () =
   [|
     GaussianBlur.Create(intensity = 5.0f, zOrder = ZOrder.Menu.blur) :> Element
+    Rectangle.Create
+      ( zOrder = ZOrder.Menu.darkMask
+      , color = Consts.Menu.blurDarkColor
+      )
+    :> Element
+  |]
+
+let createPause (container: Container) (state: ListSelector.State<MenuV2.PauseSelect>) =
+  [|
+    createBackground container
+    yield! createBlur()
     createButtons container container.PauseModeButtons (state.cursor, state.current)
     rightArea().With(createDesc container container.PauseModeDescriptions.[state.cursor])
   |]
@@ -292,7 +303,8 @@ let create (container: Container) (state: MenuV2.State) =
       |]
     | MenuV2.State.ControllerSelectState (WithContext state, _) ->
       [|
-        GaussianBlur.Create(intensity = 5.0f, zOrder = ZOrder.Menu.blur) :> Element
+        createBackground container
+        yield! createBlur()
         yield!
           createControllerSelect container state.Value
       |]
