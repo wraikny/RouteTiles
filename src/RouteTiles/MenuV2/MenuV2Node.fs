@@ -183,15 +183,21 @@ type internal MenuV2Node(config: Config) =
           gameNode |> function
           | ValueSome n -> Engine.AddNode(n)
           | ValueNone ->
-            let uiRootGameInfo = BoxUIRootNode()
+            let uiRootGameInfo = BoxUIRootNode(isAutoTerminated = false)
             let gameInfoElement, gameInfoScoreUpdater, gameInfoTimeUpdater =
               GameInfoElement.createSologameInfoElement container
 
             uiRootGameInfo.SetElement gameInfoElement
             // let gameInfo = GameInfoNode(Position = Helper.SoloGame.gameInfoCenterPos)
             let viewer = { new IGameHandler with
-              member __.SetModel(model) = gameInfoScoreUpdater model
-              member __.SetTime(second) = gameInfoTimeUpdater second
+              member __.SetModel(model) =
+                BoxUISystem.Post (fun () ->
+                  gameInfoScoreUpdater model
+                )
+              member __.SetTime(second) =
+                BoxUISystem.Post (fun () ->
+                  gameInfoTimeUpdater second
+                )
 
               member __.FinishGame(model, t) =
                 MenuV2.Msg.FinishGame(model, t)
