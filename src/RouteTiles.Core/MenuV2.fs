@@ -21,19 +21,19 @@ module Mode =
     Mode.Setting
   |]
 
-type GameMode =
-  | TimeAttack2000
-  | ScoreAttack180
+// type GameMode =
+//   | TimeAttack2000
+//   | ScoreAttack180
 
-module GameMode =
-  let items = [|
-    TimeAttack2000
-    ScoreAttack180
-  |]
+// module GameMode =
+//   let items = [|
+//     TimeAttack2000
+//     ScoreAttack180
+//   |]
 
-  let into = function
-    | TimeAttack2000 -> SoloGame.Mode.TimeAttack 2000
-    | ScoreAttack180 -> SoloGame.Mode.ScoreAttack 180
+//   let into = function
+//     | TimeAttack2000 -> SoloGame.Mode.TimeAttack 2000
+//     | ScoreAttack180 -> SoloGame.Mode.ScoreAttack 180
 
 
 [<Struct>]
@@ -102,9 +102,10 @@ and WSListSelector<'item> = WithState<ListSelector.State<'item>>
 
 and State =
   | MainMenuState of Config * ListSelector.State<Mode>
-  | GameModeSelectState of WSListSelector<GameMode> * (State * GameMode voption -> State)
+  | GameModeSelectState of WSListSelector<SoloGame.GameMode> * (State * SoloGame.GameMode voption -> State)
   | ControllerSelectState of WithState<ControllerSelect> * (State * Controller voption -> State)
-  | GameState of Config * Controller * GameMode
+  | GameState of Config * Controller * SoloGame.GameMode
+  | GameResultState of GameResult.State * (GameResult.GameNextSelection -> State)
   | PauseState of WSListSelector<PauseSelect> * (State * PauseSelect voption -> State)
   | SettingMenuState of Setting.State * (Config voption -> State)
 with
@@ -117,6 +118,7 @@ with
 
   static member StateEnter(s, k) = GameModeSelectState (s, k)
   static member StateEnter(s, k) = ControllerSelectState (s, k)
+  static member StateEnter(s, k) = GameResultState (s, k)
   static member StateEnter(s, k) = PauseState (s, k)
   static member StateEnter(s, k) = SettingMenuState (s, k)
 
@@ -125,11 +127,12 @@ let equal a b = (a, b) |> function
   | GameModeSelectState(a, _), GameModeSelectState(b, _) -> a = b
   | ControllerSelectState(a, _), ControllerSelectState(b, _) -> a = b
   | GameState(a1, a2, a3), GameState(b1, b2, b3) -> (a1, a2, a3) = (b1, b2, b3)
+  | GameResultState(a, _), GameResultState(b, _) -> GameResult.equal a b
   | PauseState(a, _), PauseState(b, _) -> a = b
   | SettingMenuState(a, _), SettingMenuState(b, _) -> Setting.equal a b
   | _ -> false
 
-[<Struct>]
+
 type Msg =
   | Incr
   | Decr
@@ -141,6 +144,7 @@ type Msg =
   | FinishGame of SoloGame.Model * time:float32
   | UpdateControllers of Controller[]
   | SelectController
+  | ReceiveRanking of RankingResponse
 
 
 module Msg =
@@ -157,6 +161,15 @@ module Msg =
     | Decr -> ValueSome ListSelector.Msg.Decr
     | Enter -> ValueSome ListSelector.Msg.Enter
     | Cancel -> ValueSome ListSelector.Msg.Cancel
+    | _ -> ValueNone
+
+  let toGameResultMsg = function
+    | Incr -> ValueSome GameResult.Msg.Incr
+    | Decr -> ValueSome GameResult.Msg.Decr
+    | Enter -> ValueSome GameResult.Msg.Enter
+    | Cancel -> ValueSome GameResult.Msg.Cancel
+    | ReceiveRanking data -> ValueSome (GameResult.Msg.ReceiveRanking data)
+    | MsgOfInput m -> ValueSome (GameResult.Msg.MsgOfInput m)
     | _ -> ValueNone
 
 
@@ -177,7 +190,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
         match mode with
         | ValueSome Mode.GamePlay ->
           match!
-            ListSelector.State<_>.Init(0, GameMode.items)
+            ListSelector.State<_>.Init(0, SoloGame.GameMode.items)
             |> WithContext
             |> stateEnter with
           | _, ValueNone -> return state
@@ -190,7 +203,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
               |> stateEnter with
             | _, ValueNone -> return gameModeState
             | _, ValueSome controller ->
-              do! GameControlEffect.Start(gameMode |> GameMode.into, controller)
+              do! GameControlEffect.Start(gameMode |> SoloGame.GameMode.into, controller)
               return GameState (config, controller, gameMode)
 
         | ValueSome Mode.Ranking ->
@@ -288,6 +301,36 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
       | _ ->
         return failwithf "Invalid State of ControllerSelectState Context: %A" controllerState
 
+
+  | Msg.FinishGame (model, time), GameState(config, controller, gameMode) ->
+    do! GameControlEffect.Pause
+
+    // todo
+    let data: Ranking.Data =
+      { Name = ""
+        Time = time
+        Point = model.board.point
+        SlideCount = model.board.slideCount
+        TilesCount = model.board.vanishedTilesCount
+        RoutesCount = model.board.routesHistory.Length
+        LoopsCount = model.board.loopsHistory.Length
+      }
+
+    match!
+      GameResult.State.Init(config, gameMode, data)
+      |> stateEnter
+        with
+    | GameResult.GameNextSelection.Restart ->
+      do! GameControlEffect.Restart
+      do! GameControlEffect.Resume
+
+      return GameState(config, controller, gameMode)
+    | GameResult.GameNextSelection.Quit ->
+      do! GameControlEffect.Restart
+      do! GameControlEffect.Quit
+
+      return State.Init (config)
+
   | _, GameState _ ->
     return state
 
@@ -311,6 +354,11 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
     | ValueNone -> return state
     | ValueSome msg -> return! WithContext.mapEff state (ControllerSelect.update msg) (s, k)
 
+  | _, GameResultState (s, k) ->
+    match Msg.toGameResultMsg msg with
+    | ValueNone -> return state
+    | ValueSome msg -> return! stateMapEff (GameResult.update msg) (s, k)
+
   | _, PauseState (s, k) ->
     match Msg.toListSelectorMsg msg with
     | ValueNone -> return state
@@ -331,6 +379,7 @@ type Handler = Handler with
   static member inline Handle(_: GameControlEffect, k) = failwith "" |> k
   static member inline Handle(_: SetControllerEffect, k) = failwith "" |> k
   static member inline Handle(_: SaveConfig, k) = failwith "" |> k
+  static member inline Handle(_: GameRankingEffect, k) = failwith "" |> k
   // static member inline Handle(_: GetStateEffect<'a>, k) = k Unchecked.defaultof<'a>
 
 let update' msg state =

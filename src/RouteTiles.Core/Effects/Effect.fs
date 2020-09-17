@@ -44,11 +44,14 @@ type GameStartEffect = GameStartEffect of SoloGame.Mode * Controller
 with
   static member Effect(_) = Eff.marker<unit>
 
+
+type RankingResponse = Result<int64 * SimpleRankingsServer.Data<Ranking.Data>[], exn>
+
 [<Struct>]
-type GameRankingEffect<'msg> =
-  GameRankingEffect of System.Guid * SoloGame.Mode * Ranking.Data
+type GameRankingEffect =
+  GameRankingEffect of System.Guid * SoloGame.GameMode * Ranking.Data
 with
-  static member Effect(_) = Eff.marker<Result<int64 * SimpleRankingsServer.Data<Ranking.Data>[], exn>>
+  static member Effect(_) = Eff.marker<unit>
 
 // type AsyncEffect<'msg> = AsyncEffect of Async<'msg>
 // with

@@ -6,6 +6,6 @@ type Data = {
   Point: int
   SlideCount: int
   TilesCount: int
-  RouteCount: int
-  LoopCount: int
+  RoutesCount: int
+  LoopsCount: int
 }

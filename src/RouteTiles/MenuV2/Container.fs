@@ -1,6 +1,7 @@
 namespace RouteTiles.App.MenuV2
 
 open RouteTiles.Core
+open RouteTiles.Core.Types
 open RouteTiles.Core.SubMenu
 open RouteTiles.App
 
@@ -37,15 +38,15 @@ type internal Container (textMap: TextMap.TextMap) =
     )
 
   member val GameModeButtons =
-    MenuV2.GameMode.items |> Array.map(function
-      | MenuV2.GameMode.TimeAttack2000 -> textMap.buttons.timeattack2000
-      | MenuV2.GameMode.ScoreAttack180 -> textMap.buttons.scoreattack180
+    SoloGame.GameMode.items |> Array.map(function
+      | SoloGame.GameMode.TimeAttack2000 -> textMap.buttons.timeattack2000
+      | SoloGame.GameMode.ScoreAttack180 -> textMap.buttons.scoreattack180
     )
 
   member val GameModeDescriptions =
-    MenuV2.GameMode.items |> Array.map (function
-    | MenuV2.GameMode.TimeAttack2000 -> textMap.descriptions.timeattack2000
-    | MenuV2.GameMode.ScoreAttack180 -> textMap.descriptions.scoreattack180
+    SoloGame.GameMode.items |> Array.map (function
+    | SoloGame.GameMode.TimeAttack2000 -> textMap.descriptions.timeattack2000
+    | SoloGame.GameMode.ScoreAttack180 -> textMap.descriptions.scoreattack180
   )
 
   member val SettingMenuButtons =

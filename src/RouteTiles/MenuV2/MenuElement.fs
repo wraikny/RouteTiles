@@ -167,7 +167,7 @@ let createMainMenu (container: Container) (state: ListSelector.State<MenuV2.Mode
     |]
   |]
 
-let createGamemodeSelect (container: Container) (state: ListSelector.State<MenuV2.GameMode>) =
+let createGamemodeSelect (container: Container) (state: ListSelector.State<SoloGame.GameMode>) =
   [|
     createBackground container
     createButtons container container.GameModeButtons (state.cursor, state.current)

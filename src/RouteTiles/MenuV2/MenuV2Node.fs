@@ -12,37 +12,32 @@ open RouteTiles.App
 open EffFs
 
 module internal RankingServer =
+  open ResourcesPassword
+
   let client =
     new SimpleRankingsServer.Client(
-      ResourcesPassword.Server.url,
-      ResourcesPassword.Server.username,
-      ResourcesPassword.Server.password
+      Server.url,
+      Server.username,
+      Server.password
     )
 
-  // type Param = {
-  //   mode: MenuV2.GameMode
-  //   table: string
-  //   guid: Guid
-  //   result: MenuV2.GameResult
-  //   limit: int
-  // }
+  let insertSelect guid gameMode (data: RouteTiles.Core.Types.Ranking.Data) =
+    let orderKey, isDescending, table = gameMode |> function
+      | SoloGame.GameMode.TimeAttack2000 -> "Time", false, Server.tableTime2000
+      | SoloGame.GameMode.ScoreAttack180 -> "Point", true, Server.tableScore180
 
-  // let insertSelect (param: Param) =
-  //   let orderKey, isDescending = param.mode |> function
-  //     | MenuV2.GameMode.TimeAttack2000 -> "Time", false
-  //     | MenuV2.GameMode.ScoreAttack180 -> "Point", true
-  //   async {
-  //     let! id = client.AsyncInsert(param.table, param.guid, param.result)
-  //     let! data =
-  //       client.AsyncSelect<MenuV2.GameResult>
-  //         ( param.table
-  //         , orderBy = orderKey
-  //         , isDescending = isDescending
-  //         , limit = param.limit
-  //         )
+    async {
+      let! id = client.AsyncInsert(table, guid, data)
+      let! data =
+        client.AsyncSelect<RouteTiles.Core.Types.Ranking.Data>
+          ( table
+          , orderBy = orderKey
+          , isDescending = isDescending
+          , limit = 10
+          )
 
-  //     return (id, data)
-  //   } |> Async.Catch
+      return (id, data)
+    } |> Async.Catch
 
 
 module internal MenuUtil =
@@ -70,18 +65,18 @@ type MenuV2Handler = {
 
   static member inline Handle(e, k) = Library.StateMachine.handle (e, k)
 
-  static member inline Handle(e: SoundEffect, k) =
+  static member Handle(e: SoundEffect, k) =
     Utils.DebugLogn (sprintf "SoundEffect: %A" e)
     k ()
 
-  static member inline Handle(e: GameControlEffect, k) =
+  static member Handle(e: GameControlEffect, k) =
     Utils.DebugLogn (sprintf "GameControlEffect: %A" e)
     Eff.capture (fun h ->
       h.handleGameControlEffect e
       k()
     )
 
-  static member inline Handle(SetController controller, k) =
+  static member Handle(SetController controller, k) =
     Utils.DebugLogn (sprintf "SetControllerEffect: %A" controller)
     Eff.capture ( fun h ->
       h.handleSetController controller |> k
@@ -91,10 +86,26 @@ type MenuV2Handler = {
     Utils.DebugLogn (sprintf "Effect: %A" e)
     MenuUtil.getCurrentControllers() |> k
 
-  static member inline Handle(SaveConfig config as e, k) =
+  static member Handle(SaveConfig config as e, k) =
     Utils.DebugLogn (sprintf "Effect: %A" e)
     Config.save config
     k()
+
+  static member Handle(GameRankingEffect (guid, gameMode, data), k) =
+    Eff.capture(fun h ->
+      async {
+        let ctx = System.Threading.SynchronizationContext.Current
+        do! Async.SwitchToThreadPool ()
+        let! res = RankingServer.insertSelect guid gameMode data
+        do! Async.SwitchToContext ctx
+        let res = res |> function
+          | Choice1Of2 x -> Ok x
+          | Choice2Of2 e -> Error e
+        h.dispatch <| MenuV2.Msg.ReceiveRanking res
+      }
+      |> Async.StartImmediate
+      k ()
+    )
 
 
 type internal MenuV2Node(config: Config) =

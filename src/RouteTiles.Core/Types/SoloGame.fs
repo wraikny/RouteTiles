@@ -12,3 +12,18 @@ type Model = {
   mode: Mode
   board: Board.Model
 }
+
+[<Struct>]
+type GameMode =
+  | TimeAttack2000
+  | ScoreAttack180
+
+module GameMode =
+  let items = [|
+    TimeAttack2000
+    ScoreAttack180
+  |]
+
+  let into = function
+    | TimeAttack2000 -> Mode.TimeAttack 2000
+    | ScoreAttack180 -> Mode.ScoreAttack 180

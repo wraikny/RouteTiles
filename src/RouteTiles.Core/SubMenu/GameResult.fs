@@ -28,43 +28,57 @@ module GameNextSelection =
     GameNextSelection.Restart
   |]
 
-type Response = Result<int64 * SimpleRankingsServer.Data<Ranking.Data>[], exn>
-
 type WaitingResponse = WaitingResponse with
-  static member StateOut(_) = Eff.marker<Response>
+  static member StateOut(_) = Eff.marker<RankingResponse>
 
 type OutStatus = StateStatus<State, GameNextSelection>
 
 and State =
-  | ResultWithSendToServerSelectState of Config * Ranking.Data * ListSelector.State<SendToServer>
-  | WaitingResponseState of WaitingResponse * (Response -> OutStatus)
+  | ResultWithSendToServerSelectState of Config * SoloGame.GameMode * Ranking.Data * ListSelector.State<SendToServer>
+  | WaitingResponseState of WaitingResponse * (RankingResponse -> OutStatus)
   | RankingListViewState of SinglePage.State<int64 * SimpleRankingsServer.Data<Ranking.Data>[]> * (unit -> OutStatus)
   | ErrorViewState of SinglePage.State<exn> * (unit -> OutStatus)
   | GameNextSelectionState of ListSelector.State<GameNextSelection> * (GameNextSelection voption -> OutStatus)
+  | InputName of StringInput.State * (string voption -> OutStatus)
 with
-  static member Init(config, data) =
+  static member Init(config, gameMode, data) =
     let selector = ListSelector.State<SendToServer>.Init(SendToServer.Yes, SendToServer.items)
-    ResultWithSendToServerSelectState (config, data, selector)
+    ResultWithSendToServerSelectState (config, gameMode, data, selector)
 
+  static member StateEnter(s, k) = WaitingResponseState(s, k)
   static member StateEnter(s, k) = RankingListViewState(s, k)
   static member StateEnter(s, k) = ErrorViewState(s, k)
   static member StateEnter(s, k) = GameNextSelectionState(s, k)
+  static member StateEnter(s, k) = InputName(s, k)
 
   static member StateOut(_) = Eff.marker<GameNextSelection>
+
+
+let equal a b = (a, b) |> function
+  | ResultWithSendToServerSelectState(a1, a2, a3, a4), ResultWithSendToServerSelectState(b1, b2, b3, b4) ->
+    (a1, a2, a3, a4) = (b1, b2, b3, b4)
+  | WaitingResponseState(a, _), WaitingResponseState(b, _) -> a = b
+  | RankingListViewState(a, _), RankingListViewState(b, _) -> a = b
+  | ErrorViewState(a, _), ErrorViewState(b, _) -> a = b
+  | GameNextSelectionState(a, _), GameNextSelectionState(b, _) -> a = b
+  | _ -> false
+
 
 [<Struct>]
 type Msg =
   | Incr
   | Decr
   | Enter
-  | ReceiveRanking of Response
+  | Cancel
+  | MsgOfInput of msgInput:StringInput.Msg
+  | ReceiveRanking of RankingResponse
 
 module Msg =
   let toListSelectorMsg = function
     | Incr -> ValueSome ListSelector.Msg.Incr
     | Decr -> ValueSome ListSelector.Msg.Decr
     | Enter -> ValueSome ListSelector.Msg.Enter
-    | ReceiveRanking(_) -> ValueNone
+    | _ -> ValueNone
 
   let toSinglePageMsg = function
     | Enter -> ValueSome SinglePage.Msg.Enter
@@ -81,32 +95,44 @@ let inline getGameNextSelection () = eff {
 
 let inline update msg state = eff {
   match state with
-  | ResultWithSendToServerSelectState (config, data, selector) ->
+  | ResultWithSendToServerSelectState (config, gameMode, data, selector) ->
     match Msg.toListSelectorMsg msg with
     | ValueNone -> return Pending state
     | ValueSome msg ->
       match! ListSelector.update msg selector with
       | Pending state ->
         return
-          (ResultWithSendToServerSelectState (config, data, state))
+          (ResultWithSendToServerSelectState (config, gameMode, data, state))
           |> Pending
 
       | Completed(ValueSome SendToServer.No) ->
         return! getGameNextSelection()
 
       | Completed(ValueSome SendToServer.Yes) ->
-        match! WaitingResponse |> stateEnter with
-        | Error e ->
-          do! SinglePage.SinglePageState e |> stateEnter
-          return! getGameNextSelection()
+        let inline cont name = eff {
+          let data = { data with Name = name }
 
-        | Ok res ->
-          do! SinglePage.SinglePageState res |> stateEnter
-          return! getGameNextSelection()
+          do! GameRankingEffect(config.guid, gameMode, data)
+
+          match! WaitingResponse |> stateEnter with
+          | Error e ->
+            do! SinglePage.SinglePageState e |> stateEnter
+            return! getGameNextSelection()
+
+          | Ok res ->
+            do! SinglePage.SinglePageState res |> stateEnter
+            return! getGameNextSelection()
+        }
+
+        if config.name.IsNone then
+          let! name = StringInput.State.Init("", Setting.NameMaxLength) |> stateEnter
+          return! cont name.Value
+        else
+          return! cont config.name.Value
 
       | Completed ValueNone -> return failwith "Unexpected!"
 
-  | WaitingResponseState(s, k) ->
+  | WaitingResponseState(_s, k) ->
     match msg with
     | Msg.ReceiveRanking data -> return k data
     | _ -> return Pending state
@@ -125,4 +151,14 @@ let inline update msg state = eff {
     match msg |> Msg.toListSelectorMsg with
     | ValueNone -> return Pending state
     | ValueSome m -> return! stateMapEff (ListSelector.update m) (s, k)
+
+  | InputName (s, k) ->
+    let inline f msg = stateMapEff (StringInput.update msg) (s, k)
+    match msg with
+    | Msg.MsgOfInput (StringInput.Msg.Enter) when s.current = "" ->
+      do! SoundEffect.Invalid
+      return Pending state
+    | Msg.MsgOfInput msg -> return! f msg
+    | Msg.Cancel -> return! f StringInput.Msg.Cancel
+    | _ -> return Pending state
 }
