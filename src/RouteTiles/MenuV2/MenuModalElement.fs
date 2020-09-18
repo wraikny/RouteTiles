@@ -44,7 +44,7 @@ let createInputUsernameModal (container: Container) (state: StringInput.State) =
         Text.Create
           ( font = container.Font
           , text = container.TextMap.descriptions.changeUsername
-          , color = Nullable(Color(0uy, 0uy, 0uy))
+          , color = Nullable(Color(255uy, 255uy, 255uy))
           , zOrder = ZOrder.MenuModal.text
           )
         |> BoxUI.alignX Align.Center
@@ -85,7 +85,7 @@ let createInputUsernameModal (container: Container) (state: StringInput.State) =
         |> BoxUI.withChild(
           let text, color =
             if state.current = ""
-            then "username", Color(100uy, 100uy, 100uy)
+            then container.TextMap.descriptions.namePlaceholder, Color(100uy, 100uy, 100uy)
             else state.current, Color(0uy, 0uy, 0uy)
 
           Text.Create
