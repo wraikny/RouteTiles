@@ -83,24 +83,19 @@ let createInputUsernameModal (container: Container) (state: StringInput.State) =
           )
         )
         |> BoxUI.withChild(
-          empty ()
-          |> BoxUI.marginBottom (LengthScale.Fixed, 20.0f)
-          |> BoxUI.withChild (
-            let text, color =
-              if state.current = ""
-              then "username", Color(100uy, 100uy, 100uy)
-              else state.current, Color(0uy, 0uy, 0uy)
+          let text, color =
+            if state.current = ""
+            then "username", Color(100uy, 100uy, 100uy)
+            else state.current, Color(0uy, 0uy, 0uy)
 
-            Text.Create
-              ( font = container.Font
-              , text = text
-              , color = Nullable(color)
-              , zOrder = ZOrder.MenuModal.text
-              )
-            |> BoxUI.alignX Align.Center
-            |> BoxUI.alignY Align.Max
-            |> BoxUI.debug
-          )
+          Text.Create
+            ( font = container.Font
+            , text = text
+            , color = Nullable(color)
+            , zOrder = ZOrder.MenuModal.text
+            )
+          |> BoxUI.alignCenter
+          |> BoxUI.debug
         )
       )
     )
