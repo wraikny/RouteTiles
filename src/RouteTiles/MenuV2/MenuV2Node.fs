@@ -154,7 +154,7 @@ type internal MenuV2Node(config: Config) =
 
   let getInput() =
     InputControl.MenuV2.getKeyboardInput ()
-    |> Option.alt getJoysticksInputs
+    |> Option.orElseWith getJoysticksInputs
 
   let isAvailableController = function
     | Controller.Keyboard -> true
@@ -235,7 +235,7 @@ type internal MenuV2Node(config: Config) =
 
     | MenuV2.SettingMenuState(SubMenu.Setting.State.InputName _, _) ->
       InputControl.MenuV2.getCharacterInput ()
-      |> Option.alt getJoysticksInputs
+      |> Option.orElseWith getJoysticksInputs
       |> Option.iter updater.Dispatch
 
     | MenuV2.ControllerSelectState _ ->

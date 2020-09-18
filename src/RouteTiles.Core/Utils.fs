@@ -22,12 +22,6 @@ let inline clamp minVal maxVal x =
 
 let inline lift (x: ^a): ^b = ((^a or ^b): (static member Lift:_->_) x)
 
-module Option =
-  let inline alt (f: unit -> 'a option) (o: 'a option) =
-    o |> function
-    | None -> f()
-    | _ -> o
-
 module ValueOption =
   let inline alt (f: unit -> 'a voption) (o: 'a voption) =
     o |> function
