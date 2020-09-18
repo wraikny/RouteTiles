@@ -140,24 +140,20 @@ type internal MenuV2Node(config: Config) =
 
   let mutable lastControllerCount = Engine.Joystick.ConnectedJoystickCount
 
-  let getKeyboardInput = InputControl.getKeyboardInput InputControl.MenuV2.keyboard
-  let getJoystickInput = InputControl.getJoystickInput InputControl.MenuV2.joystick
-  let getCharacterInput = InputControl.getKeyboardInput InputControl.MenuV2.characterInput
-
   let getJoysticksInputs() =
     let count = Engine.Joystick.ConnectedJoystickCount
     seq {
       for i in 0..count-1 do
         let info = Engine.Joystick.GetJoystickInfo(i)
         if info <> null && info.IsGamepad then
-          match getJoystickInput i with
+          match InputControl.MenuV2.getJoystickInput i with
           | Some x -> yield x
           | _ -> ()
     }
     |> Seq.tryHead
 
   let getInput() =
-    getKeyboardInput ()
+    InputControl.MenuV2.getKeyboardInput ()
     |> Option.alt getJoysticksInputs
 
   let isAvailableController = function
@@ -238,7 +234,7 @@ type internal MenuV2Node(config: Config) =
         updater.Dispatch MenuV2.Msg.PauseGame
 
     | MenuV2.SettingMenuState(SubMenu.Setting.State.InputName _, _) ->
-      getCharacterInput ()
+      InputControl.MenuV2.getCharacterInput ()
       |> Option.alt getJoysticksInputs
       |> Option.iter updater.Dispatch
 

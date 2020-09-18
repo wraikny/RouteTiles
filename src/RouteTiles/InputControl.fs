@@ -3,7 +3,7 @@ module internal RouteTiles.App.InputControl
 open RouteTiles.Core.Types
 open Altseed2
 
-let getKeyboardInput (inputs) () : 'msg option =
+let makeKeyboardInputter (inputs) () : 'msg option =
   inputs
   |> Array.tryFind(fun (buttons, _) ->
     buttons |> Array.forall(fun (button, state) ->
@@ -12,7 +12,7 @@ let getKeyboardInput (inputs) () : 'msg option =
   )
   |> Option.map snd
 
-let getJoystickInput (inputs) (index): 'msg option =
+let makeJoystickInputter (inputs) (index): 'msg option =
   inputs |> Array.tryFind(fun ((button: JoystickButton, state), _) ->
     Engine.Joystick.GetButtonState(index, button) = state
   )
@@ -63,8 +63,8 @@ module SoloGame =
     yield! Board.joystickMapping |> Seq.map(fun (a, b) -> (a, Msg.Board b))
   |]
 
-  let getKeyboardInput = getKeyboardInput keyboard
-  let getJoystickInput = getJoystickInput joystick
+  let getKeyboardInput = makeKeyboardInputter keyboard
+  let getJoystickInput = makeJoystickInputter joystick
 
 
 module MenuV2 =
@@ -127,3 +127,8 @@ module MenuV2 =
       [| Key.Escape, ButtonState.Push |], StringInput.Cancel
     |]
     |> Array.map (fun (keys, c) -> (keys, Msg.MsgOfInput c))
+
+  let getKeyboardInput = makeKeyboardInputter keyboard
+  let getJoystickInput = makeJoystickInputter joystick
+  let getCharacterInput = makeKeyboardInputter characterInput
+  

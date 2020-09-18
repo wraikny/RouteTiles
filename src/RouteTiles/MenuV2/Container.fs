@@ -1,9 +1,9 @@
 namespace RouteTiles.App.MenuV2
 
-open RouteTiles.Core
-open RouteTiles.Core.Types
-open RouteTiles.Core.SubMenu
 open RouteTiles.App
+open RouteTiles.Core
+open RouteTiles.Core.SubMenu
+open RouteTiles.Core.Types
 
 open Altseed2
 
@@ -23,47 +23,47 @@ type internal Container (textMap: TextMap.TextMap) =
   // member val Font = Font.LoadStaticFontStrict(@"Font/Makinas-4-Square-32/font.a2f")
   member val Font = Font.LoadDynamicFontStrict(@"Font/Makinas-4-Square.otf", 32)
 
-  member val MainMenuButtons =
+  member val MainMenuButtons: string[] =
     MenuV2.Mode.items |> Array.map (function
       | MenuV2.Mode.GamePlay -> textMap.buttons.play
       | MenuV2.Mode.Ranking -> textMap.buttons.ranking
       | MenuV2.Mode.Setting -> textMap.buttons.setting
     )
 
-  member val MainMenuDescriptions =
+  member val MainMenuDescriptions: string[] =
     MenuV2.Mode.items |> Array.map (function
       | MenuV2.Mode.GamePlay -> textMap.descriptions.play
       | MenuV2.Mode.Ranking -> textMap.descriptions.ranking
       | MenuV2.Mode.Setting -> textMap.descriptions.setting
     )
 
-  member val GameModeButtons =
+  member val GameModeButtons: string[] =
     SoloGame.GameMode.items |> Array.map(function
       | SoloGame.GameMode.TimeAttack2000 -> textMap.buttons.timeattack2000
       | SoloGame.GameMode.ScoreAttack180 -> textMap.buttons.scoreattack180
     )
 
-  member val GameModeDescriptions =
+  member val GameModeDescriptions: string[] =
     SoloGame.GameMode.items |> Array.map (function
     | SoloGame.GameMode.TimeAttack2000 -> textMap.descriptions.timeattack2000
     | SoloGame.GameMode.ScoreAttack180 -> textMap.descriptions.scoreattack180
   )
 
-  member val SettingMenuButtons =
+  member val SettingMenuButtons: string[] =
     Setting.Mode.items |> Array.map (function
       | Setting.Mode.InputName -> textMap.buttons.namesetting
       | Setting.Mode.Background -> textMap.buttons.backgroundsetting
       | Setting.Mode.Enter -> textMap.buttons.save
     )
 
-  member val SettingModeDescriptions =
+  member val SettingModeDescriptions: string[] =
     Setting.Mode.items |> Array.map (function
       | Setting.Mode.InputName -> textMap.descriptions.namesetting
       | Setting.Mode.Background -> textMap.descriptions.backgroundsetting
       | Setting.Mode.Enter -> textMap.descriptions.settingsave
     )
 
-  member val PauseModeButtons =
+  member val PauseModeButtons: string[] =
     MenuV2.PauseSelect.items |> Array.map (function
       | MenuV2.Continue -> textMap.buttons.continueGame
       | MenuV2.ChangeController -> textMap.buttons.changeController
@@ -71,7 +71,7 @@ type internal Container (textMap: TextMap.TextMap) =
       | MenuV2.Quit -> textMap.buttons.quitGame
     )
 
-  member val PauseModeDescriptions =
+  member val PauseModeDescriptions: string[] =
     MenuV2.PauseSelect.items |> Array.map (function
       | MenuV2.Continue -> textMap.descriptions.continueGame
       | MenuV2.ChangeController -> textMap.descriptions.selectController
