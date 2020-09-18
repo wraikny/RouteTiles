@@ -44,11 +44,6 @@ module internal MenuUtil =
   let getCurrentControllers() =
     [|
       yield Controller.Keyboard
-      #if DEBUG
-      yield Controller.Joystick(-1, "AAAAA", "")
-      yield Controller.Joystick(-1, "BBBBB", "")
-      yield Controller.Joystick(-1, "CCCCC", "")
-      #endif
       for i in 0..15 do
         let info = Engine.Joystick.GetJoystickInfo i
         if info <> null && info.IsGamepad then
