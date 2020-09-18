@@ -341,7 +341,7 @@ module Update =
         routesAndLoops = Set.empty
 
         routesHistory = board.routesHistory |> List.append vanishedRoutes
-        loopsHistory = board.routesHistory |> List.append vanishedLoops
+        loopsHistory = board.loopsHistory |> List.append vanishedLoops
         vanishedTilesCount = board.vanishedTilesCount + vanishedCount
     }
 
