@@ -20,7 +20,7 @@
     <Compile Include="Types/Common.fs" />
     <Compile Include="Types/Board.fs" />
     <Compile Include="Types/SoloGame.fs" />
-    <Compile Include="Effects/Effect.fs" />
+    <Compile Include="Effect.fs" />
     <Compile Include="Board.fs" />
     <Compile Include="SoloGame.fs" />
     <Compile Include="SubMenu/WithContext.fs" />
