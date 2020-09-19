@@ -265,7 +265,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
   | QuitGame, GameState (config, _, _) ->
     return State.Init (config)
 
-  | SelectController, GameState (_, controller, _) ->
+  | SelectController, GameState (config, controller, gameMode) ->
     do! GameControlEffect.Pause
 
     let! controllers = CurrentControllers
@@ -280,7 +280,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
 
     if res then
       do! GameControlEffect.Resume
-      return state
+      return GameState (config, selectedController.Value, gameMode)
     else
       do! SoundEffect.Invalid
 

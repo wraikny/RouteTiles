@@ -119,47 +119,45 @@ type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
 
   /// Binding Input
   do
+    let invokeInput msg = seq {
+      match msg with
+      | Some(msg) ->
+        updater.Dispatch(msg)
+        let m = updater.Model.Value
+
+        yield! Coroutine.sleep Consts.GameCommon.inputInterval
+
+        if not m.board.routesAndLoops.IsEmpty then
+          yield! Coroutine.sleep Consts.Board.tilesVanishInterval
+          updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
+      | _ -> yield ()
+    }
+
     coroutineNode.Add(seq {
       while true do
-
 #if DEBUG
         if Engine.Keyboard.IsPushState Key.Num0 then
           printfn "%A" lastModel
 #endif
 
         if inputEnabled then
-          let input =
-            controller |> function
-            | Controller.Keyboard ->
-              InputControl.SoloGame.getKeyboardInput()
-            | Controller.Joystick (index, name, guid) ->
-              let info = Engine.Joystick.GetJoystickInfo(index)
-              if info <> null && info.GUID = guid then
-                InputControl.SoloGame.getJoystickInput index
-              else
-                let s = sprintf "joystick '%s' is not found at %d" name index
-                Engine.Log.Warn(LogCategory.User, s)
-                // todo:コントローラー選択画面
-                gameInfoViewer.SelectController()
-                None
-
-          match input with
-          | None -> ()
-
-          | Some (SoloGame.Msg.Board _ as msg) ->
-            updater.Dispatch(msg)
-            let m = updater.Model.Value
-
-            yield! Coroutine.sleep Consts.GameCommon.inputInterval
-
-            if not m.board.routesAndLoops.IsEmpty then
-              yield! Coroutine.sleep Consts.Board.tilesVanishInterval
-              updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
-
-          // | Some msg ->
-          //   updater.Dispatch(msg) |> ignore
-
-          yield()
+          match controller with
+          | Controller.Keyboard ->
+            let msg = InputControl.SoloGame.getKeyboardInput()
+            yield! invokeInput msg
+          | Controller.Joystick (index, name, guid) ->
+            let info = Engine.Joystick.GetJoystickInfo(index)
+            if info <> null && info.GUID = guid then
+              let msg = InputControl.SoloGame.getJoystickInput index
+              yield! invokeInput msg
+            else
+              let s = sprintf "joystick '%s' is not found at %d" name index
+              Engine.Log.Warn(LogCategory.User, s)
+              // todo:コントローラー選択画面
+              gameInfoViewer.SelectController()
+              yield ()
+        else
+          yield ()
     })
 
   let handler: Handler = {
@@ -183,7 +181,7 @@ type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
       // controller
     |> Eff.handle handler
 
-  member val Controller = controller with get, set
+  member __.Controller with get() = controller and set(v) = controller <- v
 
   override this.OnAdded() =
     this.Initialize()

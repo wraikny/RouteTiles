@@ -180,11 +180,12 @@ type internal MenuV2Node(config: Config) =
 
             uiRootGameInfo.SetElement gameInfoElement
             // let gameInfo = GameInfoNode(Position = Helper.SoloGame.gameInfoCenterPos)
-            let viewer = { new IGameHandler with
+            let gameHandler = { new IGameHandler with
               member __.SetModel(model) =
                 BoxUISystem.Post (fun () ->
                   gameInfoScoreUpdater model
                 )
+              
               member __.SetTime(second) =
                 BoxUISystem.Post (fun () ->
                   gameInfoTimeUpdater second
@@ -193,11 +194,12 @@ type internal MenuV2Node(config: Config) =
               member __.FinishGame(model, t) =
                 MenuV2.Msg.FinishGame(model, t)
                 |> updater.Dispatch
+
               member __.SelectController() =
                 MenuV2.Msg.SelectController
                 |> updater.Dispatch
             }
-            let n = Game(gameMode, controller, viewer)
+            let n = Game(gameMode, controller, gameHandler)
             n.AddChildNode uiRootGameInfo
             Engine.AddNode(n)
 
