@@ -109,7 +109,7 @@ type ItemList private() =
 
         (fun (x, y) (child: Element) ->
           let csize = child.GetSize(itemSize)
-          (max x csize.X, y + csize.Y + this.ItemMargin)
+          (max x csize.X, y + csize.Y)
         )
 
       | Some itemHeight ->
@@ -117,11 +117,12 @@ type ItemList private() =
 
         (fun (x, y) child ->
           let csize = child.GetSize(itemSize)
-          (max x csize.X, y + itemHeight + this.ItemMargin)
+          (max x csize.X, y + itemHeight)
         )
 
     this.Children
     |> Seq.fold folder (0.0f, 0.0f)
+    |> fun (x, y) -> (x, y + this.ItemMargin * (float32 this.Children.Count - 1.0f))
     |> Vector2F
 
   override this.OnResize(area) =

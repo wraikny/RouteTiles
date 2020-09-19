@@ -30,12 +30,19 @@ let fonts = [|
   , 32
   , ([|
         yield! primitiveCharacters
+
         yield!
           TextMap.textMapJapanese.buttons
           |> getStringPropertyCharacters
+
         yield!
           TextMap.textMapJapanese.descriptions
           |> getStringPropertyCharacters
+
+        yield!
+          TextMap.textMapJapanese.modes
+          |> getStringPropertyCharacters
+
     |] |> Array.distinct |> fun cs -> new String(cs))
   )
 |]

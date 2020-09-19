@@ -18,6 +18,7 @@ type Buttons = {
   quitGame: string
   changeController: string
   others: string
+  keyboard: string
 }
 
 type Descriptions = {
@@ -38,9 +39,21 @@ type Descriptions = {
   namePlaceholder: string
 }
 
+type Modes = {
+  gameModeSelect: string
+  controllerSelect: string
+  ranking: string
+  setting: string
+  nameSetting: string
+  backgroundSetting: string
+  pause: string
+  gameResult: string
+}
+
 type TextMap = {
   buttons: Buttons
   descriptions: Descriptions
+  modes: Modes
 }
 
 let textMapJapanese = {
@@ -62,6 +75,7 @@ let textMapJapanese = {
     quitGame = "ゲームをやめる"
     changeController = "コントローラ切替"
     others = "キーボード"
+    keyboard = "キーボード"
   }
 
   descriptions = {
@@ -80,5 +94,16 @@ let textMapJapanese = {
     quitGame = "ゲームをやめてタイトルに戻ります"
     changeUsername = "ユーザ名を変更します"
     namePlaceholder = "ユーザ名を入力"
+  }
+
+  modes = {
+    gameModeSelect = "ゲームモード選択"
+    controllerSelect = "コントローラー選択"
+    ranking = "ランキング"
+    setting = "設定"
+    nameSetting = "お名前設定"
+    backgroundSetting = "背景設定"
+    pause = "一時停止"
+    gameResult = "リザルト"
   }
 }

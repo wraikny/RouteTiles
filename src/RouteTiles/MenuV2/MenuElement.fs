@@ -131,15 +131,17 @@ let createTitle (container: Container) =
 
 let createButtons (container: Container) (selections: string[]) param =
   leftArea()
+  |> BoxUI.debug
   |> BoxUI.withChild (
     empty()
     |> BoxUI.marginBottom (LengthScale.Fixed, 80.0f)
+    |> BoxUI.marginLeft (LengthScale.Fixed, 40.0f)
     |> BoxUI.withChild(
       buttons container (32.0f, true) selections param
-      |> BoxUI.alignX Align.Center
+      |> BoxUI.alignX Align.Min
       |> BoxUI.alignY Align.Max
     )
-    // |> BoxUI.debug
+    |> BoxUI.debug
   )
 
 let createDesc (container: Container) text =
@@ -154,6 +156,21 @@ let createDesc (container: Container) text =
     |> BoxUI.alignY Align.Max
     |> BoxUI.debug
   )
+
+let createCurrentMode zOrder (container: Container) (text: string) =
+  empty ()
+  |> BoxUI.marginLeft (LengthScale.Fixed, 40.0f)
+  |> BoxUI.marginTop (LengthScale.Fixed, 40.0f)
+  |> BoxUI.withChild (
+    Text.Create
+      ( text = text
+      , font = container.Font
+      , zOrder = zOrder
+      )
+    |> BoxUI.debug
+  )
+
+let createCurrentModeMenu = createCurrentMode ZOrder.Menu.currentMode
 
 let createMainMenu (container: Container) (state: ListSelector.State<MenuV2.Mode>) =
   [|
@@ -170,6 +187,9 @@ let createMainMenu (container: Container) (state: ListSelector.State<MenuV2.Mode
 let createGamemodeSelect (container: Container) (state: ListSelector.State<SoloGame.GameMode>) =
   [|
     createBackground container
+
+    createCurrentModeMenu container container.TextMap.modes.gameModeSelect
+
     createButtons container container.GameModeButtons (state.cursor, state.current)
     rightArea().With(createDesc container container.GameModeDescriptions.[state.cursor])
   |]
@@ -179,6 +199,9 @@ let createSetting (container: Container) (state: Setting.State) =
   | Setting.Base { selector = selector } ->
     [|
       createBackground container
+
+      createCurrentModeMenu container container.TextMap.modes.setting
+
       createButtons container container.SettingMenuButtons (selector.cursor, selector.current)
       rightArea().With(createDesc container container.SettingModeDescriptions.[selector.cursor])
     |]
@@ -192,7 +215,7 @@ let createControllerSelect (container: Container) (state: ListSelector.State<Con
   let controllers =
     state.selection
     |> Array.map(function
-      | Controller.Keyboard -> "キーボード"
+      | Controller.Keyboard -> container.TextMap.buttons.keyboard
       | Controller.Joystick(_, name, _) -> name
     )
 
@@ -271,6 +294,9 @@ let private createBlur zo1 zo2 =
 let createPause (container: Container) (state: ListSelector.State<MenuV2.PauseSelect>) =
   [|
     createBackground container
+
+    createCurrentModeMenu container container.TextMap.modes.pause
+
     yield! createBlur ZOrder.Menu.blur ZOrder.Menu.darkMask
     createButtons container container.PauseModeButtons (state.cursor, state.current)
     rightArea().With(createDesc container container.PauseModeDescriptions.[state.cursor])
@@ -294,13 +320,18 @@ let create (container: Container) (state: MenuV2.State) =
     | MenuV2.State.ControllerSelectState (WithContext(MenuV2.ControllerSelectToPlay state), _) ->
       [|
         createBackground container
+        createCurrentModeMenu container container.TextMap.modes.controllerSelect
         yield!
           createControllerSelect container state
       |]
     | MenuV2.State.ControllerSelectState (WithContext state, _) ->
       [|
         createBackground container
-        yield! createBlur  ZOrder.Menu.blurOverGameInfo ZOrder.Menu.darkMaskOverGameInfo
+
+        yield! createBlur ZOrder.Menu.blurOverGameInfo ZOrder.Menu.darkMaskOverGameInfo
+
+        createCurrentMode ZOrder.Menu.currentModeOverGameInfo container container.TextMap.modes.controllerSelect
+
         yield!
           createControllerSelect container state.Value
       |]

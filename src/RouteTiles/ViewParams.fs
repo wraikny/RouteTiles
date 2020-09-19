@@ -220,38 +220,44 @@ module internal ZOrder =
 
   module Menu =
     let offset = (|||) (100 <<< 16)
-    let background = offset 0
-    let backgroundMask = offset 1
+    let background = offset 10
+    let backgroundMask = offset 11
 
-    let blur = offset 2
-    let darkMask = offset 3
+    let blur = offset 20
+    let darkMask = offset 21
 
-    let gameInfoFrame = offset 6
-    let gameInfoText = offset 7
+    let currentMode = offset 30
 
-    let blurOverGameInfo = offset 8
-    let darkMaskOverGameInfo = offset 9
+    let gameInfoFrame = offset 60
+    let gameInfoText = offset 61
 
+    let blurOverGameInfo = offset 80
+    let darkMaskOverGameInfo = offset 81
 
-    let frameBackground = offset 10
-
-    let buttonBackground = offset 20
-    let buttonHighlight = offset 21
-    let buttonText = offset 23
-    let description = offset 30
-    let title = offset 100
+    let currentModeOverGameInfo = offset 83
 
 
-    let footer = offset 10
-    let iconBackground = offset 20
-    let iconCurrent = offset 22
+    let frameBackground = offset 100
+
+    let buttonBackground = offset 200
+    let buttonHighlight = offset 201
+    let buttonText = offset 210
+
+    let description = offset 300
+
+    let title = offset 1000
+
+
+    // let footer = offset 10
+    // let iconBackground = offset 20
+    // let iconCurrent = offset 22
     
-    let icon = offset 23
+    // let icon = offset 23
 
-    let iconSelected = offset 24
+    // let iconSelected = offset 24
 
-    let sideMenuBackground = offset 31
-    let sideMenuText = offset 32
+    // let sideMenuBackground = offset 31
+    // let sideMenuText = offset 32
 
   module MenuModal =
     let offset = (|||) (300 <<< 16)
@@ -265,6 +271,8 @@ module internal ZOrder =
     let framehighlight = offset 11
 
     let text = offset 20
-    
 
-  let debug = (1 <<< 30)
+  
+  let modeText = (10000 <<< 16) ||| 30
+
+  let debug = Int32.MaxValue
