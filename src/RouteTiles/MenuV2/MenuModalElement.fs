@@ -12,6 +12,7 @@ open RouteTiles.Core.Effects
 open RouteTiles.App
 open RouteTiles.App.BoxUIElements
 open RouteTiles.App.MenuV2.MenuElement
+open RouteTiles.App.MenuV2.ElementCommon
 
 let private createBlur () =
   [|
@@ -27,7 +28,6 @@ let createInputUsernameModal (container: Container) (state: StringInput.State) =
   let frameSize = Vector2F(520.0f, 80.0f)
 
   [|
-    yield! createBlur ()
     Sprite.Create
       ( aspect = Aspect.Fixed
       , texture = container.InputBackground
@@ -56,7 +56,7 @@ let createInputUsernameModal (container: Container) (state: StringInput.State) =
           ( aspect = Aspect.Fixed
           , texture = container.InputFrame
           , src = Nullable(RectF(Vector2F(0.0f, 0.0f), frameSize))
-          , zOrder = ZOrder.MenuModal.frame
+          , zOrder = ZOrder.MenuModal.inputFrame
           )
         |> BoxUI.debug
         |> BoxUI.alignX Align.Center
@@ -69,7 +69,7 @@ let createInputUsernameModal (container: Container) (state: StringInput.State) =
             ( aspect = Aspect.Fixed
             , texture = container.InputFrame
             , src = Nullable(RectF(Vector2F(0.0f, frameSize.Y), frameSize))
-            , zOrder = ZOrder.MenuModal.frame
+            , zOrder = ZOrder.MenuModal.inputFrame + 1
             )
           |> BoxUI.onUpdate (fun node ->
             let dTime = Engine.Time - startTime
@@ -101,14 +101,40 @@ let createInputUsernameModal (container: Container) (state: StringInput.State) =
     )
   |]
 
+let createControllerSelect =
+  controllerSelect
+    {|button = ZOrder.MenuModal.buttonBackground
+      buttonText = ZOrder.MenuModal.buttonText
+      desc = ZOrder.MenuModal.description
+      background = ZOrder.MenuModal.background
+    |}
+
 
 let createModal (container: Container) (state: MenuV2.State) =
   state |> function
     | MenuV2.State.SettingMenuState (Setting.State.InputName(state, _), _) ->
-      createBase ()
-      |> BoxUI.withChildren (
-          createInputUsernameModal container state
-      )
+      [|
+          yield! createBlur ()
+          createCurrentMode ZOrder.MenuModal.currentMode container container.TextMap.modes.nameSetting
+          yield! createInputUsernameModal container state
+      |]
+      |> ValueSome
+
+    | MenuV2.State.ControllerSelectState (WithContext(MenuV2.ControllerSelectToPlay _), _) -> ValueNone
+    | MenuV2.State.ControllerSelectState (WithContext state, _) ->
+      [|
+        createBackground container
+
+        yield! createBlur () // ZOrder.Menu.blurOverGameInfo ZOrder.Menu.darkMaskOverGameInfo
+
+        createCurrentMode ZOrder.MenuModal.currentMode container container.TextMap.modes.controllerSelect
+
+        yield! createControllerSelect container state.Value
+      |]
       |> ValueSome
 
     | _ -> ValueNone
+  |> ValueOption.map(fun elems ->
+    createBase ()
+      |> BoxUI.withChildren elems
+  )

@@ -240,37 +240,32 @@ module internal ZOrder =
     let frameBackground = offset 100
 
     let buttonBackground = offset 200
-    let buttonHighlight = offset 201
+    // let buttonHighlight = offset 201
     let buttonText = offset 210
 
     let description = offset 300
 
     let title = offset 1000
 
-
-    // let footer = offset 10
-    // let iconBackground = offset 20
-    // let iconCurrent = offset 22
-    
-    // let icon = offset 23
-
-    // let iconSelected = offset 24
-
-    // let sideMenuBackground = offset 31
-    // let sideMenuText = offset 32
-
   module MenuModal =
     let offset = (|||) (300 <<< 16)
     let blur = offset 0
     let darkMask = offset 1
 
+    let currentMode = offset 30
 
-    let background = offset 5
+    let background = offset 50
 
-    let frame = offset 10
-    let framehighlight = offset 11
+    // input
+    let inputFrame = offset 100
+    // let framehighlight = offset 110
 
-    let text = offset 20
+    let buttonBackground = offset 200
+    let buttonText = offset 210
+
+    let text = offset 250
+
+    let description = offset 300
 
   
   let modeText = (10000 <<< 16) ||| 30

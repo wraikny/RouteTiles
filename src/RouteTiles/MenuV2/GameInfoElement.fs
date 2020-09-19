@@ -8,7 +8,7 @@ open Altseed2.BoxUI.Elements
 open RouteTiles.Core
 open RouteTiles.App
 open RouteTiles.App.BoxUIElements
-open RouteTiles.App.MenuV2.MenuElement
+open RouteTiles.App.MenuV2.ElementCommon
 
 
 let createGameInfo (container: Container) name =

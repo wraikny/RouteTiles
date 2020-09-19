@@ -58,6 +58,7 @@
     <Compile Include="../../ResourcesPassword.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="MenuV2/Container.fs" />
+    <Compile Include="MenuV2/ElementCommon.fs" />
     <Compile Include="MenuV2/MenuElement.fs" />
     <Compile Include="MenuV2/MenuModalElement.fs" />
     <Compile Include="MenuV2/GameInfoElement.fs" />
