@@ -111,6 +111,14 @@ let buttons (zOrders: {| button: int; buttonText: int |}) (container: Container)
       )
   )
 
+let modalFrame zOrder (container: Container) =
+  Sprite.Create
+    ( aspect = Aspect.Fixed
+    , texture = container.InputBackground
+    , zOrder = zOrder
+    )
+  |> BoxUI.alignCenter
+  :> Element
 
 
 let controllerSelect (zOrders: {| button: int; buttonText: int; desc: int; background: int |}) (container: Container) (state: ListSelector.State<Controller>) =
@@ -145,13 +153,7 @@ let controllerSelect (zOrders: {| button: int; buttonText: int; desc: int; backg
     |> BoxUI.debug
 
   [|
-    Sprite.Create
-      ( aspect = Aspect.Fixed
-      , texture = container.InputBackground
-      , zOrder = zOrders.background
-      )
-    :> Element
-    |> BoxUI.alignCenter
+    modalFrame zOrders.background container
     |> BoxUI.withChild (
       ItemList.Create()
       |> BoxUI.withChildren ([|

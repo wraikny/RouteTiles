@@ -13,8 +13,8 @@ type SendToServer = Yes | No
 
 module SendToServer =
   let items = [|
-    Yes
     No
+    Yes
   |]
 
 [<Struct; RequireQualifiedAccess>]

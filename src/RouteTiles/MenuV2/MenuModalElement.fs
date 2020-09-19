@@ -24,17 +24,32 @@ let private createBlur () =
     :> Element
   |]
 
+
+let private createTextModal (container: Container) text =
+  modalFrame ZOrder.MenuModal.background container
+  |> BoxUI.withChild (
+    empty ()
+    |> BoxUI.debug
+    |> BoxUI.marginBottom (LengthScale.Fixed, 40.0f)
+    |> BoxUI.marginTop (LengthScale.Fixed, 120.0f)
+    |> BoxUI.withChild (
+      Text.Create
+        ( font = container.Font
+        , text = text
+        , color = Nullable(Color(255uy, 255uy, 255uy))
+        , zOrder = ZOrder.MenuModal.text
+        )
+      |> BoxUI.alignX Align.Center
+      |> BoxUI.alignY Align.Min
+      |> BoxUI.debug
+    )
+  )
+
 let createInputUsernameModal (container: Container) (state: StringInput.State) =
   let frameSize = Vector2F(520.0f, 80.0f)
 
   [|
-    Sprite.Create
-      ( aspect = Aspect.Fixed
-      , texture = container.InputBackground
-      , zOrder = ZOrder.MenuModal.background
-      )
-    |> BoxUI.alignCenter
-    :> Element
+    modalFrame ZOrder.MenuModal.background container
     |> BoxUI.withChild(
       empty ()
       |> BoxUI.debug
@@ -109,13 +124,14 @@ let createControllerSelect =
       background = ZOrder.MenuModal.background
     |}
 
+let private createCurrentMode = createCurrentMode ZOrder.MenuModal.currentMode
 
 let createModal (container: Container) (state: MenuV2.State) =
   state |> function
     | MenuV2.State.SettingMenuState (Setting.State.InputName(state, _), _) ->
       [|
           yield! createBlur ()
-          createCurrentMode ZOrder.MenuModal.currentMode container container.TextMap.modes.nameSetting
+          createCurrentMode container container.TextMap.modes.nameSetting
           yield! createInputUsernameModal container state
       |]
       |> ValueSome
@@ -127,11 +143,31 @@ let createModal (container: Container) (state: MenuV2.State) =
 
         yield! createBlur () // ZOrder.Menu.blurOverGameInfo ZOrder.Menu.darkMaskOverGameInfo
 
-        createCurrentMode ZOrder.MenuModal.currentMode container container.TextMap.modes.controllerSelect
+        createCurrentMode container container.TextMap.modes.controllerSelect
 
         yield! createControllerSelect container state.Value
       |]
       |> ValueSome
+
+    | MenuV2.State.GameResultState(resultState, _) ->
+      resultState |> function
+      | GameResult.WaitingResponseState _ ->
+        ValueSome [|
+          yield! createBlur ()
+          createTextModal container container.TextMap.descriptions.waitingResponse
+        |]
+
+      | GameResult.ErrorViewState (SinglePage.SinglePageState error, _) ->
+        ValueSome [|
+          // createBackground container
+          yield! createBlur ()
+          createTextModal container (error.Message)
+        |]
+
+      | GameResult.InputName (state, _) ->
+        ValueSome <| createInputUsernameModal container state
+
+      | _ -> ValueNone
 
     | _ -> ValueNone
   |> ValueOption.map(fun elems ->

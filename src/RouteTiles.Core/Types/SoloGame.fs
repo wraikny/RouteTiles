@@ -26,4 +26,4 @@ module GameMode =
 
   let into = function
     | TimeAttack2000 -> Mode.TimeAttack 2000
-    | ScoreAttack180 -> Mode.ScoreAttack 180
+    | ScoreAttack180 -> Mode.ScoreAttack 10

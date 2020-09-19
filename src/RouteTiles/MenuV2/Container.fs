@@ -78,3 +78,21 @@ type internal Container (textMap: TextMap.TextMap) =
       | MenuV2.Restart -> textMap.descriptions.restartGame
       | MenuV2.Quit -> textMap.descriptions.quitGame
     )
+
+  member val GameResultSendToServerButtons: string[] =
+    GameResult.SendToServer.items |> Array.map (function
+      | GameResult.Yes -> textMap.buttons.sendToServer
+      | GameResult.No -> textMap.buttons.notSendToServer
+    )
+
+  member val GameResultNextSelectionButtons: string[] =
+    GameResult.GameNextSelection.items |> Array.map (function
+      | GameResult.GameNextSelection.Quit -> textMap.buttons.quitGame
+      | GameResult.GameNextSelection.Restart -> textMap.buttons.restartGame
+    )
+
+  member val GameResultNextSelectionDescriptions: string[] =
+    GameResult.GameNextSelection.items |> Array.map (function
+      | GameResult.GameNextSelection.Quit -> textMap.descriptions.quitGame
+      | GameResult.GameNextSelection.Restart -> textMap.descriptions.restartGame
+    )

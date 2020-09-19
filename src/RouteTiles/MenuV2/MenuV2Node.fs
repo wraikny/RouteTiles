@@ -16,9 +16,15 @@ module internal RankingServer =
 
   let client =
     new SimpleRankingsServer.Client(
+      #if DEBUG
+      @"http://localhost:8080/api/RouteTiles",
+      "username",
+      "password"
+      #else
       Server.url,
       Server.username,
       Server.password
+      #endif
     )
 
   let insertSelect guid gameMode (data: RouteTiles.Core.Types.Ranking.Data) =
@@ -33,7 +39,7 @@ module internal RankingServer =
           ( table
           , orderBy = orderKey
           , isDescending = isDescending
-          , limit = 10
+          , limit = 5
           )
 
       return (id, data)
@@ -89,10 +95,7 @@ type MenuV2Handler = {
   static member Handle(GameRankingEffect (guid, gameMode, data), k) =
     Eff.capture(fun h ->
       async {
-        let ctx = System.Threading.SynchronizationContext.Current
-        do! Async.SwitchToThreadPool ()
         let! res = RankingServer.insertSelect guid gameMode data
-        do! Async.SwitchToContext ctx
         let res = res |> function
           | Choice1Of2 x -> Ok x
           | Choice2Of2 e -> Error e

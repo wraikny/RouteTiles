@@ -130,19 +130,83 @@ let private createBlur zo1 zo2 =
     :> Element
   |]
 
+let private createBlurDefault () = createBlur ZOrder.Menu.blur ZOrder.Menu.darkMask
+let private createBlurOverGameInfo () = createBlur ZOrder.Menu.blurOverGameInfo ZOrder.Menu.darkMaskOverGameInfo
+
 let createPause (container: Container) (state: ListSelector.State<MenuV2.PauseSelect>) =
   [|
     createBackground container
 
     createCurrentModeMenu container container.TextMap.modes.pause
 
-    yield! createBlur ZOrder.Menu.blur ZOrder.Menu.darkMask
+    yield! createBlurDefault ()
     createButtons container container.PauseModeButtons (state.cursor, state.current)
     rightArea().With(createDesc container container.PauseModeDescriptions.[state.cursor])
   |]
 
 let private createControllerSelect =
   controllerSelect {| buttonZOrders with desc = ZOrder.Menu.description; background = ZOrder.Menu.frameBackground |}
+
+
+let private createRankingList (container: Container) (id: int64 voption) (data: SimpleRankingsServer.Data<Ranking.Data>[]) =
+  ItemList.Create(itemMargin = 20.0f)
+  |> BoxUI.withChildren (
+    let makeText margin color text =
+      empty ()
+      |> BoxUI.marginLeft (LengthScale.Fixed, margin)
+      |> BoxUI.withChild (
+        Text.Create
+          ( font = container.Font
+          , text = text
+          , color = Nullable(color)
+          , zOrder = ZOrder.Menu.buttonText
+          )
+      )
+
+    data
+    |> fun a -> if a.Length > 5 then a.[0..4] else a
+    |> Array.mapi (fun i data ->
+      Sprite.Create
+        (
+          texture = container.RankingFrame
+        , zOrder = ZOrder.Menu.buttonBackground
+        )
+      |> BoxUI.withChildren
+        [|
+          makeText 20.0f (Color(255uy, 255uy, 255uy)) (sprintf "%d" i)
+        |]
+    )
+  )
+
+
+
+let private createGameResult (container: Container) state =
+  state |> function
+  | GameResult.ResultWithSendToServerSelectState(_, _, _, selector) ->
+    [|
+      // createBackground container
+      yield! createBlurDefault ()
+      createCurrentModeMenu container container.TextMap.modes.gameResult
+      createButtons container container.GameResultSendToServerButtons (selector.cursor, selector.current)
+      rightArea().With(createDesc container container.TextMap.descriptions.sendToServer)
+    |]
+
+  | GameResult.GameNextSelectionState(selector, _) ->
+    [|
+      // createBackground container
+      yield! createBlurDefault ()
+      createCurrentModeMenu container container.TextMap.modes.gameResult
+      createButtons container container.GameResultNextSelectionButtons (selector.cursor, selector.current)
+      rightArea().With(createDesc container container.GameResultNextSelectionDescriptions.[selector.cursor])
+    |]
+
+  | GameResult.RankingListViewState(SinglePage.SinglePageState (id, data), _) ->
+    [|
+      createRankingList container (ValueSome id) data
+    |]
+
+  | _ -> Array.empty
+
 
 let create (container: Container) (state: MenuV2.State) =
   createBase()
@@ -164,20 +228,12 @@ let create (container: Container) (state: MenuV2.State) =
         yield!
           createControllerSelect container state
       |]
-    // | MenuV2.State.ControllerSelectState (WithContext state, _) ->
-    //   [|
-    //     createBackground container
-
-    //     yield! createBlur ZOrder.Menu.blurOverGameInfo ZOrder.Menu.darkMaskOverGameInfo
-
-    //     createCurrentMode ZOrder.Menu.currentModeOverGameInfo container container.TextMap.modes.controllerSelect
-
-    //     yield!
-    //       createControllerSelect container state.Value
-    //   |]
 
     | MenuV2.State.PauseState(WithContext state, _) ->
       createPause container state
+
+    | MenuV2.State.GameResultState(state, _) ->
+      createGameResult container state
 
     | _ -> Array.empty
   )

@@ -326,8 +326,8 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
 
       return GameState(config, controller, gameMode)
     | GameResult.GameNextSelection.Quit ->
-      do! GameControlEffect.Restart
       do! GameControlEffect.Quit
+      do! GameControlEffect.Resume
 
       return State.Init (config)
 

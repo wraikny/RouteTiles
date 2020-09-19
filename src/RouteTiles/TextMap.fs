@@ -19,6 +19,8 @@ type Buttons = {
   changeController: string
   others: string
   keyboard: string
+  sendToServer: string
+  notSendToServer: string
 }
 
 type Descriptions = {
@@ -37,6 +39,8 @@ type Descriptions = {
   quitGame: string
   changeUsername: string
   namePlaceholder: string
+  waitingResponse: string
+  sendToServer: string
 }
 
 type Modes = {
@@ -48,6 +52,7 @@ type Modes = {
   backgroundSetting: string
   pause: string
   gameResult: string
+  // waitingResponse: string
 }
 
 type TextMap = {
@@ -76,6 +81,8 @@ let textMapJapanese = {
     changeController = "コントローラ切替"
     others = "キーボード"
     keyboard = "キーボード"
+    sendToServer = "送信する"
+    notSendToServer = "送信しない"
   }
 
   descriptions = {
@@ -94,6 +101,8 @@ let textMapJapanese = {
     quitGame = "ゲームをやめてタイトルに戻ります"
     changeUsername = "ユーザ名を変更します"
     namePlaceholder = "ユーザ名を入力"
+    waitingResponse = "しばらくお待ち下さい..."
+    sendToServer = "オンラインランキングに結果を送信しますか？"
   }
 
   modes = {
@@ -105,5 +114,7 @@ let textMapJapanese = {
     backgroundSetting = "背景設定"
     pause = "一時停止"
     gameResult = "リザルト"
+    // waitingResponse = "通信待機中..."
+    // error = "エラー"
   }
 }
