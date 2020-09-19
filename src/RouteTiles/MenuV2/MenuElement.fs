@@ -155,9 +155,7 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
   ItemList.Create(itemMargin = 20.0f)
   |> BoxUI.withChildren (
     let makeText alignX pos color text =
-      FixedWidth.Create (0.0f)
-      |> BoxUI.marginLeft (LengthScale.Fixed, pos)
-      |> BoxUI.withChild (
+      let textElem =
         Text.Create
           ( font = container.Font
           , text = text
@@ -166,8 +164,14 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
           )
         |> BoxUI.alignY Align.Center
         |> BoxUI.alignX alignX
-      )
-      :> Element
+
+      (FixedWidth.Create (0.0f)
+      |> BoxUI.marginLeft (LengthScale.Fixed, pos)
+      |> BoxUI.withChild textElem
+      :> Element)
+      , textElem
+
+    let texSize = Vector2F(1120.0f, 88.0f)
 
     // data
     // |> fun a -> if a.Length > 5 then a.[0..4] else a
@@ -176,6 +180,7 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
       Sprite.Create
         (
           texture = container.RankingFrame
+        , src = Nullable(RectF(Vector2F(0.0f, 0.0f), texSize))
         , zOrder = ZOrder.Menu.buttonBackground
         , aspect = Aspect.Fixed
         )
@@ -189,13 +194,17 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
               elif config.guid = data.userId then Color(100uy, 100uy, 255uy)
               else Color(255uy, 255uy, 255uy)
             
-            makeText Align.Center 56.0f color (sprintf "%d" i)
-            makeText Align.Center 272.0f color data.values.Name
+            let elem1, textElem1 = makeText Align.Center 56.0f color (sprintf "%d" i)
+            elem1
+            
+            let elem2 ,textElem2 = makeText Align.Center 272.0f color data.values.Name
+            elem2
 
             match gameMode with
             | SoloGame.GameMode.ScoreAttack180 -> sprintf "%d pt." data.values.Point
             | _ -> secondToDisplayTime data.values.Time
             |> makeText Align.Max 728.0f (Color(0uy, 0uy, 0uy))
+            |> fst
 
             
             empty ()
@@ -210,6 +219,28 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
               |> BoxUI.alignY Align.Center
               |> BoxUI.alignX Align.Max
             )
+
+            if id = ValueSome data.id then
+              let startTime = Engine.Time
+              Sprite.Create
+                (
+                  texture = container.RankingFrame
+                , src = Nullable(RectF(Vector2F(0.0f, texSize.Y), texSize))
+                , zOrder = ZOrder.Menu.buttonBackground
+                , aspect = Aspect.Fixed
+                )
+              |> BoxUI.onUpdate (fun node ->
+                let dTime = Engine.Time - startTime
+                let sinTime = cos (dTime * 2.0f * MathF.PI / Consts.Menu.selectedTimePeriod)
+
+                let a = if sinTime > 0.0f then 1.0f else 0.0f
+                node.Color <- Color (255, 255, 255, a * 255.0f |> int)
+
+                let colB = 255.0f * (1.0f - a) |> int
+
+                textElem1.Node.Color <- Color (255, 255, colB, 255)
+                textElem2.Node.Color <- Color (255, 255, colB, 255)
+              )
         |]
     )
   )
