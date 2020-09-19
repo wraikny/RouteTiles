@@ -36,6 +36,28 @@ type FixedHeight private () =
       child.Resize(area)
 
 [<AllowNullLiteral; Sealed; AutoSerializable(true)>]
+type FixedWidth private () =
+  inherit Element()
+
+  member val private Width = Unchecked.defaultof<_> with get, set
+
+  static member Create(width: float32) =
+    let elem = BoxUISystem.RentOrNull<FixedWidth>() |? FixedWidth()
+    elem.Width <- width
+    elem
+
+  override this.ReturnSelf() =
+    BoxUISystem.Return(this)
+
+  override this.CalcSize(size) = new Vector2F(this.Width, size.Y)
+
+  override this.OnResize(area) =
+    let area = RectF(area.Position, new Vector2F(this.Width, area.Height))
+
+    for child in this.Children do
+      child.Resize(area)
+
+[<AllowNullLiteral; Sealed; AutoSerializable(true)>]
 type GaussianBlur private () =
   inherit Element()
 

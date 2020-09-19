@@ -35,10 +35,11 @@ type internal IGameHandler =
   abstract FinishGame: SoloGame.Model * time:float32 -> unit
   abstract SelectController: unit -> unit
 
-type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
+type internal Game(gameInfoViewer: IGameHandler) =
   inherit Node()
 
-  let mutable controller = controller
+  let mutable gameMode = ValueNone
+  let mutable controller = ValueNone
 
   let mutable lastModel: SoloGame.Model voption = ValueNone
   let updater = Updater<SoloGame.Model, _>()
@@ -51,13 +52,6 @@ type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
   let mutable inputEnabled = true
 
   let mutable time = 0.0f
-
-  let initTime() =
-    time <- gameMode |> function
-      | SoloGame.Mode.ScoreAttack sec ->
-        float32 sec
-      | SoloGame.Mode.TimeAttack _ ->
-        0.0f
 
   /// Binding Children
   do
@@ -78,7 +72,7 @@ type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
     updater :> IObservable<_>
     |> Observable.subscribe(fun model ->
       gameMode |> function
-      | SoloGame.Mode.TimeAttack score ->
+      | ValueSome(SoloGame.Mode.TimeAttack score) ->
         if model.board.point > score then
           // 終了
           coroutineNode.Add(seq {
@@ -86,17 +80,17 @@ type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
             yield! Coroutine.sleep Consts.Board.tilesVanishInterval
             gameInfoViewer.FinishGame(model, time)
           })
-          ()
       | _ -> ()
 
       lastModel <- ValueSome model
     )
     |> ignore
 
-    (gameMode |> function
-    | SoloGame.Mode.ScoreAttack _ ->
-      seq {
-        while true do
+    
+    seq {
+      while true do
+        match gameMode with
+        | ValueSome(SoloGame.Mode.ScoreAttack _) ->
           time <- time - Engine.DeltaSecond
           if time < 0.0f then
             // 終了
@@ -106,16 +100,14 @@ type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
             gameInfoViewer.SetTime(0.0f)
           else
             gameInfoViewer.SetTime(time)
-          yield()
-      }
-    | SoloGame.Mode.TimeAttack _ ->
-      seq {
-        while true do
+        
+        | ValueSome(SoloGame.Mode.TimeAttack _) ->
           time <- time + Engine.DeltaSecond
           gameInfoViewer.SetTime(time)
-          yield()
-      }
-    ) |> coroutineNode.Add
+        | ValueNone ->
+          ()
+        yield()
+      } |> coroutineNode.Add
 
   /// Binding Input
   do
@@ -142,10 +134,10 @@ type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
 
         if inputEnabled then
           match controller with
-          | Controller.Keyboard ->
+          | ValueSome Controller.Keyboard ->
             let msg = InputControl.SoloGame.getKeyboardInput()
             yield! invokeInput msg
-          | Controller.Joystick (index, name, guid) ->
+          | ValueSome (Controller.Joystick (index, name, guid)) ->
             let info = Engine.Joystick.GetJoystickInfo(index)
             if info <> null && info.GUID = guid then
               let msg = InputControl.SoloGame.getJoystickInput index
@@ -156,6 +148,8 @@ type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
               // todo:コントローラー選択画面
               gameInfoViewer.SelectController()
               yield ()
+          | ValueNone ->
+            yield ()
         else
           yield ()
     })
@@ -169,24 +163,21 @@ type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
       emitVanishmentParticle = boardNode.EmitVanishmentParticle
     }
 
-  let initModel =
-    let config: Board.BoardConfig = {
-      nextCounts = Consts.Core.nextsCount
-      size = Consts.Core.boardSize
-    }
-
-    SoloGame.init
-      config
-      gameMode
-      // controller
-    |> Eff.handle handler
-
   member __.Controller with get() = controller and set(v) = controller <- v
 
-  override this.OnAdded() =
-    this.Initialize()
+  member __.Initialize(gameMode_, controller_) =
+    let initModel =
+      let config: Board.BoardConfig = {
+        nextCounts = Consts.Core.nextsCount
+        size = Consts.Core.boardSize
+      }
 
-  member __.Initialize() =
+      SoloGame.init
+        config
+        gameMode_
+        // controller
+      |> Eff.handle handler
+
     updater.Init(initModel, fun msg model ->
       Utils.DebugLogn (sprintf "Msg: %A" msg)
       SoloGame.update msg model
@@ -195,5 +186,19 @@ type internal Game(gameMode, controller, gameInfoViewer: IGameHandler) =
 
     lastModel <- updater.Model
 
-    initTime()
+    time <- gameMode_ |> function
+      | SoloGame.Mode.ScoreAttack sec ->
+        float32 sec
+      | SoloGame.Mode.TimeAttack _ ->
+        0.0f
+    
     inputEnabled <- true
+
+    gameMode <- ValueSome gameMode_
+    controller <- ValueSome controller_
+
+  member this.Restart() =
+    (gameMode, controller) |> function
+    | ValueSome gameMode, ValueSome controller ->
+      this.Initialize(gameMode, controller)
+    | _ -> failwith "invalid state"

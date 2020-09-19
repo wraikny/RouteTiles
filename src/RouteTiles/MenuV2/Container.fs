@@ -23,6 +23,8 @@ type internal Container (textMap: TextMap.TextMap) =
   // member val Font = Font.LoadStaticFontStrict(@"Font/Makinas-4-Square-32/font.a2f")
   member val Font = Font.LoadDynamicFontStrict(@"Font/Makinas-4-Square.otf", 32)
 
+  // member val Font = Font.LoadDynamicFontStrict(@"mplus-1c-bold.ttf", 32)
+
   member val MainMenuButtons: string[] =
     MenuV2.Mode.items |> Array.map (function
       | MenuV2.Mode.GamePlay -> textMap.buttons.play
@@ -64,19 +66,19 @@ type internal Container (textMap: TextMap.TextMap) =
     )
 
   member val PauseModeButtons: string[] =
-    MenuV2.PauseSelect.items |> Array.map (function
-      | MenuV2.Continue -> textMap.buttons.continueGame
-      | MenuV2.ChangeController -> textMap.buttons.changeController
-      | MenuV2.Restart -> textMap.buttons.restartGame
-      | MenuV2.Quit -> textMap.buttons.quitGame
+    Pause.PauseSelect.items |> Array.map (function
+      | Pause.PauseSelect.Continue -> textMap.buttons.continueGame
+      | Pause.PauseSelect.ChangeController -> textMap.buttons.changeController
+      | Pause.PauseSelect.Restart -> textMap.buttons.restartGame
+      | Pause.PauseSelect.Quit -> textMap.buttons.quitGame
     )
 
   member val PauseModeDescriptions: string[] =
-    MenuV2.PauseSelect.items |> Array.map (function
-      | MenuV2.Continue -> textMap.descriptions.continueGame
-      | MenuV2.ChangeController -> textMap.descriptions.selectController
-      | MenuV2.Restart -> textMap.descriptions.restartGame
-      | MenuV2.Quit -> textMap.descriptions.quitGame
+    Pause.PauseSelect.items |> Array.map (function
+      | Pause.PauseSelect.Continue -> textMap.descriptions.continueGame
+      | Pause.PauseSelect.ChangeController -> textMap.descriptions.selectController
+      | Pause.PauseSelect.Restart -> textMap.descriptions.restartGame
+      | Pause.PauseSelect.Quit -> textMap.descriptions.quitGame
     )
 
   member val GameResultSendToServerButtons: string[] =

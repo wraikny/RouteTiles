@@ -1,0 +1,46 @@
+{
+    "readme": [
+        "- Don't use same table name",
+        "- Don't use 'Id', 'UserId', 'Date' as key",
+        "- Available types are Int, Float, Text",
+        "- Never change the setting of table which has been created once",
+        "- API entry point is '/api/{dbName}'",
+
+        "- 同じテーブル名を使用しないでください",
+        "- 'Id', 'UserId', 'Date'をキーの名前として用いないでください",
+        "- 利用可能なデータ型は Int, Float, Text です",
+        "- 一度作成したテーブルの設定は変更しないでください",
+        "- APIエントリーポイントは'/api/{dbName}'です。"
+    ],
+
+    "directory": "databases",
+
+    "port": 8080,
+
+    "games": {
+        "RouteTiles": {
+            "username": "username",
+            "password": "password",
+            "tables": {
+                "SG_v1_Time2000": {
+                    "Name": "Text",
+                    "Time": "Float",
+                    "Point": "Int",
+                    "SlideCount": "Int",
+                    "TilesCount": "Int",
+                    "RoutesCount": "Int",
+                    "LoopsCount": "Int"
+                },
+                "SG_v1_Score180": {
+                    "Name": "Text",
+                    "Time": "Float",
+                    "Point": "Int",
+                    "SlideCount": "Int",
+                    "TilesCount": "Int",
+                    "RoutesCount": "Int",
+                    "LoopsCount": "Int"
+                }
+            }
+        }
+    }
+}

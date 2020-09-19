@@ -36,7 +36,7 @@ type OutStatus = StateStatus<State, GameNextSelection>
 and State =
   | ResultWithSendToServerSelectState of Config * SoloGame.GameMode * Ranking.Data * ListSelector.State<SendToServer>
   | WaitingResponseState of WaitingResponse * (RankingResponse -> OutStatus)
-  | RankingListViewState of SinglePage.State<int64 * SimpleRankingsServer.Data<Ranking.Data>[]> * (unit -> OutStatus)
+  | RankingListViewState of SinglePage.State<Config * SoloGame.GameMode * int64 * SimpleRankingsServer.Data<Ranking.Data>[]> * (unit -> OutStatus)
   | ErrorViewState of SinglePage.State<exn> * (unit -> OutStatus)
   | GameNextSelectionState of ListSelector.State<GameNextSelection> * (GameNextSelection voption -> OutStatus)
   | InputName of StringInput.State * (string voption -> OutStatus)
@@ -81,7 +81,9 @@ module Msg =
     | _ -> ValueNone
 
   let toSinglePageMsg = function
-    | Enter -> ValueSome SinglePage.Msg.Enter
+    | Enter
+    | Cancel ->
+      ValueSome SinglePage.Msg.Enter
     | _ -> ValueNone
 
 let inline getGameNextSelection () = eff {
@@ -119,14 +121,17 @@ let inline update msg state = eff {
             do! SinglePage.SinglePageState e |> stateEnter
             return! getGameNextSelection()
 
-          | Ok res ->
-            do! SinglePage.SinglePageState res |> stateEnter
+          | Ok (id, data) ->
+            do! SinglePage.SinglePageState (config, gameMode, id, data) |> stateEnter
             return! getGameNextSelection()
         }
 
         if config.name.IsNone then
-          let! name = StringInput.State.Init("", Setting.NameMaxLength) |> stateEnter
-          return! cont name.Value
+          match!
+            StringInput.State.Init("", Setting.NameMaxLength) |> stateEnter
+            with
+          | ValueSome name when name <> "" -> return! cont name
+          | _ -> return Pending state
         else
           return! cont config.name.Value
 

@@ -21,47 +21,18 @@ module Mode =
     Mode.Setting
   |]
 
-// type GameMode =
-//   | TimeAttack2000
-//   | ScoreAttack180
 
-// module GameMode =
-//   let items = [|
-//     TimeAttack2000
-//     ScoreAttack180
-//   |]
-
-//   let into = function
-//     | TimeAttack2000 -> SoloGame.Mode.TimeAttack 2000
-//     | ScoreAttack180 -> SoloGame.Mode.ScoreAttack 180
-
-
-[<Struct>]
-type PauseSelect =
-  | Continue
-  | ChangeController
-  | Restart
-  | Quit
-
-module PauseSelect =
-  let items = [|
-    Continue
-    ChangeController
-    Restart
-    Quit
-  |]
 
 [<Struct>]
 type ControllerSelect =
   | ControllerSelectToPlay of toPlay:ListSelector.State<Controller>
-  | ControllerSelectFromPause of fromPause:ListSelector.State<Controller>
+  // | ControllerSelectFromPause of fromPause:ListSelector.State<Controller>
   | ControllerSelectWhenRejected of rejected:ListSelector.State<Controller>
 with
   static member StateOut(_) = Eff.marker<Controller voption>
 
   member s.Value = s |> function
     | ControllerSelectToPlay state -> state
-    | ControllerSelectFromPause state -> state
     | ControllerSelectWhenRejected state -> state
 
 module ControllerSelect =
@@ -69,9 +40,6 @@ module ControllerSelect =
     match state with
     | ControllerSelectToPlay state ->
       f state |> ControllerSelectToPlay
-
-    | ControllerSelectFromPause state ->
-      f state |> ControllerSelectFromPause
 
     | ControllerSelectWhenRejected state ->
       f state |> ControllerSelectWhenRejected
@@ -88,9 +56,6 @@ module ControllerSelect =
     | ControllerSelectToPlay state ->
       return! state |> apply ControllerSelectToPlay
 
-    | ControllerSelectFromPause state ->
-      return! state |> apply ControllerSelectFromPause
-
     | ControllerSelectWhenRejected state ->
       return! state |> apply ControllerSelectWhenRejected
   }
@@ -106,7 +71,7 @@ and State =
   | ControllerSelectState of WithState<ControllerSelect> * (State * Controller voption -> State)
   | GameState of Config * Controller * SoloGame.GameMode
   | GameResultState of GameResult.State * (GameResult.GameNextSelection -> State)
-  | PauseState of WSListSelector<PauseSelect> * (State * PauseSelect voption -> State)
+  | PauseState of Pause.State * (Pause.PauseResult -> State)
   | SettingMenuState of Setting.State * (Config voption -> State)
 with
   member x.IsStringInputMode = x |> function
@@ -128,7 +93,7 @@ let equal a b = (a, b) |> function
   | ControllerSelectState(a, _), ControllerSelectState(b, _) -> a = b
   | GameState(a1, a2, a3), GameState(b1, b2, b3) -> (a1, a2, a3) = (b1, b2, b3)
   | GameResultState(a, _), GameResultState(b, _) -> GameResult.equal a b
-  | PauseState(a, _), PauseState(b, _) -> a = b
+  | PauseState(a, _), PauseState(b, _) -> Pause.equal a b
   | SettingMenuState(a, _), SettingMenuState(b, _) -> Setting.equal a b
   | _ -> false
 
@@ -170,6 +135,14 @@ module Msg =
     | Cancel -> ValueSome GameResult.Msg.Cancel
     | ReceiveRanking data -> ValueSome (GameResult.Msg.ReceiveRanking data)
     | MsgOfInput m -> ValueSome (GameResult.Msg.MsgOfInput m)
+    | _ -> ValueNone
+
+  let toPauseMsg = function
+    | Incr -> ValueSome Pause.Msg.Incr
+    | Decr -> ValueSome Pause.Msg.Decr
+    | Enter -> ValueSome Pause.Msg.Enter
+    | Cancel -> ValueSome Pause.Msg.Cancel
+    | UpdateControllers x -> ValueSome (Pause.Msg.UpdateControllers x)
     | _ -> ValueNone
 
 
@@ -227,40 +200,22 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
     do! GameControlEffect.Pause
 
     match!
-      ListSelector.State<_>.Init(0, PauseSelect.items)
-      |> WithContext
+      Pause.State.Init (controller)
       |> stateEnter
       with
-    | _, ValueNone
-    | _, ValueSome Continue ->
+    | Pause.PauseResult.Continue(c) ->
       do! GameControlEffect.Resume
-      return state
+      return GameState(config, c, gameMode)
 
-    | _, ValueSome Restart ->
+    | Pause.PauseResult.Restart(c) ->
       do! GameControlEffect.Restart
       do! GameControlEffect.Resume
-      return state
+      return GameState(config, c, gameMode)
 
-    | _, ValueSome Quit ->
-      do! GameControlEffect.Resume
+    | Pause.PauseResult.Quit ->
       do! GameControlEffect.Quit
-      return State.Init (config)
-
-    | pauseState, ValueSome ChangeController ->
-      let! controllers = CurrentControllers
-      match!
-        ListSelector.State<_>.Init(controller, controllers,currentItem=controller)
-        |> ControllerSelectFromPause
-        |> WithContext
-        |> stateEnter
-        with
-      | _, ValueNone -> return pauseState
-      | controllerState, ValueSome controller ->
-        let! res = SetController controller
-        if res then
-          return GameState (config, controller, gameMode)
-        else
-          return controllerState
+      do! GameControlEffect.Resume
+      return State.Init(config)
 
   | QuitGame, GameState (config, _, _) ->
     return State.Init (config)
@@ -359,10 +314,12 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
     | ValueNone -> return state
     | ValueSome msg -> return! stateMapEff (GameResult.update msg) (s, k)
 
+  // | Msg.Cancel, (PauseState (_, k) as state) -> return k (state, Pause.PauseResult.Continue)
+  // | Msg.PauseGame, (PauseState (_, k) as state) -> return k (state, Pause.PauseResult.Continue)
   | _, PauseState (s, k) ->
-    match Msg.toListSelectorMsg msg with
+    match Msg.toPauseMsg msg with
     | ValueNone -> return state
-    | ValueSome msg -> return! WithContext.mapEff state (ListSelector.update msg) (s, k)
+    | ValueSome msg -> return! stateMapEff (Pause.update msg) (s, k)
 
   | _, SettingMenuState (s, k) ->
     match Msg.toSettingMsg msg with

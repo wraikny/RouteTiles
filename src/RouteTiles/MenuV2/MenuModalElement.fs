@@ -137,7 +137,10 @@ let createModal (container: Container) (state: MenuV2.State) =
       |> ValueSome
 
     | MenuV2.State.ControllerSelectState (WithContext(MenuV2.ControllerSelectToPlay _), _) -> ValueNone
-    | MenuV2.State.ControllerSelectState (WithContext state, _) ->
+
+    | MenuV2.State.PauseState(Pause.ControllerSelectState (state, _), _)
+    | MenuV2.State.ControllerSelectState (WithContext (MenuV2.ControllerSelectToPlay state), _)
+    | MenuV2.State.ControllerSelectState (WithContext (MenuV2.ControllerSelectWhenRejected state), _) ->
       [|
         createBackground container
 
@@ -145,7 +148,7 @@ let createModal (container: Container) (state: MenuV2.State) =
 
         createCurrentMode container container.TextMap.modes.controllerSelect
 
-        yield! createControllerSelect container state.Value
+        yield! createControllerSelect container state
       |]
       |> ValueSome
 
@@ -165,7 +168,10 @@ let createModal (container: Container) (state: MenuV2.State) =
         |]
 
       | GameResult.InputName (state, _) ->
-        ValueSome <| createInputUsernameModal container state
+        ValueSome <| [|
+          yield! createBlur ()
+          yield! createInputUsernameModal container state
+        |]
 
       | _ -> ValueNone
 

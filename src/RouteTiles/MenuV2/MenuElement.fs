@@ -133,27 +133,30 @@ let private createBlur zo1 zo2 =
 let private createBlurDefault () = createBlur ZOrder.Menu.blur ZOrder.Menu.darkMask
 let private createBlurOverGameInfo () = createBlur ZOrder.Menu.blurOverGameInfo ZOrder.Menu.darkMaskOverGameInfo
 
-let createPause (container: Container) (state: ListSelector.State<MenuV2.PauseSelect>) =
+let createPause (container: Container) (state: Pause.State) =
   [|
-    createBackground container
+    yield createBackground container
 
-    createCurrentModeMenu container container.TextMap.modes.pause
+    yield createCurrentModeMenu container container.TextMap.modes.pause
 
     yield! createBlurDefault ()
-    createButtons container container.PauseModeButtons (state.cursor, state.current)
-    rightArea().With(createDesc container container.PauseModeDescriptions.[state.cursor])
+    match state with
+    | Pause.Base (_, selector) ->
+      yield createButtons container container.PauseModeButtons (selector.cursor, selector.current)
+      yield rightArea().With(createDesc container container.PauseModeDescriptions.[selector.cursor])
+    | _ -> ()
   |]
 
 let private createControllerSelect =
   controllerSelect {| buttonZOrders with desc = ZOrder.Menu.description; background = ZOrder.Menu.frameBackground |}
 
 
-let private createRankingList (container: Container) (id: int64 voption) (data: SimpleRankingsServer.Data<Ranking.Data>[]) =
+let private createRankingList (container: Container) (config: Config) (gameMode: SoloGame.GameMode) (id: int64 voption) (data: SimpleRankingsServer.Data<Ranking.Data>[]) =
   ItemList.Create(itemMargin = 20.0f)
   |> BoxUI.withChildren (
-    let makeText margin color text =
-      empty ()
-      |> BoxUI.marginLeft (LengthScale.Fixed, margin)
+    let makeText alignX pos color text =
+      FixedWidth.Create (0.0f)
+      |> BoxUI.marginLeft (LengthScale.Fixed, pos)
       |> BoxUI.withChild (
         Text.Create
           ( font = container.Font
@@ -161,22 +164,56 @@ let private createRankingList (container: Container) (id: int64 voption) (data: 
           , color = Nullable(color)
           , zOrder = ZOrder.Menu.buttonText
           )
+        |> BoxUI.alignY Align.Center
+        |> BoxUI.alignX alignX
       )
+      :> Element
 
-    data
-    |> fun a -> if a.Length > 5 then a.[0..4] else a
-    |> Array.mapi (fun i data ->
+    // data
+    // |> fun a -> if a.Length > 5 then a.[0..4] else a
+    [| 0..4 |]
+    |> Array.map (fun i ->
       Sprite.Create
         (
           texture = container.RankingFrame
         , zOrder = ZOrder.Menu.buttonBackground
+        , aspect = Aspect.Fixed
         )
       |> BoxUI.withChildren
         [|
-          makeText 20.0f (Color(255uy, 255uy, 255uy)) (sprintf "%d" i)
+          match data |> Array.tryItem i with
+          | None -> ()
+          | Some data ->
+            let color =
+              if id = ValueSome data.id then Color(255uy, 255uy, 100uy)
+              elif config.guid = data.userId then Color(100uy, 100uy, 255uy)
+              else Color(255uy, 255uy, 255uy)
+            
+            makeText Align.Center 56.0f color (sprintf "%d" i)
+            makeText Align.Center 272.0f color data.values.Name
+
+            match gameMode with
+            | SoloGame.GameMode.ScoreAttack180 -> sprintf "%d pt." data.values.Point
+            | _ -> secondToDisplayTime data.values.Time
+            |> makeText Align.Max 728.0f (Color(0uy, 0uy, 0uy))
+
+            
+            empty ()
+            |> BoxUI.marginRight (LengthScale.Fixed, 20.0f)
+            |> BoxUI.withChild (
+              Text.Create
+                ( font = container.Font
+                , text = data.utcDate.ToLocalTime().ToString("yyyy/MM/dd hh:mm")
+                , color = Nullable(Color(0uy, 0uy, 0uy))
+                , zOrder = ZOrder.Menu.buttonText
+                )
+              |> BoxUI.alignY Align.Center
+              |> BoxUI.alignX Align.Max
+            )
         |]
     )
   )
+  |> BoxUI.alignCenter
 
 
 
@@ -200,9 +237,10 @@ let private createGameResult (container: Container) state =
       rightArea().With(createDesc container container.GameResultNextSelectionDescriptions.[selector.cursor])
     |]
 
-  | GameResult.RankingListViewState(SinglePage.SinglePageState (id, data), _) ->
+  | GameResult.RankingListViewState(SinglePage.SinglePageState (config, gameMode, id, data), _) ->
     [|
-      createRankingList container (ValueSome id) data
+      yield! createBlurOverGameInfo ()
+      createRankingList container config gameMode (ValueSome id) data
     |]
 
   | _ -> Array.empty
@@ -229,7 +267,7 @@ let create (container: Container) (state: MenuV2.State) =
           createControllerSelect container state
       |]
 
-    | MenuV2.State.PauseState(WithContext state, _) ->
+    | MenuV2.State.PauseState(state, _) ->
       createPause container state
 
     | MenuV2.State.GameResultState(state, _) ->

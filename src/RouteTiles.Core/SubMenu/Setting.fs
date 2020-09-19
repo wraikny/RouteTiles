@@ -114,8 +114,9 @@ let inline update msg state = eff {
           with
         | ValueNone -> return Pending state
         | ValueSome inputName ->
+          let newName = if inputName = "" then ValueNone else ValueSome inputName
           return
-            { s with config = { s.config with name = ValueSome inputName }}
+            { s with config = { s.config with name = newName }}
             |> Base
             |> Pending
 

@@ -101,10 +101,6 @@ let createSologameInfoElement (container: Container) =
     |> loopCountUpdater
 
   let timeUpdater second =
-    sprintf "%02i:%02i.%03i"
-      (second / 60.0f |> int)
-      (second % 60.0f |> int)
-      ((second % 1.0f) * 1000.0f |> int)
-    |> timeUpdater
+    secondToDisplayTime second |> timeUpdater
 
   element, updater, timeUpdater

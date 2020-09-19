@@ -12,6 +12,12 @@ open RouteTiles.Core.Effects
 open RouteTiles.App
 open RouteTiles.App.BoxUIElements
 
+let secondToDisplayTime second =
+  sprintf "%02i:%02i.%03i"
+    (second / 60.0f |> int)
+    (second % 60.0f |> int)
+    ((second % 1.0f) * 1000.0f |> int)
+
 let empty() = Empty.Create() :> Element
 
 let private fixedArea(pos, size) =

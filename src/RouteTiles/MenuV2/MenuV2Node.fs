@@ -117,12 +117,11 @@ type internal MenuV2Node(config: Config) =
 
   let container = Container(TextMap.textMapJapanese)
 
-  let mutable gameNode = ValueNone
+  let mutable gameNode: Game voption = ValueNone
 
   do
     base.AddChildNode uiRootMenu
     base.AddChildNode uiRootModal
-
 
     updater.Subscribe (fun state ->
       lastState |> function
@@ -165,9 +164,9 @@ type internal MenuV2Node(config: Config) =
       let info = Engine.Joystick.GetJoystickInfo(index)
       info <> null && info.GUID = guid
 
-  override this.OnAdded() =
-    
+  let mutable dispachableIntervalTime = 0.0f
 
+  override this.OnAdded() =
     let handler = {
       dispatch = updater.Dispatch
       handleGameControlEffect = function
@@ -175,7 +174,9 @@ type internal MenuV2Node(config: Config) =
         | GameControlEffect.Resume -> Engine.Resume()
         | GameControlEffect.Start(gameMode, controller) ->
           gameNode |> function
-          | ValueSome n -> Engine.AddNode(n)
+          | ValueSome n ->
+            Engine.AddNode(n)
+            n.Initialize(gameMode, controller)
           | ValueNone ->
             let uiRootGameInfo = BoxUIRootNode(isAutoTerminated = false)
             let gameInfoElement, gameInfoScoreUpdater, gameInfoTimeUpdater =
@@ -198,11 +199,14 @@ type internal MenuV2Node(config: Config) =
                 MenuV2.Msg.FinishGame(model, t)
                 |> updater.Dispatch
 
+                dispachableIntervalTime <- 1.0f
+
               member __.SelectController() =
                 MenuV2.Msg.SelectController
                 |> updater.Dispatch
             }
-            let n = Game(gameMode, controller, gameHandler)
+            let n = Game(gameHandler)
+            n.Initialize(gameMode, controller)
             n.AddChildNode uiRootGameInfo
             Engine.AddNode(n)
 
@@ -212,11 +216,11 @@ type internal MenuV2Node(config: Config) =
           gameNode |> ValueOption.iter Engine.RemoveNode
 
         | GameControlEffect.Restart ->
-          gameNode |> ValueOption.iter (fun n -> n.Initialize())
+          gameNode |> ValueOption.iter (fun n -> n.Restart())
 
       handleSetController = fun controller ->
         if isAvailableController controller then
-          gameNode.Value.Controller <- controller
+          gameNode.Value.Controller <- ValueSome controller
           true
         else
           false
@@ -233,26 +237,31 @@ type internal MenuV2Node(config: Config) =
     lastState <- updater.Model
 
   override this.OnUpdate() =
-    updater.Model.Value |> function
-    | MenuV2.GameState (_, controller, _) ->
-      if InputControl.pauseInput controller then
-        updater.Dispatch MenuV2.Msg.PauseGame
+    if dispachableIntervalTime <= 0.0f then
+      updater.Model.Value |> function
+      | MenuV2.GameState (_, controller, _) ->
+        if InputControl.pauseInput controller then
+          updater.Dispatch MenuV2.Msg.PauseGame
 
-    | MenuV2.SettingMenuState(SubMenu.Setting.State.InputName _, _) ->
-      InputControl.MenuV2.getCharacterInput ()
-      |> Option.orElseWith getJoysticksInputs
-      |> Option.iter updater.Dispatch
+      | MenuV2.SettingMenuState(SubMenu.Setting.State.InputName _, _)
+      | MenuV2.GameResultState(SubMenu.GameResult.State.InputName _, _) ->
+        InputControl.MenuV2.getCharacterInput ()
+        |> Option.orElseWith getJoysticksInputs
+        |> Option.iter updater.Dispatch
 
-    | MenuV2.ControllerSelectState _ ->
-      let curretConnectedCount = Engine.Joystick.ConnectedJoystickCount
-      if curretConnectedCount <> lastControllerCount then
-        lastControllerCount <- curretConnectedCount
-        let controllers = MenuUtil.getCurrentControllers()
-        updater.Dispatch(MenuV2.UpdateControllers controllers) |> ignore
+      | MenuV2.ControllerSelectState _ ->
+        let curretConnectedCount = Engine.Joystick.ConnectedJoystickCount
+        if curretConnectedCount <> lastControllerCount then
+          lastControllerCount <- curretConnectedCount
+          let controllers = MenuUtil.getCurrentControllers()
+          updater.Dispatch(MenuV2.UpdateControllers controllers) |> ignore
 
-      getInput()
-      |> Option.iter updater.Dispatch
+        getInput()
+        |> Option.iter updater.Dispatch
 
-    | _ ->
-      getInput()
-      |> Option.iter updater.Dispatch
+      | _ ->
+        getInput()
+        |> Option.iter updater.Dispatch
+    
+    else
+      dispachableIntervalTime <- dispachableIntervalTime - Engine.DeltaSecond

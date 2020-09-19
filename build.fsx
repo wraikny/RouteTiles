@@ -73,11 +73,17 @@ Target.create "Build" (fun _ ->
   |> Seq.iter (DotNet.build id)
 )
 
-Target.create "CopyShader" (fun _ ->
-  Shell.copyDir (resourcesf "/Shader") @"src/Shader" (fun _ -> true)
+
+Target.create "Serve" (fun _ ->
+  Shell.cd @"SRServer"
+  dotnet "run" "--project ../lib/simple-rankings-server/src/SimpleRankingsServer"
+  ()
 )
 
+
 Target.create "Resources" (fun _ ->
+  Shell.copyDir (resourcesf "/Shader") @"src/Shader" (fun _ -> true)
+
   dotnet "fsi" "--exec pack.fsx"
 
   let targetProject = "RouteTiles"
@@ -248,8 +254,7 @@ let [<Literal>] password = ""
 
 Target.create "All" ignore
 
-"CopyShader"
-  ==> "Resources"
+"Resources"
   ==> "Publish"
 
 "Build"

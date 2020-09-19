@@ -63,7 +63,7 @@ type TextMap = {
 
 let textMapJapanese = {
   buttons = {
-    play = "プレイ"
+    play = "遊ぶ"
     ranking = "ランキング"
     setting = "設定"
     timeattack2000 = "タイム2000"
@@ -86,7 +86,7 @@ let textMapJapanese = {
   }
 
   descriptions = {
-    play = "ゲームをプレイします"
+    play = "ゲームを遊びます"
     ranking = "オンラインランキングを確認します"
     setting = "色々な設定を行います"
     timeattack2000 = "2000点までの時間を競うモードです"
@@ -99,8 +99,8 @@ let textMapJapanese = {
     continueGame = "ゲームを再開します"
     restartGame = "ゲームを始めからやりなおします"
     quitGame = "ゲームをやめてタイトルに戻ります"
-    changeUsername = "ユーザ名を変更します"
-    namePlaceholder = "ユーザ名を入力"
+    changeUsername = "ユーザ名を設定します"
+    namePlaceholder = "username"
     waitingResponse = "しばらくお待ち下さい..."
     sendToServer = "オンラインランキングに結果を送信しますか？"
   }
