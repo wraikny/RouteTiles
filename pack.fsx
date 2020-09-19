@@ -9,14 +9,14 @@ open Altseed2
 open RouteTiles.App
 
 let getProperties (x: 'a) =
-  typeof<'a>.GetProperties(BindingFlags.Public ||| BindingFlags.Instance)
+  typeof<'a>.GetProperties(BindingFlags.Public ||| BindingFlags.NonPublic ||| BindingFlags.Instance)
   |> Array.map(fun p -> p.GetValue(x, null))
 
 let getStringPropertyCharacters (x: 'a) =
   [|for v in getProperties x do
       match v with
       | :? string as v -> yield! v
-      | _ -> ()
+      | _ -> eprintfn "%O is not string" v
   |]
 
 let primitiveCharacters = [|
