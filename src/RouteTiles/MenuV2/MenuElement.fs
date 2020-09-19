@@ -258,11 +258,11 @@ let createControllerSelect (container: Container) (state: ListSelector.State<Con
   |]
 
 
-let private createBlur () =
+let private createBlur zo1 zo2 =
   [|
-    GaussianBlur.Create(intensity = 5.0f, zOrder = ZOrder.Menu.blur) :> Element
+    GaussianBlur.Create(intensity = 5.0f, zOrder = zo1) :> Element
     Rectangle.Create
-      ( zOrder = ZOrder.Menu.darkMask
+      ( zOrder = zo2
       , color = Consts.Menu.blurDarkColor
       )
     :> Element
@@ -271,7 +271,7 @@ let private createBlur () =
 let createPause (container: Container) (state: ListSelector.State<MenuV2.PauseSelect>) =
   [|
     createBackground container
-    yield! createBlur()
+    yield! createBlur ZOrder.Menu.blur ZOrder.Menu.darkMask
     createButtons container container.PauseModeButtons (state.cursor, state.current)
     rightArea().With(createDesc container container.PauseModeDescriptions.[state.cursor])
   |]
@@ -300,7 +300,7 @@ let create (container: Container) (state: MenuV2.State) =
     | MenuV2.State.ControllerSelectState (WithContext state, _) ->
       [|
         createBackground container
-        yield! createBlur()
+        yield! createBlur  ZOrder.Menu.blurOverGameInfo ZOrder.Menu.darkMaskOverGameInfo
         yield!
           createControllerSelect container state.Value
       |]

@@ -218,16 +218,6 @@ module internal ZOrder =
     let tiles = offset 2
     let particles = offset 3
 
-  module GameInfo =
-    let offset = (|||) (20 <<< 16)
-    let text = offset 0
-
-  module Pause =
-    let offset = (|||) (50 <<< 16)
-    let background = offset 0
-    let elementBackground = offset 1
-    let text = offset 100
-
   module Menu =
     let offset = (|||) (100 <<< 16)
     let background = offset 0
@@ -235,6 +225,13 @@ module internal ZOrder =
 
     let blur = offset 2
     let darkMask = offset 3
+
+    let gameInfoFrame = offset 6
+    let gameInfoText = offset 7
+
+    let blurOverGameInfo = offset 8
+    let darkMaskOverGameInfo = offset 9
+
 
     let frameBackground = offset 10
 
@@ -244,8 +241,6 @@ module internal ZOrder =
     let description = offset 30
     let title = offset 100
 
-    let gameInfoFrame = offset 200
-    let gameInfoText = offset 210
 
     let footer = offset 10
     let iconBackground = offset 20
