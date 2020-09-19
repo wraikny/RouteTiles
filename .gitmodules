@@ -7,3 +7,6 @@
 [submodule "lib/Affogato"]
 	path = lib/Affogato
 	url = https://github.com/wraikny/Affogato.git
+[submodule "lib/simple-rankings-server"]
+	path = lib/simple-rankings-server
+	url = https://github.com/wraikny/simple-rankings-server.git
