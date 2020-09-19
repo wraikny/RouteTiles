@@ -14,7 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Utils.fs" />
-    <Compile Include="SimpleRankingsServer.fs" />
+    <Compile Include="../../lib/simple-rankings-server/sample/FSharp/SimpleRankingsServer.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="Types/Ranking.fs" />
     <Compile Include="Types/Common.fs" />
