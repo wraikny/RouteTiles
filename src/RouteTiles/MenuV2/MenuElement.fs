@@ -194,7 +194,7 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
               elif config.guid = data.userId then Color(100uy, 100uy, 255uy)
               else Color(255uy, 255uy, 255uy)
             
-            let elem1, textElem1 = makeText Align.Center 56.0f color (sprintf "%d" i)
+            let elem1, textElem1 = makeText Align.Center 56.0f color (sprintf "%d" <| i + 1)
             elem1
             
             let elem2 ,textElem2 = makeText Align.Center 272.0f color data.values.Name
