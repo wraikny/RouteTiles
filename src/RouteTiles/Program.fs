@@ -60,7 +60,7 @@ let private main _ =
 
     Engine.TerminateEx()
   with e ->
-    printfn "%A: %s" (e.GetType()) e.Message
+    eprintfn "%A: %s" (e.GetType()) e.Message
 #endif
 
   0 // return an integer exit code
