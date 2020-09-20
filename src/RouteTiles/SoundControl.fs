@@ -9,7 +9,7 @@ type BGM = {
   length: float32
 }
 
-module BGM =
+module internal BGM =
   let sikoumeikyu =
     {
       name = "思考迷宮・虚"
@@ -42,18 +42,27 @@ module BGM =
       length = 150.0f
     }
 
-module SE =
-  let cursorMove = ()
-  let enter = ()
-  let cancel = ()
 
-  // let bgms =
-  //   [|
-  //     sikoumeikyu
-  //     rasenkouro
-  //     hodoku
-  //     sikoumeikyumaborosi
-  //   |]
+[<RequireQualifiedAccess>]
+type SEKind =
+  | CursorMove
+  | Enter
+  | Cancel
+  | Invalid
+  | InputChar
+  | DeleteChar
+  | GameMoveCursor
+  | GameMoveTiles
+  | GameVanishTiles
+
+module internal SE =
+  let [<Literal>] cursorMove = @"SE/select_001_6.wav"
+  let [<Literal>] enter = @"SE/common_001_1.wav"
+  let [<Literal>] cancel = @"SE/select_001_1.wav"
+  let [<Literal>] gameMoveTiles = @"SE/button63.wav"
+  
+
+
 
 [<RequireQualifiedAccess>]
 type SoundControlState =
@@ -64,7 +73,7 @@ open RouteTiles.Core.Utils
 open System.Collections.Generic
 
 [<Sealed>]
-type internal SoundControl(bgmVolume, seVolume) =
+type SoundControl(bgmVolume, seVolume) =
   inherit Node()
 
   let fadeSecond = Consts.ViewCommon.BGMFadeSecond
@@ -87,6 +96,17 @@ type internal SoundControl(bgmVolume, seVolume) =
     s.IsLoopingMode <- true
 
     BGM.sikoumeikyumaborosi, s
+
+  let seMap =
+    [|
+      SEKind.CursorMove, SE.cursorMove
+      SEKind.Enter, SE.enter
+      SEKind.Cancel, SE.cancel
+      SEKind.GameMoveTiles, SE.gameMoveTiles
+      // SEKind.Invalid, SE.invalid
+    |]
+    |> Array.map(fun (k, path) -> (k, Sound.LoadStrict(path, true)))
+    |> Map.ofSeq
 
   let mutable playingBGM = ValueNone
   let mutable fadingInBGM = ValueNone
@@ -124,9 +144,13 @@ type internal SoundControl(bgmVolume, seVolume) =
       Engine.Sound.SetVolume(id, bgmVolume)
     )
 
-  member __.PlaySE(se: Sound) =
-    let id = Engine.Sound.Play se
-    Engine.Sound.SetVolume (id, seVolume)
+  member __.PlaySE(kind: SEKind) =
+    seMap
+    |> Map.tryFind kind
+    |> Option.iter (fun se ->
+      let id = Engine.Sound.Play se
+      Engine.Sound.SetVolume (id, seVolume)
+    )
 
   member this.SetState(state) =
     state |> function

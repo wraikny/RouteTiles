@@ -82,6 +82,7 @@ type MenuV2Handler = {
   dispatch: MenuV2.Msg -> unit
   handleGameControlEffect: GameControlEffect -> unit
   handleSetController: Controller -> bool
+  soundControl: SoundControl
 } with
   static member Handle(x) = x
 
@@ -89,7 +90,17 @@ type MenuV2Handler = {
 
   static member Handle(e: SoundEffect, k) =
     Utils.DebugLogn (sprintf "SoundEffect: %A" e)
-    k ()
+    Eff.capture(fun h ->
+      e |> function
+        | SoundEffect.Select -> SEKind.Enter
+        | SoundEffect.Move -> SEKind.CursorMove
+        | SoundEffect.Cancel -> SEKind.Cancel
+        | SoundEffect.Invalid -> SEKind.Invalid
+        | SoundEffect.InputChar -> SEKind.InputChar
+        | SoundEffect.DeleteChar -> SEKind.Invalid
+      |> h.soundControl.PlaySE
+      k ()
+    )
 
   static member Handle(e: GameControlEffect, k) =
     Utils.DebugLogn (sprintf "GameControlEffect: %A" e)
@@ -219,6 +230,8 @@ type internal MenuV2Node(config: Config) =
   override this.OnAdded() =
     let handler = {
       dispatch = updater.Dispatch
+      soundControl = soundControl
+
       handleGameControlEffect = function
         | GameControlEffect.Pause -> Engine.Pause(this)
         | GameControlEffect.Resume -> Engine.Resume()
@@ -259,7 +272,7 @@ type internal MenuV2Node(config: Config) =
                 MenuV2.Msg.SelectController
                 |> updater.Dispatch
             }
-            let n = Game(gameHandler)
+            let n = Game(gameHandler, soundControl)
             n.Initialize(gameMode, controller)
             n.AddChildNode uiRootGameInfo
             Engine.AddNode(n)

@@ -35,7 +35,7 @@ type internal IGameHandler =
   abstract FinishGame: SoloGame.Model * time:float32 -> unit
   abstract SelectController: unit -> unit
 
-type internal Game(gameInfoViewer: IGameHandler) =
+type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
   inherit Node()
 
   let mutable gameMode = ValueNone
@@ -116,11 +116,17 @@ type internal Game(gameInfoViewer: IGameHandler) =
     let invokeInput msg = seq {
       match msg with
       | Some(msg) ->
+        match msg with
+        | SoloGame.Msg.Board(Board.Msg.Slide _) ->
+          soundControl.PlaySE(SEKind.GameMoveTiles)
+        | _ -> ()
+
         updater.Dispatch(msg)
         let m = updater.Model.Value
 
         yield! Coroutine.sleep Consts.GameCommon.inputInterval
 
+        // todo: SoundEffect
         if not m.board.routesAndLoops.IsEmpty then
           yield! Coroutine.sleep Consts.Board.tilesVanishInterval
           updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore

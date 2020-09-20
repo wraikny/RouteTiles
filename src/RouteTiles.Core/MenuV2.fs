@@ -180,7 +180,10 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
             ListSelector.State<_>.Init(0, SoloGame.GameMode.items)
             |> WithContext
             |> stateEnter with
-          | _, ValueNone -> return state
+          | _, ValueNone ->
+            do! SoundEffect.Cancel
+            return state
+          
           | gameModeState, ValueSome gameMode ->
             let! controllers = CurrentControllers
             match!
@@ -188,7 +191,10 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
               |> ControllerSelectToPlay
               |> WithContext
               |> stateEnter with
-            | _, ValueNone -> return gameModeState
+            | _, ValueNone ->
+              do! SoundEffect.Cancel
+              return gameModeState
+
             | _, ValueSome controller ->
               do! GameControlEffect.Start(gameMode |> SoloGame.GameMode.into, controller)
               return GameState (config, controller, gameMode)
@@ -213,7 +219,10 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
           match!
             Setting.State.Init config
             |> stateEnter with
-          | ValueNone -> return state
+          | ValueNone ->
+            do! SoundEffect.Cancel
+            return state
+
           | ValueSome c ->
             if c <> config then
               do! SaveConfig(c)

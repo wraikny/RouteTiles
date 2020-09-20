@@ -62,5 +62,6 @@ let inline update msg state = eff {
     return state.current |> ValueSome |> Completed
 
   | Cancel ->
+    do! SoundEffect.Cancel
     return Completed ValueNone
 }

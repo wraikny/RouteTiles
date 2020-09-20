@@ -93,6 +93,7 @@ let inline update msg state = eff {
 
   // Cancelallation
   | Base _, Msg.Cancel ->
+    do! SoundEffect.Cancel
     return Completed ValueNone
 
   // Mode Change

@@ -60,5 +60,6 @@ let inline update msg state = eff {
     return state.selection.[state.cursor] |> ValueSome |> Completed
 
   | Msg.Cancel ->
+    do! SoundEffect.Cancel
     return ValueNone |> Completed
 }

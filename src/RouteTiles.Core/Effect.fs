@@ -32,6 +32,7 @@ type CurrentControllers = CurrentControllers with
 [<Struct; RequireQualifiedAccess>]
 type SoundEffect =
   | Select
+  | Cancel
   | Move
   | Invalid
   | InputChar
