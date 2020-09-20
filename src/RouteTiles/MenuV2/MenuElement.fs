@@ -44,7 +44,7 @@ let private createButtons (container: Container) (selections: string[]) param =
     |> BoxUI.marginBottom (LengthScale.Fixed, 80.0f)
     |> BoxUI.marginLeft (LengthScale.Fixed, 40.0f)
     |> BoxUI.withChild(
-      buttons buttonZOrders container (32.0f, true) selections param
+      buttons buttonZOrders (32.0f, true, false) container selections param
       |> BoxUI.alignX Align.Min
       |> BoxUI.alignY Align.Max
     )
@@ -221,7 +221,7 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
             )
 
             if id = ValueSome data.id then
-              let startTime = Engine.Time
+              
               Sprite.Create
                 (
                   texture = container.RankingFrame
@@ -229,18 +229,23 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
                 , zOrder = ZOrder.Menu.buttonBackground
                 , aspect = Aspect.Fixed
                 )
-              |> BoxUI.onUpdate (fun node ->
-                let dTime = Engine.Time - startTime
-                let sinTime = cos (dTime * 2.0f * MathF.PI / Consts.Menu.selectedTimePeriod)
+              |> fun e ->
+                BoxUISystem.Post (fun () ->
+                  let startTime = Engine.Time
+                  e.add_OnUpdateEvent(fun node ->
+                    let dTime = Engine.Time - startTime
+                    let sinTime = cos (dTime * 2.0f * MathF.PI / Consts.Menu.selectedTimePeriod)
 
-                let a = if sinTime > 0.0f then 1.0f else 0.0f
-                node.Color <- Color (255, 255, 255, a * 255.0f |> int)
+                    let a = if sinTime > 0.0f then 1.0f else 0.0f
+                    node.Color <- Color (255, 255, 255, a * 255.0f |> int)
 
-                let colB = 255.0f * (1.0f - a) |> int
+                    let colB = 255.0f * (1.0f - a) |> int
 
-                textElem1.Node.Color <- Color (255, 255, colB, 255)
-                textElem2.Node.Color <- Color (255, 255, colB, 255)
-              )
+                    textElem1.Node.Color <- Color (255, 255, colB, 255)
+                    textElem2.Node.Color <- Color (255, 255, colB, 255)
+                  )
+                )
+                e
         |]
     )
   )
