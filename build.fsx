@@ -112,6 +112,9 @@ Target.create "Resources" (fun _ ->
   // for Backup
   !!(resourcesf "/**")
   |> Zip.zip resourcesDirectory (resourcesf ".zip")
+
+  !!("Fonts/**")
+  |> Zip.zip "Fonts" ("Fonts.zip")
 )
 
 
