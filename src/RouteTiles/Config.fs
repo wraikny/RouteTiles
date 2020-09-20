@@ -26,19 +26,21 @@ let private writeQueue = ConcurrentQueue<Config>()
 
 let save = writeQueue.Enqueue
 
+let private lockObj = obj()
+let mutable private config = ValueNone
+let tryGet() = lock lockObj (fun () -> config)
+
 let update = async {
-  let ctx = SynchronizationContext.Current
+  // let ctx = SynchronizationContext.Current
+  do! Async.SwitchToThreadPool()
   while true do
     match writeQueue.TryDequeue() with
     | true, conf ->
-      do! Async.SwitchToThreadPool()
       write conf
-      do! Async.SwitchToContext ctx
+      lock lockObj (fun () -> config <- ValueSome conf)
+      // do! Async.SwitchToContext ctx
     | _ -> do! Async.Sleep 100
 }
-
-let mutable private config = ValueNone
-let tryGetConfig() = config
 
 let initialize = async {
   do! Async.SwitchToThreadPool()

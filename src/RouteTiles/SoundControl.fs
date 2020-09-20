@@ -54,13 +54,15 @@ type SEKind =
   | GameMoveCursor
   | GameMoveTiles
   | GameVanishTiles
+  | Pause
 
 module internal SE =
   let [<Literal>] cursorMove = @"SE/select_001_6.wav"
   let [<Literal>] enter = @"SE/common_001_1.wav"
   let [<Literal>] cancel = @"SE/select_001_1.wav"
+  let [<Literal>] gameMoveCursor = @"SE/button45.wav"
   let [<Literal>] gameMoveTiles = @"SE/button63.wav"
-  
+  let [<Literal>] pause = @"SE/button16.wav"
 
 
 
@@ -102,7 +104,9 @@ type SoundControl(bgmVolume, seVolume) =
       SEKind.CursorMove, SE.cursorMove
       SEKind.Enter, SE.enter
       SEKind.Cancel, SE.cancel
+      SEKind.GameMoveCursor, SE.gameMoveCursor
       SEKind.GameMoveTiles, SE.gameMoveTiles
+      SEKind.Pause, SE.pause
       // SEKind.Invalid, SE.invalid
     |]
     |> Array.map(fun (k, path) -> (k, Sound.LoadStrict(path, true)))
@@ -112,8 +116,8 @@ type SoundControl(bgmVolume, seVolume) =
   let mutable fadingInBGM = ValueNone
   // let playingSEs = ResizeArray<int>()
 
-  let mutable bgmVolume = bgmVolume
-  let mutable seVolume = seVolume
+  let mutable bgmVolume = bgmVolume * Consts.Sound.VolumeAmp
+  let mutable seVolume = seVolume * Consts.Sound.VolumeAmp
 
   let mutable coroutine: IEnumerator<unit> = null
 
@@ -132,17 +136,18 @@ type SoundControl(bgmVolume, seVolume) =
 
     res
 
-  // member __.CurrentBGM =
-  //   playingBGM
-  //   |> ValueOption.map fst
-
-  member __.SetVolume(bgmVolume', seVolume') =
-    bgmVolume <- bgmVolume'
-    seVolume <- seVolume'
-
+  member __.SetBGMVolume(v) =
+    bgmVolume <- v * Consts.Sound.VolumeAmp
     playingBGM |> ValueOption.iter(fun (_, id) ->
       Engine.Sound.SetVolume(id, bgmVolume)
     )
+
+  // member __.Volume
+  //   with get() = (bgmVolume, seVolume)
+  //   and set(bgmVolume', seVolume') =
+  //     bgmVolume <- bgmVolume'
+  //     seVolume <- seVolume'
+
 
   member __.PlaySE(kind: SEKind) =
     seMap

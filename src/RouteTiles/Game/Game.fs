@@ -119,6 +119,8 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
         match msg with
         | SoloGame.Msg.Board(Board.Msg.Slide _) ->
           soundControl.PlaySE(SEKind.GameMoveTiles)
+        | SoloGame.Msg.Board(Board.Msg.MoveCursor _) ->
+          soundControl.PlaySE(SEKind.GameMoveCursor)
         | _ -> ()
 
         updater.Dispatch(msg)

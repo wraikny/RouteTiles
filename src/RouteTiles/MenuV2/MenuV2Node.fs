@@ -171,9 +171,7 @@ type internal MenuV2Node(config: Config) =
 
   let container = Container(TextMap.textMapJapanese)
 
-  let volumeAmp = 0.1f
-
-  let soundControl = SoundControl(0.5f * volumeAmp, 0.5f * volumeAmp)
+  let soundControl = SoundControl(0.5f, 0.5f)
 
   let mutable gameNode: Game voption = ValueNone
 
@@ -233,8 +231,17 @@ type internal MenuV2Node(config: Config) =
       soundControl = soundControl
 
       handleGameControlEffect = function
-        | GameControlEffect.Pause -> Engine.Pause(this)
-        | GameControlEffect.Resume -> Engine.Resume()
+        | GameControlEffect.Pause ->
+          Engine.Pause(this)
+          let config = Config.tryGet().Value
+          soundControl.SetBGMVolume(config.bgmVolume * 0.25f)
+          soundControl.PlaySE(SEKind.Pause)
+
+        | GameControlEffect.Resume ->
+          Engine.Resume()
+          let config = Config.tryGet().Value
+          soundControl.SetBGMVolume(config.bgmVolume)
+
         | GameControlEffect.Start(gameMode, controller) ->
           soundControl.SetState(SoundControlState.Game)
 

@@ -27,4 +27,6 @@
   - select_001_1
   - select_001_6
 - [フリー効果音素材 くらげ工匠](http://www.kurage-kosho.info)
+  - button16
+  - button45
   - button63

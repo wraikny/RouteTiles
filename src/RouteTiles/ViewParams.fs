@@ -18,7 +18,9 @@ module internal Consts =
     let clearColor = Color(50, 50, 50, 255)
 
     let [<Literal>] BGMFadeSecond = 3.0f
-    // let font = @"mplus-1c-regular.ttf"
+  
+  module Sound =
+    let [<Literal>] VolumeAmp = 0.1f
 
   module PostEffect =
     let [<Literal>] wavepath = @"Shader/wave.hlsl"
