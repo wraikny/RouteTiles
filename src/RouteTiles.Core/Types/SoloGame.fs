@@ -26,8 +26,8 @@ module GameMode =
 
   let into = function
 #if DEBUG
-    | TimeAttack2000 -> Mode.TimeAttack 20
-    | ScoreAttack180 -> Mode.ScoreAttack 10
+    | TimeAttack2000 -> Mode.TimeAttack 2000
+    | ScoreAttack180 -> Mode.ScoreAttack 180
 #else
     | TimeAttack2000 -> Mode.TimeAttack 2000
     | ScoreAttack180 -> Mode.ScoreAttack 180
