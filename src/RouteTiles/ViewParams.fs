@@ -17,7 +17,8 @@ module internal Consts =
     let windowSize = Vector2I(1280, 720)
     let clearColor = Color(50, 50, 50, 255)
 
-    let font = @"mplus-1c-regular.ttf"
+    let [<Literal>] BGMFadeSecond = 3.0f
+    // let font = @"mplus-1c-regular.ttf"
 
   module PostEffect =
     let [<Literal>] wavepath = @"Shader/wave.hlsl"

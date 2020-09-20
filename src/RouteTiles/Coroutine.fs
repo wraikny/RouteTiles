@@ -21,6 +21,26 @@ module internal Coroutine =
   let loop coroutine =
     seq { while true do yield! coroutine }
 
+  open System.Collections.Generic
+  open System.Linq
+
+  let inline toParallel (coroutines : seq<seq<unit>>) =
+    seq {
+      let coroutines =
+        coroutines
+        |> Seq.map(fun c -> c.GetEnumerator())
+        |> Seq.toArray
+
+      let mutable isContinue = true
+
+      while isContinue do
+        isContinue <- false
+        for c in coroutines do
+          if c.MoveNext() && not isContinue then
+            isContinue <- true
+        yield ()
+    }
+
 [<Sealed>]
 type internal CoroutineNode(?capacity) =
   inherit Node()

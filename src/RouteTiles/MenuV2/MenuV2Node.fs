@@ -160,11 +160,18 @@ type internal MenuV2Node(config: Config) =
 
   let container = Container(TextMap.textMapJapanese)
 
+  let volumeAmp = 0.1f
+
+  let soundControl = SoundControl(0.5f * volumeAmp, 0.5f * volumeAmp)
+
   let mutable gameNode: Game voption = ValueNone
 
   do
     base.AddChildNode uiRootMenu
     base.AddChildNode uiRootModal
+    base.AddChildNode soundControl
+
+    soundControl.SetState(SoundControlState.Menu)
 
     updater.Subscribe (fun state ->
       lastState |> function
@@ -216,6 +223,8 @@ type internal MenuV2Node(config: Config) =
         | GameControlEffect.Pause -> Engine.Pause(this)
         | GameControlEffect.Resume -> Engine.Resume()
         | GameControlEffect.Start(gameMode, controller) ->
+          soundControl.SetState(SoundControlState.Game)
+
           gameNode |> function
           | ValueSome n ->
             Engine.AddNode(n)
@@ -239,6 +248,8 @@ type internal MenuV2Node(config: Config) =
                 )
 
               member __.FinishGame(model, t) =
+                soundControl.SetState(SoundControlState.Menu)
+
                 MenuV2.Msg.FinishGame(model, t)
                 |> updater.Dispatch
 

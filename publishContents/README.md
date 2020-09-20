@@ -17,3 +17,4 @@
 ## Resources
 - [マキナス Square 4 (c) もじワク研究](https://moji-waku.com/makinas/)
 - [M+ FONT](https://mplus-fonts.osdn.jp/)
+- [かゆいところに手が届くBGM集 vol.3 (c) みろく](https://booth.pm/ja/items/2037124)
