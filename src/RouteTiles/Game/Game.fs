@@ -77,6 +77,7 @@ type internal Game(gameInfoViewer: IGameHandler) =
           // 終了
           coroutineNode.Add(seq {
             inputEnabled <- false
+            yield! Coroutine.sleep Consts.GameCommon.inputInterval
             yield! Coroutine.sleep Consts.Board.tilesVanishInterval
             gameInfoViewer.FinishGame(model, time)
           })
@@ -95,6 +96,7 @@ type internal Game(gameInfoViewer: IGameHandler) =
           if time < 0.0f then
             // 終了
             inputEnabled <- false
+            yield! Coroutine.sleep Consts.GameCommon.inputInterval
             yield! Coroutine.sleep Consts.Board.tilesVanishInterval
             gameInfoViewer.FinishGame(lastModel.Value, 0.0f)
             gameInfoViewer.SetTime(0.0f)
