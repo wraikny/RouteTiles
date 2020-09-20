@@ -25,6 +25,14 @@ type internal Container (textMap: TextMap.TextMap) =
 
   // member val Font = Font.LoadDynamicFontStrict(@"mplus-1c-bold.ttf", 32)
 
+  member val RankingGameMode: Map<SoloGame.GameMode, string> =
+    [|
+      SoloGame.GameMode.TimeAttack2000, textMap.buttons.timeattack2000
+      SoloGame.GameMode.ScoreAttack180, textMap.buttons.scoreattack180
+    |]
+    |> Array.map(fun (m, s) -> m, sprintf "%s%s" textMap.modes.rankingOf s)
+    |> Map.ofArray
+
   member val MainMenuButtons: string[] =
     MenuV2.Mode.items |> Array.map (function
       | MenuV2.Mode.GamePlay -> textMap.buttons.play

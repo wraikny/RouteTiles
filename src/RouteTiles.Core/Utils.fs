@@ -84,6 +84,20 @@ module Seq =
         | ValueNone -> ()
     }
 
+module Async =
+  let CatchResult a = async {
+    match! Async.Catch a with
+    | Choice1Of2 x -> return Ok x
+    | Choice2Of2 e -> return Error e
+  }
+
+module AsyncResult =
+  let bind f (a: Async<Result<'a, 'e>>) = async {
+    match! a with
+    | Ok(x) -> return! f x
+    | Error(e) -> return Error(e)
+  }
+
 [<Measure>] type sec
 [<Measure>] type millisec
 

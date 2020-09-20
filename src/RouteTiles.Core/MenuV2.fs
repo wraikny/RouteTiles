@@ -73,6 +73,9 @@ and State =
   | GameResultState of GameResult.State * (GameResult.GameNextSelection -> State)
   | PauseState of Pause.State * (Pause.PauseResult -> State)
   | SettingMenuState of Setting.State * (Config voption -> State)
+  | RankingState of Ranking.Rankings.State * (unit -> State)
+  | WaitingResponseState of Ranking.Rankings.Waiting * (Ranking.Rankings.Response -> State)
+  | ErrorViewState of SinglePage.State<exn> * (unit -> State)
 with
   member x.IsStringInputMode = x |> function
     | SettingMenuState (s, _) -> s.IsStringInputMode
@@ -86,6 +89,9 @@ with
   static member StateEnter(s, k) = GameResultState (s, k)
   static member StateEnter(s, k) = PauseState (s, k)
   static member StateEnter(s, k) = SettingMenuState (s, k)
+  static member StateEnter(s, k) = RankingState (s, k)
+  static member StateEnter(s, k) = WaitingResponseState (s, k)
+  static member StateEnter(s, k) = ErrorViewState (s, k)
 
 let equal a b = (a, b) |> function
   | MainMenuState(a1, a2), MainMenuState(b1, b2) -> (a1, a2) = (b1, b2)
@@ -95,6 +101,9 @@ let equal a b = (a, b) |> function
   | GameResultState(a, _), GameResultState(b, _) -> GameResult.equal a b
   | PauseState(a, _), PauseState(b, _) -> Pause.equal a b
   | SettingMenuState(a, _), SettingMenuState(b, _) -> Setting.equal a b
+  | RankingState(a, _), RankingState(b, _) -> a = b
+  | WaitingResponseState(a, _), WaitingResponseState(b, _) -> a = b
+  | ErrorViewState(a, _), ErrorViewState(b, _) -> a = b
   | _ -> false
 
 
@@ -109,7 +118,8 @@ type Msg =
   | FinishGame of SoloGame.Model * time:float32
   | UpdateControllers of Controller[]
   | SelectController
-  | ReceiveRanking of RankingResponse
+  | ReceiveRankingGameResult of Ranking.GameResult.Response
+  | ReceiveRankingRankings of Ranking.Rankings.Response
 
 
 module Msg =
@@ -133,7 +143,7 @@ module Msg =
     | Decr -> ValueSome GameResult.Msg.Decr
     | Enter -> ValueSome GameResult.Msg.Enter
     | Cancel -> ValueSome GameResult.Msg.Cancel
-    | ReceiveRanking data -> ValueSome (GameResult.Msg.ReceiveRanking data)
+    | ReceiveRankingGameResult data -> ValueSome (GameResult.Msg.ReceiveRanking data)
     | MsgOfInput m -> ValueSome (GameResult.Msg.MsgOfInput m)
     | _ -> ValueNone
 
@@ -143,6 +153,10 @@ module Msg =
     | Enter -> ValueSome Pause.Msg.Enter
     | Cancel -> ValueSome Pause.Msg.Cancel
     | UpdateControllers x -> ValueSome (Pause.Msg.UpdateControllers x)
+    | _ -> ValueNone
+
+  let toSinglePageMsg = function
+    | Enter | Cancel -> ValueSome SinglePage.Msg.Enter
     | _ -> ValueNone
 
 
@@ -180,7 +194,20 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
               return GameState (config, controller, gameMode)
 
         | ValueSome Mode.Ranking ->
-          return Utils.Todo(state)
+          do! GameRankingEffect.SelectAll
+
+          match! Ranking.Rankings.Waiting |> stateEnter with
+          | Error e ->
+            do! SinglePage.SinglePageState e |> stateEnter
+            return state
+          | Ok dataMap ->
+            let gameMode = SoloGame.GameMode.TimeAttack2000
+            do! Ranking.Rankings.init (config, gameMode, dataMap.[gameMode]) |> stateEnter
+            
+            let gameMode = SoloGame.GameMode.ScoreAttack180
+            do! Ranking.Rankings.init (config, gameMode, dataMap.[gameMode]) |> stateEnter
+
+            return state
 
         | ValueSome Mode.Setting ->
           match!
@@ -325,6 +352,23 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
     match Msg.toSettingMsg msg with
     | ValueNone -> return state
     | ValueSome msg -> return! stateMapEff (Setting.update msg) (s, k)
+
+  | _, RankingState (s, k) ->
+    match Msg.toSinglePageMsg msg with
+    | ValueSome msg ->
+      return stateMap (SinglePage.update msg) (s, k)
+    | _ -> return state
+
+  | _, ErrorViewState(s, k) ->
+    match Msg.toSinglePageMsg msg with
+    | ValueSome msg ->
+      return stateMap (SinglePage.update msg) (s, k)
+    | _ -> return state
+
+  | _, WaitingResponseState(_s, k) ->
+    match msg with
+    | ReceiveRankingRankings data -> return k data
+    | _ -> return state
 }
 
 #if DEBUG

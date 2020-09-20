@@ -29,6 +29,7 @@
     <Compile Include="SubMenu/StringInput.fs" />
     <Compile Include="SubMenu/Pause.fs" />
     <Compile Include="SubMenu/Setting.fs" />
+    <Compile Include="SubMenu/Ranking.fs" />
     <Compile Include="SubMenu/GameResult.fs" />
     <Compile Include="MenuV2.fs" />
   </ItemGroup>

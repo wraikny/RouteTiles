@@ -273,9 +273,10 @@ let private createGameResult (container: Container) state =
       rightArea().With(createDesc container container.GameResultNextSelectionDescriptions.[selector.cursor])
     |]
 
-  | GameResult.RankingListViewState(SinglePage.SinglePageState (config, gameMode, id, data), _) ->
+  | GameResult.RankingListViewState(SinglePage.SinglePageState (config, gameMode, Ok (id, data)), _) ->
     [|
       yield! createBlurOverGameInfo ()
+      createCurrentMode ZOrder.Menu.currentModeOverGameInfo container container.RankingGameMode.[gameMode]
       createRankingList container config gameMode (ValueSome id) data
     |]
 
@@ -308,6 +309,13 @@ let create (container: Container) (state: MenuV2.State) =
 
     | MenuV2.State.GameResultState(state, _) ->
       createGameResult container state
+
+    | MenuV2.State.RankingState(SinglePage.SinglePageState(config, gameMode, data), _) ->
+      [|
+        createBackground container
+        createCurrentMode ZOrder.Menu.currentModeOverGameInfo container container.RankingGameMode.[gameMode]
+        createRankingList container config gameMode ValueNone data
+      |]
 
     | _ -> Array.empty
   )

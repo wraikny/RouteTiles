@@ -45,11 +45,10 @@ with
   static member Effect(_) = Eff.marker<unit>
 
 
-type RankingResponse = Result<int64 * SimpleRankingsServer.Data<Ranking.Data>[], exn>
-
 [<Struct>]
 type GameRankingEffect =
-  GameRankingEffect of System.Guid * SoloGame.GameMode * Ranking.Data
+  | SelectAll
+  | InsertSelect of System.Guid * SoloGame.GameMode * Ranking.Data
 with
   static member Effect(_) = Eff.marker<unit>
 

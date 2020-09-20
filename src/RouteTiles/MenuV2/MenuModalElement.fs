@@ -126,6 +126,12 @@ let createControllerSelect =
 
 let private createCurrentMode = createCurrentMode ZOrder.MenuModal.currentMode
 
+let private createWaitingResponse (container: Container) =
+  [|
+    yield! createBlur ()
+    createTextModal container container.TextMap.descriptions.waitingResponse
+  |]
+
 let createModal (container: Container) (state: MenuV2.State) =
   state |> function
     | MenuV2.State.SettingMenuState (Setting.State.InputName(state, _), _) ->
@@ -152,15 +158,22 @@ let createModal (container: Container) (state: MenuV2.State) =
       |]
       |> ValueSome
 
+    | MenuV2.State.WaitingResponseState _ ->
+      ValueSome <| createWaitingResponse container
+
+    | MenuV2.State.ErrorViewState(SinglePage.SinglePageState(error), _) ->
+      ValueSome [|
+          // createBackground container
+          yield! createBlur ()
+          createTextModal container (error.Message)
+        |]
+
     | MenuV2.State.GameResultState(resultState, _) ->
       resultState |> function
       | GameResult.WaitingResponseState _ ->
-        ValueSome [|
-          yield! createBlur ()
-          createTextModal container container.TextMap.descriptions.waitingResponse
-        |]
+        ValueSome <| createWaitingResponse container
 
-      | GameResult.ErrorViewState (SinglePage.SinglePageState error, _) ->
+      | GameResult.RankingListViewState(SinglePage.SinglePageState (_, _, Error error), _) ->
         ValueSome [|
           // createBackground container
           yield! createBlur ()

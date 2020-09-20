@@ -27,14 +27,20 @@ module internal RankingServer =
       #endif
     )
 
-  let insertSelect guid gameMode (data: RouteTiles.Core.Types.Ranking.Data) =
-    let orderKey, isDescending, table = gameMode |> function
-      | SoloGame.GameMode.TimeAttack2000 -> "Time", false, Server.tableTime2000
-      | SoloGame.GameMode.ScoreAttack180 -> "Point", true, Server.tableScore180
+  let toTable = function
+    | SoloGame.GameMode.TimeAttack2000 -> Server.tableTime2000
+    | SoloGame.GameMode.ScoreAttack180 -> Server.tableScore180
+
+  let select gameMode: Async<_> =
+    let orderKey, isDescending = gameMode |> function
+      | SoloGame.GameMode.TimeAttack2000 -> "Time", false
+      | SoloGame.GameMode.ScoreAttack180 -> "Point", true
+
+    let table = toTable gameMode
 
     async {
-      let! id = client.AsyncInsert(table, guid, data)
-      let! data =
+
+      let! res =
         client.AsyncSelect<RouteTiles.Core.Types.Ranking.Data>
           ( table
           , orderBy = orderKey
@@ -42,8 +48,23 @@ module internal RankingServer =
           , limit = 5
           )
 
+      Utils.DebugLogn (sprintf "select from %s: %A" table res)
+
+      return res
+    }
+
+  let insertSelect guid gameMode (data: RouteTiles.Core.Types.Ranking.Data) =
+    let table = toTable gameMode
+
+    async {
+      let! id = client.AsyncInsert(table, guid, data)
+
+      Utils.DebugLogn (sprintf "insert to %s: %A" table id)
+
+      let! data = select gameMode
+
       return (id, data)
-    } |> Async.Catch
+    }
 
 
 module internal MenuUtil =
@@ -92,14 +113,36 @@ type MenuV2Handler = {
     Config.save config
     k()
 
-  static member Handle(GameRankingEffect (guid, gameMode, data), k) =
+  static member Handle(e: GameRankingEffect, k) =
     Eff.capture(fun h ->
       async {
-        let! res = RankingServer.insertSelect guid gameMode data
-        let res = res |> function
-          | Choice1Of2 x -> Ok x
-          | Choice2Of2 e -> Error e
-        h.dispatch <| MenuV2.Msg.ReceiveRanking res
+        match e with
+        | GameRankingEffect.InsertSelect (guid, gameMode, data) ->
+          let! res = RankingServer.insertSelect guid gameMode data  |> Async.Catch
+          let res = res |> function
+            | Choice1Of2 (id, data) -> Ok (id, data)
+            | Choice2Of2 e -> Error e
+          h.dispatch <| MenuV2.Msg.ReceiveRankingGameResult res
+
+        | GameRankingEffect.SelectAll ->
+          let! res =
+            RankingServer.select SoloGame.GameMode.TimeAttack2000
+            |> Async.CatchResult
+            |> AsyncResult.bind (fun time2000 -> async {
+              let! resScore180 =
+                RankingServer.select SoloGame.GameMode.ScoreAttack180
+                |> Async.CatchResult
+              
+              return
+                resScore180
+                |> Result.map(fun score180 ->
+                  Map.ofArray [|
+                    SoloGame.GameMode.TimeAttack2000, time2000
+                    SoloGame.GameMode.ScoreAttack180, score180
+                  |]
+                )
+            })
+          h.dispatch <| MenuV2.Msg.ReceiveRankingRankings res
       }
       |> Async.StartImmediate
       k ()
@@ -199,7 +242,7 @@ type internal MenuV2Node(config: Config) =
                 MenuV2.Msg.FinishGame(model, t)
                 |> updater.Dispatch
 
-                dispachableIntervalTime <- 1.0f
+                dispachableIntervalTime <- 0.5f
 
               member __.SelectController() =
                 MenuV2.Msg.SelectController

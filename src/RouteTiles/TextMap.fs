@@ -52,6 +52,7 @@ type Modes = {
   backgroundSetting: string
   pause: string
   gameResult: string
+  rankingOf: string
   // waitingResponse: string
 }
 
@@ -59,6 +60,7 @@ type TextMap = {
   buttons: Buttons
   descriptions: Descriptions
   modes: Modes
+  others: string
 }
 
 let textMapJapanese = {
@@ -114,7 +116,10 @@ let textMapJapanese = {
     backgroundSetting = "背景設定"
     pause = "一時停止"
     gameResult = "リザルト"
+    rankingOf = "ランキング - "
     // waitingResponse = "通信待機中..."
     // error = "エラー"
   }
+
+  others = ":/-."
 }
