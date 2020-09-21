@@ -16,7 +16,7 @@ type Mode =
 module Mode =
   let items = [|
     Mode.InputName
-    Mode.Background
+    // Mode.Background
     Mode.Enter
   |]
 

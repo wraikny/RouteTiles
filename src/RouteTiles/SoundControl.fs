@@ -7,6 +7,7 @@ type BGM = {
   author: string
   path: string
   length: float32
+  volumeRate: float32
 }
 
 module internal BGM =
@@ -16,6 +17,7 @@ module internal BGM =
       author = "みろく"
       path = @"BGM/03-sikoumeikyu.ogg"
       length = 106.0f
+      volumeRate = 0.1f
     }
 
   let rasenkouro =
@@ -24,6 +26,7 @@ module internal BGM =
       author = "みろく"
       path = @"BGM/04-rasenkouro.ogg"
       length = 110.0f
+      volumeRate = 0.1f
     }
 
   let hodoku =
@@ -32,6 +35,7 @@ module internal BGM =
       author = "みろく"
       path = @"BGM/07-hodoku.ogg"
       length = 96.0f
+      volumeRate = 0.1f
     }
 
   let sikoumeikyumaborosi =
@@ -40,6 +44,7 @@ module internal BGM =
       author = "みろく"
       path = @"BGM/08-sikoumeikyumaborosi.ogg"
       length = 150.0f
+      volumeRate = 0.1f
     }
 
 
@@ -62,13 +67,13 @@ type SE = {
 }
 
 module internal SE =
-  let cursorMove = { path = @"SE/select_001_6.wav"; volumeRate = 1.0f }
-  let enter = { path = @"SE/common_001_1.wav"; volumeRate = 1.0f }
-  let cancel = { path = @"SE/select_001_1.wav"; volumeRate = 1.0f }
-  let pause = { path = @"SE/button16.wav"; volumeRate = 1.0f }
-  let gameMoveCursor = { path = @"SE/button45.wav"; volumeRate = 1.0f }
-  let gameMoveTiles = { path = @"SE/button63.wav"; volumeRate = 1.0f }
-  let gameVanishTiles = { path = @"SE/tambourine.ogg"; volumeRate = 3.0f }
+  let cursorMove = { path = @"SE/select_001_6.wav"; volumeRate = 0.25f }
+  let enter = { path = @"SE/common_001_1.wav"; volumeRate = 0.25f }
+  let cancel = { path = @"SE/select_001_1.wav"; volumeRate = 0.25f }
+  let pause = { path = @"SE/button16.wav"; volumeRate = 0.25f }
+  let gameMoveCursor = { path = @"SE/button45.wav"; volumeRate = 0.25f }
+  let gameMoveTiles = { path = @"SE/button63.wav"; volumeRate = 0.25f }
+  let gameVanishTiles = { path = @"SE/tambourine.ogg"; volumeRate = 0.75f }
 
 
 
@@ -119,12 +124,12 @@ type SoundControl(bgmVolume, seVolume) =
     |> Array.map(fun (k, se) -> (k, (se.volumeRate, Sound.LoadStrict(se.path, true))))
     |> Map.ofSeq
 
-  let mutable playingBGM = ValueNone
-  let mutable fadingInBGM = ValueNone
+  let mutable playingBGM: (BGM * int) voption = ValueNone
+  let mutable fadingInBGM: (BGM * int) voption = ValueNone
   // let playingSEs = ResizeArray<int>()
 
-  let mutable bgmVolume = bgmVolume * Consts.Sound.VolumeAmp
-  let mutable seVolume = seVolume * Consts.Sound.VolumeAmp
+  let mutable bgmVolume = bgmVolume
+  let mutable seVolume = seVolume
 
   let mutable coroutine: IEnumerator<unit> = null
 
@@ -144,18 +149,11 @@ type SoundControl(bgmVolume, seVolume) =
     res
 
   member __.SetVolume(bgmVol, seVol) =
-    bgmVolume <- bgmVol * Consts.Sound.VolumeAmp
-    seVolume <- seVol * Consts.Sound.VolumeAmp
-    playingBGM |> ValueOption.iter(fun (_, id) ->
-      Engine.Sound.SetVolume(id, bgmVolume)
+    bgmVolume <- bgmVol
+    seVolume <- seVol
+    playingBGM |> ValueOption.iter(fun (bgm, id) ->
+      Engine.Sound.SetVolume(id, bgmVolume * bgm.volumeRate)
     )
-
-  // member __.Volume
-  //   with get() = (bgmVolume, seVolume)
-  //   and set(bgmVolume', seVolume') =
-  //     bgmVolume <- bgmVolume'
-  //     seVolume <- seVolume'
-
 
   member __.PlaySE(kind: SEKind) =
     seMap
@@ -169,7 +167,7 @@ type SoundControl(bgmVolume, seVolume) =
     state |> function
     | SoundControlState.Menu ->
       let nextId = Engine.Sound.Play (snd menuBGMSound)
-      Engine.Sound.SetVolume (nextId, bgmVolume)
+      Engine.Sound.SetVolume (nextId, bgmVolume * (fst menuBGMSound).volumeRate)
       Engine.Sound.FadeIn (nextId, fadeSecond)
       fadingInBGM <- ValueSome (fst menuBGMSound, nextId)
 
@@ -194,7 +192,7 @@ type SoundControl(bgmVolume, seVolume) =
           let (nextBGM, nextBGMSound) = shuffledBGMs.[count]
           let nextId = Engine.Sound.Play nextBGMSound
           fadingInBGM <- ValueSome (nextBGM, nextId)
-          Engine.Sound.SetVolume (nextId, bgmVolume)
+          Engine.Sound.SetVolume (nextId, bgmVolume * nextBGM.volumeRate)
           Engine.Sound.FadeIn (nextId, fadeSecond)
 
           count <- (count + 1) % shuffledBGMs.Length

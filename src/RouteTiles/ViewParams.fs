@@ -18,9 +18,6 @@ module internal Consts =
     let clearColor = Color(50, 50, 50, 255)
 
     let [<Literal>] BGMFadeSecond = 3.0f
-  
-  module Sound =
-    let [<Literal>] VolumeAmp = 0.1f
 
   module PostEffect =
     let [<Literal>] wavepath = @"Shader/wave.hlsl"
