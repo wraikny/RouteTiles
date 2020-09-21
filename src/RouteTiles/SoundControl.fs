@@ -89,7 +89,7 @@ open System.Collections.Generic
 type SoundControl(bgmVolume, seVolume) =
   inherit Node()
 
-  let fadeSecond = Consts.ViewCommon.BGMFadeSecond
+  static let fadeSecond = Consts.ViewCommon.BGMFadeSecond
 
   static let bgmToSound (bgm: BGM) =
     let sound = Sound.LoadStrict(bgm.path, false)
@@ -148,12 +148,14 @@ type SoundControl(bgmVolume, seVolume) =
 
     res
 
+  static let fadeOut (_: BGM, id) =Engine.Sound.FadeOut (id, fadeSecond) 
+
   member __.SetVolume(bgmVol, seVol) =
     bgmVolume <- bgmVol
     seVolume <- seVol
-    playingBGM |> ValueOption.iter(fun (bgm, id) ->
-      Engine.Sound.SetVolume(id, bgmVolume * bgm.volumeRate)
-    )
+    let setVol (bgm: BGM, id) = Engine.Sound.SetVolume(id, bgmVolume * bgm.volumeRate)
+    playingBGM |> ValueOption.iter setVol
+    fadingInBGM |> ValueOption.iter setVol
 
   member __.PlaySE(kind: SEKind) =
     seMap
@@ -164,17 +166,19 @@ type SoundControl(bgmVolume, seVolume) =
     )
 
   member this.SetState(state) =
+    fadingInBGM |> ValueOption.iter fadeOut
+
     state |> function
     | SoundControlState.Menu ->
       let nextId = Engine.Sound.Play (snd menuBGMSound)
       Engine.Sound.SetVolume (nextId, bgmVolume * (fst menuBGMSound).volumeRate)
-      Engine.Sound.FadeIn (nextId, fadeSecond)
-      fadingInBGM <- ValueSome (fst menuBGMSound, nextId)
 
       this.StartCoroutine(seq {
         match playingBGM with
         | ValueNone -> ()
         | ValueSome (_, id) ->
+          fadingInBGM <- ValueSome (fst menuBGMSound, nextId)
+          Engine.Sound.FadeIn (nextId, fadeSecond)
           Engine.Sound.FadeOut (id, fadeSecond)
           yield! Coroutine.sleep (int (fadeSecond * 1000.0f) * 1<millisec>)
 
@@ -191,20 +195,20 @@ type SoundControl(bgmVolume, seVolume) =
           // 次の曲を指定
           let (nextBGM, nextBGMSound) = shuffledBGMs.[count]
           let nextId = Engine.Sound.Play nextBGMSound
-          fadingInBGM <- ValueSome (nextBGM, nextId)
           Engine.Sound.SetVolume (nextId, bgmVolume * nextBGM.volumeRate)
-          Engine.Sound.FadeIn (nextId, fadeSecond)
 
           count <- (count + 1) % shuffledBGMs.Length
 
           yield! Coroutine.toParallel [|
             seq {
-              yield! Coroutine.sleep (int((nextBGM.length - fadeSecond * 2.0f) * 1000.0f) * 1<millisec>)
+              yield! Coroutine.sleep (int((nextBGM.length - fadeSecond) * 1000.0f) * 1<millisec>)
             }
             seq {
               match playingBGM with
               | ValueNone -> ()
               | ValueSome (_, id) ->
+                fadingInBGM <- ValueSome (nextBGM, nextId)
+                Engine.Sound.FadeIn (nextId, fadeSecond)
                 Engine.Sound.FadeOut (id, fadeSecond)
                 yield! Coroutine.sleep (int (fadeSecond * 1000.0f) * 1<millisec>)
 

@@ -290,10 +290,12 @@ type internal MenuV2Node(config: Config) =
             gameNode <- ValueSome n
 
         | GameControlEffect.Quit ->
-          gameNode |> ValueOption.iter Engine.RemoveNode
+          soundControl.SetState(SoundControlState.Menu)
+          Engine.RemoveNode gameNode.Value
 
         | GameControlEffect.Restart ->
-          gameNode |> ValueOption.iter (fun n -> n.Restart())
+          soundControl.SetState(SoundControlState.Game)
+          gameNode.Value.Restart()
 
       handleSetController = fun controller ->
         if isAvailableController controller then
