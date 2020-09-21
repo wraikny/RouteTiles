@@ -67,12 +67,12 @@ type SE = {
 }
 
 module internal SE =
-  let cursorMove = { path = @"SE/select_001_6.wav"; volumeRate = 0.25f }
-  let enter = { path = @"SE/common_001_1.wav"; volumeRate = 0.25f }
-  let cancel = { path = @"SE/select_001_1.wav"; volumeRate = 0.25f }
-  let pause = { path = @"SE/button16.wav"; volumeRate = 0.25f }
-  let gameMoveCursor = { path = @"SE/button45.wav"; volumeRate = 0.25f }
-  let gameMoveTiles = { path = @"SE/button63.wav"; volumeRate = 0.25f }
+  let cursorMove = { path = @"SE/select_001_6.ogg"; volumeRate = 0.25f }
+  let enter = { path = @"SE/common_001_1.ogg"; volumeRate = 0.25f }
+  let cancel = { path = @"SE/select_001_1.ogg"; volumeRate = 0.25f }
+  let pause = { path = @"SE/button16.ogg"; volumeRate = 0.25f }
+  let gameMoveCursor = { path = @"SE/button45.ogg"; volumeRate = 0.25f }
+  let gameMoveTiles = { path = @"SE/button63.ogg"; volumeRate = 0.25f }
   let gameVanishTiles = { path = @"SE/tambourine.ogg"; volumeRate = 0.75f }
 
 
