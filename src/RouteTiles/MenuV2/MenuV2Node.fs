@@ -120,9 +120,12 @@ type MenuV2Handler = {
     MenuUtil.getCurrentControllers() |> k
 
   static member Handle(SaveConfig config as e, k) =
-    Utils.DebugLogn (sprintf "Effect: %A" e)
-    Config.save config
-    k()
+    Eff.capture (fun h ->
+      Utils.DebugLogn (sprintf "Effect: %A" e)
+      h.soundControl.SetVolume(config.bgmVolume, config.seVolume)
+      Config.save config
+      k()
+    )
 
   static member Handle(e: GameRankingEffect, k) =
     Eff.capture(fun h ->
@@ -171,7 +174,7 @@ type internal MenuV2Node(config: Config) =
 
   let container = Container(TextMap.textMapJapanese)
 
-  let soundControl = SoundControl(0.5f, 0.5f)
+  let soundControl = SoundControl(config.bgmVolume, config.seVolume)
 
   let mutable gameNode: Game voption = ValueNone
 
@@ -234,13 +237,13 @@ type internal MenuV2Node(config: Config) =
         | GameControlEffect.Pause ->
           Engine.Pause(this)
           let config = Config.tryGet().Value
-          soundControl.SetBGMVolume(config.bgmVolume * 0.25f)
+          soundControl.SetVolume(config.bgmVolume * 0.25f, config.seVolume)
           soundControl.PlaySE(SEKind.Pause)
 
         | GameControlEffect.Resume ->
           Engine.Resume()
           let config = Config.tryGet().Value
-          soundControl.SetBGMVolume(config.bgmVolume)
+          soundControl.SetVolume(config.bgmVolume, config.bgmVolume)
 
         | GameControlEffect.Start(gameMode, controller) ->
           soundControl.SetState(SoundControlState.Game)

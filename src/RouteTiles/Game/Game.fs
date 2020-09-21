@@ -12,7 +12,7 @@ open EffFs.Library
 
 type Handler = {
   rand: Random
-  emitVanishmentParticle: Set<Board.RouteOrLoop> -> unit
+  // emitVanishmentParticle: Set<Board.RouteOrLoop> -> unit
 } with
   static member Handle(x) = x
 
@@ -23,11 +23,11 @@ type Handler = {
     Engine.Log.Warn(LogCategory.User, s)
     k ()
 
-  static member Handle(EmitVanishParticleEffect particleSet, k) =
-    Eff.capture(fun h ->
-      h.emitVanishmentParticle particleSet
-      k()
-    )
+  // static member Handle(EmitVanishParticleEffect particleSet, k) =
+  //   Eff.capture(fun h ->
+  //     h.emitVanishmentParticle particleSet
+  //     k()
+  //   )
 
 type internal IGameHandler =
   abstract SetModel: SoloGame.Model -> unit
@@ -128,9 +128,11 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
 
         yield! Coroutine.sleep Consts.GameCommon.inputInterval
 
-        // todo: SoundEffect
         if not m.board.routesAndLoops.IsEmpty then
+        // todo: SoundEffect
           yield! Coroutine.sleep Consts.Board.tilesVanishInterval
+          soundControl.PlaySE(SEKind.GameVanishTiles)
+          boardNode.EmitVanishmentParticle(m.board.routesAndLoops)
           updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
       | _ -> yield ()
     }
@@ -170,7 +172,7 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
 #else
       rand = Random()
 #endif
-      emitVanishmentParticle = boardNode.EmitVanishmentParticle
+      // emitVanishmentParticle = 
     }
 
   member __.Controller with get() = controller and set(v) = controller <- v

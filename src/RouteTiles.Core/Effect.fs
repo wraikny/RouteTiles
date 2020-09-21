@@ -5,10 +5,10 @@ open RouteTiles.Core.Types
 
 open EffFs
 
-[<Struct>]
-type EmitVanishParticleEffect = EmitVanishParticleEffect of Set<Types.Board.RouteOrLoop>
-with
-  static member Effect(_: EmitVanishParticleEffect) = Eff.marker<unit>
+// [<Struct>]
+// type EmitVanishParticleEffect = EmitVanishParticleEffect of Set<Types.Board.RouteOrLoop>
+// with
+//   static member Effect(_: EmitVanishParticleEffect) = Eff.marker<unit>
 
 [<Struct; RequireQualifiedAccess>]
 type GameControlEffect =

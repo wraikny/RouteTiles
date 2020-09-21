@@ -56,13 +56,19 @@ type SEKind =
   | GameVanishTiles
   | Pause
 
+type SE = {
+  path: string
+  volumeRate: float32
+}
+
 module internal SE =
-  let [<Literal>] cursorMove = @"SE/select_001_6.wav"
-  let [<Literal>] enter = @"SE/common_001_1.wav"
-  let [<Literal>] cancel = @"SE/select_001_1.wav"
-  let [<Literal>] gameMoveCursor = @"SE/button45.wav"
-  let [<Literal>] gameMoveTiles = @"SE/button63.wav"
-  let [<Literal>] pause = @"SE/button16.wav"
+  let cursorMove = { path = @"SE/select_001_6.wav"; volumeRate = 1.0f }
+  let enter = { path = @"SE/common_001_1.wav"; volumeRate = 1.0f }
+  let cancel = { path = @"SE/select_001_1.wav"; volumeRate = 1.0f }
+  let pause = { path = @"SE/button16.wav"; volumeRate = 1.0f }
+  let gameMoveCursor = { path = @"SE/button45.wav"; volumeRate = 1.0f }
+  let gameMoveTiles = { path = @"SE/button63.wav"; volumeRate = 1.0f }
+  let gameVanishTiles = { path = @"SE/tambourine.ogg"; volumeRate = 3.0f }
 
 
 
@@ -80,7 +86,7 @@ type SoundControl(bgmVolume, seVolume) =
 
   let fadeSecond = Consts.ViewCommon.BGMFadeSecond
 
-  static let bgmToSound bgm =
+  static let bgmToSound (bgm: BGM) =
     let sound = Sound.LoadStrict(bgm.path, false)
     sound.LoopEndPoint <- bgm.length
     sound
@@ -107,9 +113,10 @@ type SoundControl(bgmVolume, seVolume) =
       SEKind.GameMoveCursor, SE.gameMoveCursor
       SEKind.GameMoveTiles, SE.gameMoveTiles
       SEKind.Pause, SE.pause
+      SEKind.GameVanishTiles, SE.gameVanishTiles
       // SEKind.Invalid, SE.invalid
     |]
-    |> Array.map(fun (k, path) -> (k, Sound.LoadStrict(path, true)))
+    |> Array.map(fun (k, se) -> (k, (se.volumeRate, Sound.LoadStrict(se.path, true))))
     |> Map.ofSeq
 
   let mutable playingBGM = ValueNone
@@ -136,8 +143,9 @@ type SoundControl(bgmVolume, seVolume) =
 
     res
 
-  member __.SetBGMVolume(v) =
-    bgmVolume <- v * Consts.Sound.VolumeAmp
+  member __.SetVolume(bgmVol, seVol) =
+    bgmVolume <- bgmVol * Consts.Sound.VolumeAmp
+    seVolume <- seVol * Consts.Sound.VolumeAmp
     playingBGM |> ValueOption.iter(fun (_, id) ->
       Engine.Sound.SetVolume(id, bgmVolume)
     )
@@ -152,9 +160,9 @@ type SoundControl(bgmVolume, seVolume) =
   member __.PlaySE(kind: SEKind) =
     seMap
     |> Map.tryFind kind
-    |> Option.iter (fun se ->
+    |> Option.iter (fun (volRate, se) ->
       let id = Engine.Sound.Play se
-      Engine.Sound.SetVolume (id, seVolume)
+      Engine.Sound.SetVolume (id, seVolume * volRate)
     )
 
   member this.SetState(state) =
@@ -193,7 +201,7 @@ type SoundControl(bgmVolume, seVolume) =
 
           yield! Coroutine.toParallel [|
             seq {
-              yield! Coroutine.sleep (int((nextBGM.length - fadeSecond) * 1000.0f) * 1<millisec>)
+              yield! Coroutine.sleep (int((nextBGM.length - fadeSecond * 2.0f) * 1000.0f) * 1<millisec>)
             }
             seq {
               match playingBGM with

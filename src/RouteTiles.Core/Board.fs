@@ -351,8 +351,8 @@ module Update =
     msg |> function
     | ApplyVanishment ->
       eff {
-        if not board.routesAndLoops.IsEmpty then
-          do! EmitVanishParticleEffect board.routesAndLoops
+        // if not board.routesAndLoops.IsEmpty then
+        //   do! EmitVanishParticleEffect board.routesAndLoops
 
         return vanish board
       }
