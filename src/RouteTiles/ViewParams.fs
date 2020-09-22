@@ -218,6 +218,8 @@ module internal ZOrder =
     let tiles = offset 2
     let particles = offset 3
 
+    let readyStart = offset 100
+
   module Menu =
     let offset = (|||) (100 <<< 16)
     let background = offset 10

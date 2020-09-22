@@ -98,7 +98,7 @@ type MenuV2Handler = {
         | SoundEffect.Invalid -> SEKind.Invalid
         | SoundEffect.InputChar -> SEKind.InputChar
         | SoundEffect.DeleteChar -> SEKind.Invalid
-      |> h.soundControl.PlaySE
+      |> fun k -> h.soundControl.PlaySE (k, false)
       k ()
     )
 
@@ -245,7 +245,7 @@ type internal MenuV2Node(config: Config) =
           Engine.Pause(this)
           let config = Config.tryGet().Value
           soundControl.SetVolume(config.bgmVolume * 0.25f, config.seVolume)
-          soundControl.PlaySE(SEKind.Pause)
+          soundControl.PlaySE(SEKind.Pause, false)
 
         | GameControlEffect.Resume ->
           Engine.Resume()

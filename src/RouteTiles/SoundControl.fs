@@ -60,6 +60,8 @@ type SEKind =
   | GameMoveTiles
   | GameVanishTiles
   | Pause
+  | ReadyGame
+  | StartGame
 
 type SE = {
   path: string
@@ -126,7 +128,7 @@ type SoundControl(bgmVolume, seVolume) =
 
   let mutable playingBGM: (BGM * int) voption = ValueNone
   let mutable fadingInBGM: (BGM * int) voption = ValueNone
-  // let playingSEs = ResizeArray<int>()
+  let playingGameSEs = ResizeArray<int * float32>()
 
   let mutable bgmVolume = bgmVolume
   let mutable seVolume = seVolume
@@ -151,19 +153,34 @@ type SoundControl(bgmVolume, seVolume) =
   static let fadeOut (_: BGM, id) =Engine.Sound.FadeOut (id, fadeSecond) 
 
   member __.SetVolume(bgmVol, seVol) =
-    seVolume <- seVol
+    if seVolume <> seVol then
+     seVolume <- seVol
+     for (id, volumeRate) in playingGameSEs do
+      Engine.Sound.SetVolume(id, seVolume * volumeRate)
+
     if bgmVolume <> bgmVol then
       bgmVolume <- bgmVol
       let setVol (bgm: BGM, id) = Engine.Sound.SetVolume(id, bgmVolume * bgm.volumeRate)
       playingBGM |> ValueOption.iter setVol
       fadingInBGM |> ValueOption.iter setVol
 
-  member __.PlaySE(kind: SEKind) =
+  member __.PauseSE() =
+    for (id, _) in playingGameSEs do
+      Engine.Sound.Pause(id)
+
+  member __.ResumeSE() =
+    for (id, _) in playingGameSEs do
+      Engine.Sound.Resume(id)
+
+  member __.PlaySE(kind: SEKind, pausable) =
     seMap
     |> Map.tryFind kind
     |> Option.iter (fun (volRate, se) ->
       let id = Engine.Sound.Play se
       Engine.Sound.SetVolume (id, seVolume * volRate)
+
+      if pausable then
+        playingGameSEs.Add ((id, volRate))
     )
 
   member this.SetState(state) =
@@ -226,3 +243,10 @@ type SoundControl(bgmVolume, seVolume) =
     if coroutine <> null then
       if not (coroutine.MoveNext()) then
         coroutine <- null
+        
+    let mutable index = 0
+    while index < playingGameSEs.Count do
+      let id, _ = playingGameSEs.[index]
+      if not <| Engine.Sound.GetIsPlaying(id) then
+        playingGameSEs.RemoveAt(index)
+      index <- index + 1

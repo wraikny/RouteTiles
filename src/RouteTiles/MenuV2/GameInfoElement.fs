@@ -80,7 +80,7 @@ let createSologameInfoElement (container: Container) =
   let updater (model: Types.SoloGame.Model): unit =
     model.mode |> function
     | Types.SoloGame.Mode.TimeAttack maxScore ->
-      sprintf "%d/%d" (maxScore - model.board.point) maxScore
+      sprintf "%d/%d" ((maxScore - model.board.point) |> max 0) maxScore
     | _ -> sprintf "%d" model.board.point
     |> scoreUpdater
 

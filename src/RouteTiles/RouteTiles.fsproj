@@ -55,6 +55,7 @@
     <Compile Include="Loading.fs" />
     <Compile Include="Game/Board.fs" />
     <Compile Include="Game/NextTiles.fs" />
+    <Compile Include="Game/ReadyStart.fs" />
     <Compile Include="Game/Game.fs" />
     <Compile Include="../../ResourcesPassword.fs" />
     <Compile Include="Config.fs" />
