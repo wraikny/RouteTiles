@@ -30,4 +30,6 @@
   - button16
   - button45
   - button63
-- [一般的なタンバリンを一発だけ叩いた (c) 足立 壮一郎](https://tadaoto.com/1087)
+- [効果音素材 魔王魂](https://tadaoto.com/1087)
+  - [物音2](https://maoudamashii.jokersounds.com/list/se5b.html)
+    - 物音15

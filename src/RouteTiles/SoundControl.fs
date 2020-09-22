@@ -75,9 +75,7 @@ module internal SE =
   let pause = { path = @"SE/button16.ogg"; volumeRate = 0.25f }
   let gameMoveCursor = { path = @"SE/button45.ogg"; volumeRate = 0.25f }
   let gameMoveTiles = { path = @"SE/button63.ogg"; volumeRate = 0.25f }
-  let gameVanishTiles = { path = @"SE/tambourine.ogg"; volumeRate = 0.75f }
-
-
+  let gameVanishTiles = { path = @"SE/se_maoudamashii_se_sound15.ogg"; volumeRate = 0.75f }
 
 [<RequireQualifiedAccess>]
 type SoundControlState =
