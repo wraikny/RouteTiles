@@ -33,3 +33,6 @@
 - [効果音素材 魔王魂](https://tadaoto.com/1087)
   - [物音2](https://maoudamashii.jokersounds.com/list/se5b.html)
     - 物音15
+  - [ワンポイント](https://maoudamashii.jokersounds.com/list/se2.html)
+    - ワンポイント9
+    - ワンポイント23

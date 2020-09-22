@@ -32,7 +32,7 @@ type ReadyStart(soundControl: SoundControl, initPosition) =
     soundControl.PlaySE(SEKind.ReadyGame, true)
 
     coroutine <- (seq {
-      for t in Coroutine.milliseconds 1000<millisec> do
+      for t in Coroutine.milliseconds 1500<millisec> do
         this.Color <- Color(255, 255, 255, 255.0f * t |> int)
         this.Position <- initPosition + Vector2F(0.0f, Easing.GetEasing(EasingType.InQuad, t) * 20.0f)
         yield ()
@@ -44,13 +44,25 @@ type ReadyStart(soundControl: SoundControl, initPosition) =
       soundControl.PlaySE(SEKind.StartGame, true)
       start()
 
-      let t = 200<millisec>
+      let peri = 200<millisec>
 
-      for _ in 1..3 do
-        this.IsDrawn <- true
-        for _ in Coroutine.milliseconds t -> ()
-        this.IsDrawn <- false
-        for _ in Coroutine.milliseconds t -> ()
+      yield! Coroutine.toParallel [|
+        seq {
+          for t in Coroutine.milliseconds (6 * peri) do
+            this.Color <- Color(255, 255, 255, 255.0f * (1.0f - t) |> int)
+            this.Position <- initPosition + Vector2F(0.0f, 20.0f - Easing.GetEasing(EasingType.InQuad, t) * 20.0f)
+            yield ()
+          }
+        seq {
+          for _ in 1..3 do
+            this.IsDrawn <- true
+            
+            yield! Coroutine.sleep peri
+            this.IsDrawn <- false
+
+            yield! Coroutine.sleep peri
+        }
+      |]
 
       this.Position <- initPosition
       this.IsDrawn <- false

@@ -75,7 +75,9 @@ module internal SE =
   let pause = { path = @"SE/button16.ogg"; volumeRate = 0.25f }
   let gameMoveCursor = { path = @"SE/button45.ogg"; volumeRate = 0.25f }
   let gameMoveTiles = { path = @"SE/button63.ogg"; volumeRate = 0.25f }
-  let gameVanishTiles = { path = @"SE/se_maoudamashii_se_sound15.ogg"; volumeRate = 0.75f }
+  let gameVanishTiles = { path = @"SE/se_maoudamashii_se_sound15.ogg"; volumeRate = 0.5f }
+  let readyGame = { path = @"SE/se_maoudamashii_onepoint23.ogg"; volumeRate = 0.25f }
+  let startGame = { path = @"SE/se_maoudamashii_onepoint09.ogg"; volumeRate = 0.25f }
 
 [<RequireQualifiedAccess>]
 type SoundControlState =
@@ -119,6 +121,8 @@ type SoundControl(bgmVolume, seVolume) =
       SEKind.GameMoveTiles, SE.gameMoveTiles
       SEKind.Pause, SE.pause
       SEKind.GameVanishTiles, SE.gameVanishTiles
+      SEKind.ReadyGame, SE.readyGame
+      SEKind.StartGame, SE.startGame
       // SEKind.Invalid, SE.invalid
     |]
     |> Array.map(fun (k, se) -> (k, (se.volumeRate, Sound.LoadStrict(se.path, true))))
