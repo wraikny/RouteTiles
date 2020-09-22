@@ -17,7 +17,7 @@ module internal Consts =
     let windowSize = Vector2I(1280, 720)
     let clearColor = Color(50, 50, 50, 255)
 
-    let [<Literal>] BGMFadeSecond = 5.0f
+    let [<Literal>] BGMFadeSecond = 2.5f
 
   module PostEffect =
     let [<Literal>] wavepath = @"Shader/wave.hlsl"
