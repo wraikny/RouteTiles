@@ -270,4 +270,4 @@ module internal ZOrder =
   
   let modeText = (10000 <<< 16) ||| 30
 
-  let debug = Int32.MaxValue
+  let debug = 1 <<< 31

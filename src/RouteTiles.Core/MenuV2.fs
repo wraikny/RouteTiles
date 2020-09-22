@@ -112,6 +112,8 @@ type Msg =
   | Decr
   | Enter
   | Cancel
+  | Right
+  | Left
   | MsgOfInput of msgInput:StringInput.Msg
   | PauseGame
   | QuitGame
@@ -126,6 +128,8 @@ module Msg =
   let toSettingMsg = function
     | Decr -> ValueSome Setting.Msg.Decr
     | Incr -> ValueSome Setting.Msg.Incr
+    | Right -> ValueSome Setting.Msg.Right
+    | Left -> ValueSome Setting.Msg.Left
     | Enter -> ValueSome Setting.Msg.Enter
     | Cancel -> ValueSome Setting.Msg.Cancel
     | MsgOfInput m -> ValueSome <| Setting.Msg.MsgOfInput m
@@ -220,6 +224,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
             Setting.State.Init config
             |> stateEnter with
           | ValueNone ->
+            do! SetSoundVolume(config.bgmVolume, config.seVolume)
             do! SoundEffect.Cancel
             return state
 
@@ -390,6 +395,7 @@ type Handler = Handler with
   static member inline Handle(_: SetControllerEffect, k) = failwith "" |> k
   static member inline Handle(_: SaveConfig, k) = failwith "" |> k
   static member inline Handle(_: GameRankingEffect, k) = failwith "" |> k
+  static member inline Handle(_: SetSoundVolumeEffect, k) = failwith "" |> k
   // static member inline Handle(_: GetStateEffect<'a>, k) = k Unchecked.defaultof<'a>
 
 let update' msg state =

@@ -151,11 +151,12 @@ type SoundControl(bgmVolume, seVolume) =
   static let fadeOut (_: BGM, id) =Engine.Sound.FadeOut (id, fadeSecond) 
 
   member __.SetVolume(bgmVol, seVol) =
-    bgmVolume <- bgmVol
     seVolume <- seVol
-    let setVol (bgm: BGM, id) = Engine.Sound.SetVolume(id, bgmVolume * bgm.volumeRate)
-    playingBGM |> ValueOption.iter setVol
-    fadingInBGM |> ValueOption.iter setVol
+    if bgmVolume <> bgmVol then
+      bgmVolume <- bgmVol
+      let setVol (bgm: BGM, id) = Engine.Sound.SetVolume(id, bgmVolume * bgm.volumeRate)
+      playingBGM |> ValueOption.iter setVol
+      fadingInBGM |> ValueOption.iter setVol
 
   member __.PlaySE(kind: SEKind) =
     seMap

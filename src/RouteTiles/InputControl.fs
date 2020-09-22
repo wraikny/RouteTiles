@@ -75,6 +75,8 @@ module MenuV2 =
     [|
       yield [|Key.W, ButtonState.Push|], Msg.Decr
       yield [|Key.S, ButtonState.Push|], Msg.Incr
+      yield [|Key.D, ButtonState.Push|], Msg.Right
+      yield [|Key.A, ButtonState.Push|], Msg.Left
       yield [|Key.Space, ButtonState.Push|], Msg.Enter
       yield [|Key.Enter, ButtonState.Push|], Msg.Enter
       yield [|Key.Escape, ButtonState.Push|], Msg.Cancel
@@ -83,6 +85,8 @@ module MenuV2 =
   let joystick = [|
     yield (JoystickButton.DPadUp, ButtonState.Push), Msg.Decr
     yield (JoystickButton.DPadDown, ButtonState.Push), Msg.Incr
+    yield (JoystickButton.DPadRight, ButtonState.Push), Msg.Right
+    yield (JoystickButton.DPadLeft, ButtonState.Push), Msg.Left
     yield (JoystickButton.RightRight, ButtonState.Push), Msg.Enter
     yield (JoystickButton.RightDown, ButtonState.Push), Msg.Cancel
     yield (JoystickButton.Guide, ButtonState.Push), Msg.Cancel

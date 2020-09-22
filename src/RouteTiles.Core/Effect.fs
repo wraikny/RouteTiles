@@ -61,3 +61,8 @@ with
 type SaveConfig = SaveConfig of Config
 with
   static member Effect(_) = Eff.marker<unit>
+
+[<Struct>]
+type SetSoundVolumeEffect = SetSoundVolume of float32 * float32
+with
+  static member Effect(_) = Eff.marker<unit>

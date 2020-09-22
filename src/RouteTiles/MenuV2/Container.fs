@@ -62,6 +62,7 @@ type internal Container (textMap: TextMap.TextMap) =
   member val SettingMenuButtons: string[] =
     Setting.Mode.items |> Array.map (function
       | Setting.Mode.InputName -> textMap.buttons.namesetting
+      | Setting.Mode.Volume -> textMap.buttons.volumeSetting
       | Setting.Mode.Background -> textMap.buttons.backgroundsetting
       | Setting.Mode.Enter -> textMap.buttons.save
     )
@@ -69,6 +70,7 @@ type internal Container (textMap: TextMap.TextMap) =
   member val SettingModeDescriptions: string[] =
     Setting.Mode.items |> Array.map (function
       | Setting.Mode.InputName -> textMap.descriptions.namesetting
+      | Setting.Mode.Volume -> textMap.descriptions.volumeSetting
       | Setting.Mode.Background -> textMap.descriptions.backgroundsetting
       | Setting.Mode.Enter -> textMap.descriptions.settingsave
     )
@@ -105,4 +107,10 @@ type internal Container (textMap: TextMap.TextMap) =
     GameResult.GameNextSelection.items |> Array.map (function
       | GameResult.GameNextSelection.Quit -> textMap.descriptions.quitGame
       | GameResult.GameNextSelection.Restart -> textMap.descriptions.restartGame
+    )
+
+  member val VolumeModeButtons: string[] =
+    VolumeSetting.VolumeMode.items |> Array.map (function
+      | VolumeSetting.VolumeMode.BGM -> textMap.buttons.bgm
+      | VolumeSetting.VolumeMode.SE -> textMap.buttons.se
     )

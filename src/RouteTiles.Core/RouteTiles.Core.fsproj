@@ -27,6 +27,7 @@
     <Compile Include="SubMenu/SinglePage.fs" />
     <Compile Include="SubMenu/ListSelector.fs" />
     <Compile Include="SubMenu/StringInput.fs" />
+    <Compile Include="SubMenu/VolumeSetting.fs" />
     <Compile Include="SubMenu/Pause.fs" />
     <Compile Include="SubMenu/Setting.fs" />
     <Compile Include="SubMenu/Ranking.fs" />

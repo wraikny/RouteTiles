@@ -39,7 +39,7 @@ let debug e =
   e
   // |> withChild (
   //   Elements.Rectangle.Create
-  //     (zOrder = Int32.MaxValue, color = Nullable(Color(255, 0, 0, 60)))
+  //     (zOrder = (1 <<< 28), color = Nullable(Color(255, 0, 0, 60)))
   // )
 #else
   e

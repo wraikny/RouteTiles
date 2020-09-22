@@ -10,12 +10,14 @@ open EffFs.Library.StateMachine
 [<Struct; RequireQualifiedAccess>]
 type Mode =
   | InputName
+  | Volume
   | Background
   | Enter
 
 module Mode =
   let items = [|
     Mode.InputName
+    Mode.Volume
     // Mode.Background
     Mode.Enter
   |]
@@ -32,6 +34,7 @@ type OutStatus = StateStatus<State, Config voption>
 
 and State =
   | InputName of StringInput.State * (string voption -> OutStatus)
+  | Volume of VolumeSetting.State * ((float32 * float32) voption -> OutStatus)
   | Background of ListSelector.State<Background> * (Background voption -> OutStatus)
   | Base of SettingState
 with
@@ -48,10 +51,12 @@ with
 
   static member StateOut(_: State) = Eff.marker<Config voption>
   static member StateEnter(s, k) = InputName (s, k)
+  static member StateEnter(s, k) = Volume (s, k)
   static member StateEnter(s, k) = Background (s, k)
 
 let equal a b = (a, b) |> function
   | InputName (a, _), InputName (b, _) -> a = b
+  | Volume (a, _), Volume (b, _) -> a = b
   | Background (a, _), Background (b, _) -> a = b
   | Base a, Base b -> a = b
   | _ -> false
@@ -65,6 +70,8 @@ type Msg =
   | Cancel
   | Decr
   | Incr
+  | Right
+  | Left
   | MsgOfInput of msgInput: StringInput.Msg
 
 module Msg =
@@ -73,6 +80,15 @@ module Msg =
     | Msg.Decr -> ValueSome ListSelector.Msg.Decr
     | Msg.Enter -> ValueSome ListSelector.Enter
     | Msg.Cancel -> ValueSome ListSelector.Cancel
+    | _ -> ValueNone
+
+  let toVolumeSetting = function
+    | Msg.Enter -> ValueSome VolumeSetting.Msg.Enter
+    | Msg.Cancel -> ValueSome VolumeSetting.Msg.Cancel
+    | Msg.Incr -> ValueSome VolumeSetting.Msg.Incr
+    | Msg.Decr -> ValueSome VolumeSetting.Msg.Decr
+    | Msg.Right -> ValueSome VolumeSetting.Msg.Right
+    | Msg.Left -> ValueSome VolumeSetting.Msg.Left
     | _ -> ValueNone
 
 
@@ -85,6 +101,10 @@ let inline update msg state = eff {
     | Msg.Cancel -> return! f StringInput.Msg.Cancel
     | _ -> return Pending state
 
+  | Volume (s, k), msg ->
+    match Msg.toVolumeSetting msg with
+    | ValueSome msg -> return! stateMapEff (VolumeSetting.update msg) (s, k)
+    | _ -> return Pending state
 
   | Background (s, k), msg ->
     match Msg.toListSelector msg with
@@ -93,7 +113,6 @@ let inline update msg state = eff {
 
   // Cancelallation
   | Base _, Msg.Cancel ->
-    do! SoundEffect.Cancel
     return Completed ValueNone
 
   // Mode Change
@@ -118,6 +137,20 @@ let inline update msg state = eff {
           let newName = if inputName = "" then ValueNone else ValueSome inputName
           return
             { s with config = { s.config with name = newName }}
+            |> Base
+            |> Pending
+
+      | Completed (ValueSome Mode.Volume) ->
+        match!
+          VolumeSetting.State.Init (config.bgmVolume, config.seVolume)
+          |> stateEnter
+          with
+        | ValueNone ->
+          do! SetSoundVolume(config.bgmVolume, config.seVolume)
+          return Pending state
+        | ValueSome (bgmVolume, seVolume) ->
+          return
+            { s with config = { s.config with bgmVolume = bgmVolume; seVolume = seVolume }}
             |> Base
             |> Pending
 

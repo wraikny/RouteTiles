@@ -41,6 +41,29 @@ let createBackground (container: Container) =
       )
   |]
 
+let createHighlightUpdate (baseElem: Element) (textElem: Text) =
+  let startTime = Engine.Time
+  System.Action<_>(fun (node: SpriteNode) ->
+    let dTime = Engine.Time - startTime
+    
+    let mutable finished = false
+    if baseElem <> null && not finished then
+      if dTime < Consts.Menu.offsetAnimationPeriod then
+        let a = Easing.GetEasing(EasingType.OutQuad, dTime / Consts.Menu.offsetAnimationPeriod)
+        baseElem.MarginLeft <- (LengthScale.Fixed, 20.0f * a)
+      else
+        baseElem.MarginLeft <- (LengthScale.Fixed, 20.0f)
+        finished <- true
+
+    let sinTime = cos (dTime * 2.0f * MathF.PI / Consts.Menu.selectedTimePeriod)
+
+    let a = (1.0f + sinTime) * 0.5f
+    let (aMin, aMax) = Consts.Menu.cursorAlphaMinMax
+    let alpha = (a * (aMax - aMin) + aMin) * 255.0f |> int
+    node.Color <- Color (255, 255, 255, alpha)
+    textElem.Node.Color <- Color (255, 255, int (100.0f + 155.0f * (1.0f - a)), 255)
+  )
+
 let buttonSize = Vector2F(320.0f, 80.0f)
 
 let buttons
@@ -105,27 +128,7 @@ let buttons
               )
             |> fun e ->
               BoxUISystem.Post(fun () ->
-                let startTime = Engine.Time
-                e.add_OnUpdateEvent (fun node ->
-                  let dTime = Engine.Time - startTime
-                  
-                  let mutable finished = false
-                  if enabledCursorAnimation && not finished then
-                    if dTime < Consts.Menu.offsetAnimationPeriod then
-                      let a = Easing.GetEasing(EasingType.OutQuad, dTime / Consts.Menu.offsetAnimationPeriod)
-                      baseElem.MarginLeft <- (LengthScale.Fixed, 20.0f * a)
-                    else
-                      baseElem.MarginLeft <- (LengthScale.Fixed, 20.0f)
-                      finished <- true
-
-                  let sinTime = cos (dTime * 2.0f * MathF.PI / Consts.Menu.selectedTimePeriod)
-
-                  let a = (1.0f + sinTime) * 0.5f
-                  let (aMin, aMax) = Consts.Menu.cursorAlphaMinMax
-                  let alpha = (a * (aMax - aMin) + aMin) * 255.0f |> int
-                  node.Color <- Color (255, 255, 255, alpha)
-                  textElem.Node.Color <- Color (255, 255, int (100.0f + 155.0f * (1.0f - a)), 255)
-                )
+                e.add_OnUpdateEvent (createHighlightUpdate (if enabledCursorAnimation then baseElem else null) textElem)
               )
 
               e
@@ -216,3 +219,19 @@ let controllerSelect (zOrders: {| button: int; buttonText: int; desc: int; backg
 
     // rightArea().With(createDesc container (container.TextMap.descriptions.selectController))
   |]
+
+
+let gameInfoFrameSize = Vector2F(480.0f, 68.0f)
+
+let twoSplitFrameWithSrc src zOrder (container: Container) =
+  Sprite.Create
+    ( aspect = Aspect.Fixed
+      , texture = container.GameInfoFrame
+      , zOrder = zOrder
+      , src = Nullable(src)
+    )
+
+let twoSplitFrame: int -> Container -> _ = twoSplitFrameWithSrc <| RectF(Vector2F(0.0f, 0.0f), gameInfoFrameSize)
+let twoSplitFrameHighlight: int -> Container -> _ = twoSplitFrameWithSrc <| RectF(Vector2F(0.0f, gameInfoFrameSize.Y), gameInfoFrameSize)
+
+let twoSplitFrameXMargin = 32.0f

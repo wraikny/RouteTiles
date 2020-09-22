@@ -28,20 +28,16 @@ let createGameInfo (container: Container) name =
     dataElem.Node.Text <- data
 
   let elem =
-    Sprite.Create
-      ( aspect = Aspect.Fixed
-      , texture = container.GameInfoFrame
-      , zOrder = ZOrder.Menu.gameInfoFrame
-      )
+    twoSplitFrame ZOrder.Menu.gameInfoFrame container
     |> BoxUI.withChildren [|
       empty ()
-      |> BoxUI.marginLeft (LengthScale.Fixed, 32.0f)
+      |> BoxUI.marginLeft (LengthScale.Fixed, twoSplitFrameXMargin)
       |> BoxUI.withChild (
         nameElem
       )
 
       empty ()
-      |> BoxUI.marginLeft (LengthScale.Fixed, float32 container.GameInfoFrame.Size.X * 0.5f + 32.0f)
+      |> BoxUI.marginLeft (LengthScale.Fixed, gameInfoFrameSize.X * 0.5f + twoSplitFrameXMargin)
       |> BoxUI.withChild (
         dataElem
       )

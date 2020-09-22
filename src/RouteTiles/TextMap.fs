@@ -8,6 +8,7 @@ type Buttons = {
   scoreattack180: string
   tutorial: string
   namesetting: string
+  volumeSetting: string
   backgroundsetting: string
   save: string
   cancel: string
@@ -21,6 +22,8 @@ type Buttons = {
   keyboard: string
   sendToServer: string
   notSendToServer: string
+  bgm: string
+  se: string
 }
 
 type Descriptions = {
@@ -31,6 +34,7 @@ type Descriptions = {
   scoreattack180: string
   tutorial: string
   namesetting: string
+  volumeSetting: string
   backgroundsetting: string
   settingsave: string
   selectController: string
@@ -38,6 +42,7 @@ type Descriptions = {
   restartGame: string
   quitGame: string
   changeUsername: string
+  changeVolume: string
   namePlaceholder: string
   waitingResponse: string
   sendToServer: string
@@ -53,6 +58,7 @@ type Modes = {
   pause: string
   gameResult: string
   rankingOf: string
+  volumeSetting: string
   // waitingResponse: string
 }
 
@@ -72,6 +78,7 @@ let textMapJapanese = {
     scoreattack180 = "スコア180"
     tutorial = "チュートリアル"
     namesetting = "お名前"
+    volumeSetting = "音量"
     backgroundsetting = "背景"
     save = "保存する"
     cancel = "キャンセル"
@@ -85,6 +92,8 @@ let textMapJapanese = {
     keyboard = "キーボード"
     sendToServer = "送信する"
     notSendToServer = "送信しない"
+    bgm = "BGM"
+    se = "SE"
   }
 
   descriptions = {
@@ -95,6 +104,7 @@ let textMapJapanese = {
     scoreattack180 = "180秒以内のスコアを競うモードです"
     tutorial = "ゲームの遊び方を説明します"
     namesetting = "ランキングで使う名前を設定します"
+    volumeSetting = "BGMとSEの音量を設定します。"
     backgroundsetting = "背景を設定します"
     settingsave = "設定を保存します"
     selectController = "使いたいコントローラを選びます"
@@ -102,6 +112,7 @@ let textMapJapanese = {
     restartGame = "ゲームを始めからやりなおします"
     quitGame = "ゲームをやめてタイトルに戻ります"
     changeUsername = "ユーザ名を設定します"
+    changeVolume = "音量を設定します"
     namePlaceholder = "username"
     waitingResponse = "しばらくお待ち下さい..."
     sendToServer = "オンラインランキングに結果を送信しますか？"
@@ -117,6 +128,7 @@ let textMapJapanese = {
     pause = "一時停止"
     gameResult = "リザルト"
     rankingOf = "ランキング - "
+    volumeSetting = "音量設定"
     // waitingResponse = "通信待機中..."
     // error = "エラー"
   }

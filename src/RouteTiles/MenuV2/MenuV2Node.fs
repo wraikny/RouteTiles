@@ -127,6 +127,13 @@ type MenuV2Handler = {
       k()
     )
 
+  static member Handle(SetSoundVolume(bgmVolume, seVolume) as e, k) =
+    Eff.capture(fun h ->
+      Utils.DebugLogn (sprintf "Effect: %A" e)
+      h.soundControl.SetVolume(bgmVolume, seVolume)
+      k()
+    )
+
   static member Handle(e: GameRankingEffect, k) =
     Eff.capture(fun h ->
       async {
