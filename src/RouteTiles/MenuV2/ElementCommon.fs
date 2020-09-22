@@ -43,7 +43,7 @@ let createBackground (container: Container) =
 
 let createHighlightUpdate (baseElem: Element) (textElem: Text) =
   let startTime = Engine.Time
-  System.Action<_>(fun (node: SpriteNode) ->
+  (fun (node: SpriteNode) ->
     let dTime = Engine.Time - startTime
     
     let mutable finished = false
@@ -126,14 +126,10 @@ let buttons
               , zOrder = zOrders.button + 1
               , src = Nullable(RectF(Vector2F(buttonSize.X, 1.0f * buttonSize.Y), buttonSize))
               )
-            |> fun e ->
-              BoxUISystem.Post(fun () ->
-                e.add_OnUpdateEvent (createHighlightUpdate (if enabledCursorAnimation then baseElem else null) textElem)
-              )
-
-              e
+            |> BoxUI.onUpdate (createHighlightUpdate (if enabledCursorAnimation then baseElem else null) textElem)
             :> Element
           )
+
       |]
       )
   )

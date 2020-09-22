@@ -153,11 +153,8 @@ let createVolumeSettingModal (container: Container) (state: VolumeSetting.State)
           if index = state.cursor then
             elem.AddChild(
               twoSplitFrameHighlight (ZOrder.MenuModal.buttonBackground + 1) container
-              |> fun e ->
-                BoxUISystem.Post(fun () ->
-                  e.add_OnUpdateEvent (createHighlightUpdate null textElem)
-                )
-                e
+              |> BoxUI.onUpdate (createHighlightUpdate null textElem)
+              :> Element
             )
 
           let volume =
