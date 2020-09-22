@@ -225,9 +225,10 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
       |> Eff.handle handler
 
     updater.Init(initModel, fun msg model ->
+      let newModel = SoloGame.update msg model |> Eff.handle handler
       Utils.DebugLogn (sprintf "Msg: %A" msg)
-      SoloGame.update msg model
-      |> Eff.handle handler
+      Utils.DebugLogn (sprintf "Model: %A" newModel)
+      newModel
     )
 
     let initTime = gameMode_ |> function

@@ -50,7 +50,7 @@ module TileDir =
         yield ((b, d), a)
     } |> dict
 
-  let contains dir tileDir = correspondence.ContainsKey((dir, tileDir))
+  // let contains dir tileDir = correspondence.ContainsKey((dir, tileDir))
 
   (*
     goThrough (Dir.rev dir) -> Dir.toVector -> tryGet x y -> map ...
@@ -103,6 +103,7 @@ module Model =
     | Fail of int
 
   let routeTiles (board: Model) =
+    // タイルを辿ってその結果を返す。
     let routes firstTile cdn firstDir =
       let rec f tiles cdn dir =
         let cdn = cdn + Dir.toVector dir
@@ -110,7 +111,9 @@ module Model =
         board
         |> tryGetTile cdn
         |> function
+        // Marker
         | ValueNone when board.markers |> Seq.contains (cdn.x, cdn.y, rDir) -> RouteResult.Marker tiles
+        // タイル
         | ValueSome (ValueSome tile) ->
           TileDir.goThrough rDir tile.dir
           |> function
@@ -119,7 +122,9 @@ module Model =
               RouteResult.Self tiles
             else
               f ((cdn, tile.id) :: tiles) cdn nextDir
+          // 接続されていない
           | ValueNone -> RouteResult.Fail tiles.Length
+        // 空白
         | _ -> RouteResult.Fail tiles.Length
 
       f [cdn, firstTile.id] cdn firstDir
