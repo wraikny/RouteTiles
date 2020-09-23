@@ -323,6 +323,7 @@ type internal MenuV2Node(config: Config, container: Container) =
                 )
 
               member __.FinishGame(model, t) =
+                soundControl.StopSE()
                 soundControl.SetState(SoundControlState.Menu)
 
                 MenuV2.Msg.FinishGame(model, t)
@@ -345,8 +346,16 @@ type internal MenuV2Node(config: Config, container: Container) =
             )
 
         | GameControlEffect.Quit ->
-          soundControl.SetState(SoundControlState.Menu)
-          Engine.RemoveNode gameNode.Value
+          if soundControl.State <> ValueSome SoundControlState.Menu then
+            soundControl.SetState(SoundControlState.Menu)
+
+          let n = gameNode.Value
+          n.Clear()
+          async {
+            do! Async.Sleep 1
+            Engine.RemoveNode n
+          }
+          |> Async.StartImmediate
 
         | GameControlEffect.Restart ->
           soundControl.SetState(SoundControlState.Game)

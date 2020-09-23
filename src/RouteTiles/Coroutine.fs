@@ -58,6 +58,10 @@ type internal CoroutineNode(?capacity) =
     else
       coroutines.Add(coroutine.GetEnumerator())
 
+  member __.Clear() =
+    coroutines.Clear()
+    tmp.Clear()
+
   override this.OnUpdate() =
     if this.IsUpdated then
       if tmp.Count > 0 then

@@ -190,3 +190,6 @@ type internal BoardNode(addCoroutine) =
       let cursorXPos, cursorYPos = Helper.Board.cursorPos board.cursor
       cursorX.Position <- cursorXPos
       cursorY.Position <- cursorYPos
+
+  member __.Clear() =
+    tilesPool.Clear()

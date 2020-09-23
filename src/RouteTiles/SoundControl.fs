@@ -29,6 +29,15 @@ module internal BGM =
       volumeRate = 0.1f
     }
 
+  let makukan =
+    {
+      name = "幕間"
+      author = "みろく"
+      path = @"BGM/05-makuai.ogg"
+      length = 79.0f
+      volumeRate = 0.1f
+    }
+
   let hodoku =
     {
       name = "ほどく"
@@ -50,6 +59,7 @@ module internal BGM =
   let gameBGMs = [|
     sikoumeikyu
     rasenkouro
+    makukan
     hodoku
   |]
 
@@ -137,12 +147,10 @@ type SoundControl(bgmVolume, seVolume) =
     sound.LoopEndPoint <- bgm.length
     sound
 
+  static let fadeOut (_: BGM, id) = Engine.Sound.FadeOut (id, fadeSecond)
+
   let gameBGMSounds =
-    [|
-      BGM.sikoumeikyu
-      BGM.rasenkouro
-      BGM.hodoku
-    |]
+    BGM.gameBGMs
     |> Array.map (fun bgm -> bgm, bgmToSound bgm)
 
   let menuBGMSound =
@@ -152,18 +160,7 @@ type SoundControl(bgmVolume, seVolume) =
     BGM.sikoumeikyumaborosi, s
 
   let seMap =
-    [|
-      SEKind.CursorMove, SE.cursorMove
-      SEKind.Enter, SE.enter
-      SEKind.Cancel, SE.cancel
-      SEKind.GameMoveCursor, SE.gameMoveCursor
-      SEKind.GameMoveTiles, SE.gameMoveTiles
-      SEKind.Pause, SE.pause
-      SEKind.GameVanishTiles, SE.gameVanishTiles
-      SEKind.ReadyGame, SE.readyGame
-      SEKind.StartGame, SE.startGame
-      // SEKind.Invalid, SE.invalid
-    |]
+    SE.sePairs
     |> Array.map(fun (k, se) -> (k, (se.volumeRate, Sound.LoadStrict(se.path, true))))
     |> Map.ofSeq
 
@@ -191,7 +188,7 @@ type SoundControl(bgmVolume, seVolume) =
 
     res
 
-  static let fadeOut (_: BGM, id) =Engine.Sound.FadeOut (id, fadeSecond) 
+  let mutable currentState = ValueNone
 
   member __.SetVolume(bgmVol, seVol) =
     if seVolume <> seVol then
@@ -213,6 +210,12 @@ type SoundControl(bgmVolume, seVolume) =
     for (id, _) in playingGameSEs do
       Engine.Sound.Resume(id)
 
+  member __.StopSE() =
+    for (id, _) in playingGameSEs do
+      Engine.Sound.Stop id
+    
+    playingGameSEs.Clear()
+
   member __.PlaySE(kind: SEKind, pausable) =
     seMap
     |> Map.tryFind kind
@@ -224,7 +227,10 @@ type SoundControl(bgmVolume, seVolume) =
         playingGameSEs.Add ((id, volRate))
     )
 
+  member __.State with get() = currentState
+
   member this.SetState(state) =
+    currentState <- ValueSome state
     fadingInBGM |> ValueOption.iter fadeOut
 
     state |> function

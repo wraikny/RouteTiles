@@ -15,6 +15,16 @@ type internal NodePool<'key, 'node, 'arg when 'key : equality and 'node :> Node>
   abstract Create: unit -> 'node
   abstract Update: node:'node * arg:'arg * isFirstUpdate:bool -> unit
 
+  member private this.ClearItem(key) =
+    let object = objects.Item(key)
+    pool.Push(object)
+    this.RemoveChildNode(object)
+    objects.Remove(key) |> ignore
+
+  member this.Clear() =
+    for x in objects do
+      this.ClearItem x.Key
+
   member this.Update(args) =
     for (key, arg) in args do
       objects.TryGetValue(key) |> function
@@ -31,16 +41,8 @@ type internal NodePool<'key, 'node, 'arg when 'key : equality and 'node :> Node>
 
       existKeys.Add(key) |> ignore
 
-    [|
-      for x in objects do
-        if not <| existKeys.Contains(x.Key) then
-          yield x.Key
-    |]
-    |> Array.iter(fun key ->
-      let object = objects.Item(key)
-      pool.Push(object)
-      this.RemoveChildNode(object)
-      objects.Remove(key) |> ignore
-    )
+    for x in objects do
+      if not <| existKeys.Contains(x.Key) then
+        this.ClearItem x.Key
 
     existKeys.Clear()

@@ -45,3 +45,6 @@ type internal NextTilesNode(addCoroutine) =
       |> Seq.map(fun (i, t) -> (t.id, (i, t)))
       |> Seq.take Consts.Board.nextsCountToShow
     )
+
+  member __.Clear() =
+    nextsPool.Clear()

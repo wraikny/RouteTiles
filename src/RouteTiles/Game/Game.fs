@@ -47,8 +47,9 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
   let updater = Updater<SoloGame.Model, _>()
 
   let coroutineNode = CoroutineNode()
-  let boardNode = BoardNode(coroutineNode.Add, Position = Helper.SoloGame.boardViewPos)
-  let nextTilesNode = NextTilesNode(coroutineNode.Add, Position = Helper.SoloGame.nextsViewPos)
+  let childrenCoroutineNode = CoroutineNode()
+  let boardNode = BoardNode(childrenCoroutineNode.Add, Position = Helper.SoloGame.boardViewPos)
+  let nextTilesNode = NextTilesNode(childrenCoroutineNode.Add, Position = Helper.SoloGame.nextsViewPos)
   // let gameInfoNode = GameInfoNode(Helper.SoloGame.gameInfoCenterPos)
   let backgroundPostEffect = PostEffect.PostEffectBackground(ZOrder = ZOrder.posteffect)
 
@@ -62,6 +63,7 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
   /// Binding Children
   do
     base.AddChildNode(coroutineNode)
+    base.AddChildNode(childrenCoroutineNode)
 
     base.AddChildNode(boardNode)
     base.AddChildNode(nextTilesNode)
@@ -154,6 +156,12 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
     if uniqueCoroutine <> null then
       if not <| uniqueCoroutine.MoveNext() then
         uniqueCoroutine <- null
+
+  member this.Clear() =
+    boardNode.Clear()
+    nextTilesNode.Clear()
+    childrenCoroutineNode.Clear()
+    this.FlushQueue()
 
   member __.Controller with get() = controller and set(v) = controller <- v
 
