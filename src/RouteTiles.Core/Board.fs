@@ -112,7 +112,9 @@ module Model =
         |> tryGetTile cdn
         |> function
         // Marker
-        | ValueNone when board.markers |> Seq.contains (cdn.x, cdn.y, rDir) -> RouteResult.Marker tiles
+        | ValueNone when board.markers |> Seq.contains (cdn.x, cdn.y, rDir) ->
+          RouteResult.Marker tiles
+
         // タイル
         | ValueSome (ValueSome tile) ->
           TileDir.goThrough rDir tile.dir
@@ -124,6 +126,7 @@ module Model =
               f ((cdn, tile.id) :: tiles) cdn nextDir
           // 接続されていない
           | ValueNone -> RouteResult.Fail tiles.Length
+
         // 空白
         | _ -> RouteResult.Fail tiles.Length
 
@@ -133,11 +136,11 @@ module Model =
       (routes id cdn dir1, routes id cdn dir2) |> function
       | RouteResult.Self tiles, RouteResult.Self _ ->
         LineState.Looped,
-        Set.ofSeq tiles |> RouteOrLoop.Loop |> ValueSome
+        Array.ofSeq tiles |> RouteOrLoop.Loop |> ValueSome
       
       | RouteResult.Marker tiles1, RouteResult.Marker tiles2 ->
         LineState.Routed,
-        Set.ofSeq(seq { yield! tiles1; yield! tiles2 }) |> RouteOrLoop.Route |> ValueSome
+        [| yield! tiles1; yield! tiles2 |> Seq.rev |> Seq.tail |] |> RouteOrLoop.Route |> ValueSome
       
       | RouteResult.Marker _, _ | _, RouteResult.Marker _ -> LineState.Routing, ValueNone
       | RouteResult.Fail a, RouteResult.Fail b when a + b > 2 -> LineState.Looping, ValueNone
@@ -268,16 +271,20 @@ type Msg =
 module Update =
   let incr model = { model with slideCount = model.slideCount + 1 }
 
+  /// 得点計算を行う
   let calculatePoint (routesAndLoops: Set<RouteOrLoop>) =
+
+
     routesAndLoops
     |> Seq.sumBy(function
-      | RouteOrLoop.Route tiles -> tiles.Count * tiles.Count * 3
-      | RouteOrLoop.Loop tiles -> tiles.Count * tiles.Count * 2
+      | RouteOrLoop.Route tiles -> tiles.Length * tiles.Length * 3
+      | RouteOrLoop.Loop tiles -> tiles.Length * tiles.Length * 2
     )
     |> float32
     |> ( * ) (1.0f + float32 routesAndLoops.Count / 5.0f)
     |> int
 
+  /// タイルを移動する
   let sldieTiles (slideDir: Dir) (nextTile) (board: Model): Model =
     let tiles =
       let dirVec = Dir.toVector slideDir
@@ -321,7 +328,7 @@ module Update =
   let vanish board =
     let routesAndLoops = board.routesAndLoops
 
-    let extractRouteOrLoopBy f = routesAndLoops |> Seq.filterMapV f |> Seq.map (Set.map snd) |> Seq.toList
+    let extractRouteOrLoopBy f = routesAndLoops |> Seq.filterMapV f |> Seq.map (Array.map snd) |> Seq.toList
 
     let vanishedRoutes = extractRouteOrLoopBy RouteOrLoop.getRoute
     let vanishedLoops = extractRouteOrLoopBy RouteOrLoop.getLoop

@@ -21,8 +21,8 @@ type RouteState =
 
 [<Struct; RequireQualifiedAccess>]
 type RouteOrLoop =
-  | Route of route:Set<int Vector2 * int<TileId>>
-  | Loop of loop:Set<int Vector2 * int<TileId>>
+  | Route of route:(int Vector2 * int<TileId>)[]
+  | Loop of loop:(int Vector2 * int<TileId>)[]
 
 [<Struct; RequireQualifiedAccess>]
 type TileDir =
@@ -62,7 +62,7 @@ type Model = {
   point: int
 
   routesAndLoops: Set<RouteOrLoop>
-  routesHistory: Set<int<TileId>> list
-  loopsHistory: Set<int<TileId>> list
+  routesHistory: int<TileId>[] list
+  loopsHistory: int<TileId>[] list
   vanishedTilesCount: int
 }
