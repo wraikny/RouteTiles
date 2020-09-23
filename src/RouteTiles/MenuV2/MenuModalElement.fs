@@ -25,42 +25,48 @@ let private createBlur () =
   |]
 
 
-let private createTextModal (container: Container) text =
-  modalFrame ZOrder.MenuModal.background container
-  |> BoxUI.withChild (
-    empty ()
-    |> BoxUI.debug
-    |> BoxUI.marginBottom (LengthScale.Fixed, 40.0f)
-    |> BoxUI.marginTop (LengthScale.Fixed, 120.0f)
-    |> BoxUI.withChild (
-      Text.Create
-        ( font = container.Font
-        , text = text
-        , color = Nullable(Color(255uy, 255uy, 255uy))
-        , zOrder = ZOrder.MenuModal.text
-        )
-      |> BoxUI.alignX Align.Center
-      |> BoxUI.alignY Align.Min
-      |> BoxUI.debug
+// let private createModalWithChildren (container: Container) marginTop children =
+//   modalFrame ZOrder.MenuModal.background container
+//   |> BoxUI.withChild (
+//     empty ()
+//     |> BoxUI.debug
+//     |> BoxUI.marginBottom (LengthScale.Fixed, 40.0f)
+//     |> BoxUI.marginTop (LengthScale.Fixed, marginTop)
+//     |> BoxUI.marginX (LengthScale.Fixed, 40.0f)
+//     |> BoxUI.withChild (
+//       ItemList.Create(itemMargin = 12.0f)
+//       |> BoxUI.alignY Align.Min
+//       |> BoxUI.withChildren children
+//     )
+//   )
+
+let private modalText font color text =
+  Text.Create
+    ( font = font
+    , text = text
+    , color = Nullable(color)
+    , zOrder = ZOrder.MenuModal.text
     )
-  )
+
+// let private createTextsModal (container: Container) texts =
+//   createModalWithChildren container 120.0f (
+//     texts |> Array.map(fun text ->
+//       modalText container.Font (Color(255, 255, 255, 255)) text
+//       |> BoxUI.alignX Align.Center
+//       |> BoxUI.debug
+//     )
+//   )
 
 let modalWithDescriptionAndChildren (container: Container) marginBottom (description: string) (children) =
-  // let frameSize = Vector2F(520.0f, 80.0f)
-
   modalFrame ZOrder.MenuModal.background container
   |> BoxUI.withChild(
     empty ()
     |> BoxUI.debug
-    |> BoxUI.marginBottom (LengthScale.Fixed, marginBottom)
     |> BoxUI.marginTop (LengthScale.Fixed, 80.0f)
+    |> BoxUI.marginBottom (LengthScale.Fixed, marginBottom)
+    |> BoxUI.marginX (LengthScale.Fixed, 40.0f)
     |> BoxUI.withChild (
-      Text.Create
-        ( font = container.Font
-        , text = description
-        , color = Nullable(Color(255uy, 255uy, 255uy))
-        , zOrder = ZOrder.MenuModal.text
-        )
+      modalText container.Font (Color(255, 255, 255, 255)) description
       |> BoxUI.alignX Align.Center
       |> BoxUI.alignY Align.Min
       |> BoxUI.debug
@@ -227,9 +233,38 @@ let private createCurrentMode = createCurrentMode ZOrder.MenuModal.currentMode
 let private createWaitingResponse (container: Container) =
   [|
     yield! createBlur ()
-    createTextModal container container.TextMap.descriptions.waitingResponse
+    modalWithDescriptionAndChildren
+      container 120.0f
+      container.TextMap.descriptions.waitingResponse
+      Array.empty
   |]
 
+let rec private errorToMessage (error: exn) =
+  error |> function
+  | :? AggregateException as e ->
+    [|
+      for e in e.Flatten().InnerExceptions -> errorToMessage e
+    |]
+    |> String.concat "\n\n"
+  | :? Net.Http.HttpRequestException ->
+    "サーバーとの通信に失敗しました"
+  | e ->
+    sprintf "%s\n%s" (e.GetType().Name) e.Message
+
+let private createErrorModal (container: Container) (error: exn) =
+  let white = Color(255, 255, 255, 255)
+  modalWithDescriptionAndChildren
+    container 80.0f
+    container.TextMap.descriptions.error
+    [|
+      empty ()
+      |> BoxUI.marginTop (LengthScale.Fixed, 120.0f)
+      |> BoxUI.withChild (
+        errorToMessage error
+        |> modalText container.ErrorMessageFont white
+        |> BoxUI.alignX Align.Center
+      )
+    |]
 
 
 let createModal (container: Container) (state: MenuV2.State) =
@@ -271,7 +306,7 @@ let createModal (container: Container) (state: MenuV2.State) =
       ValueSome [|
           // createBackground container
           yield! createBlur ()
-          createTextModal container (error.Message)
+          createErrorModal container error
         |]
 
     | MenuV2.State.GameResultState(resultState, _) ->
@@ -283,7 +318,7 @@ let createModal (container: Container) (state: MenuV2.State) =
         ValueSome [|
           // createBackground container
           yield! createBlur ()
-          createTextModal container (error.Message)
+          createErrorModal container error
         |]
 
       | GameResult.InputName (state, _) ->

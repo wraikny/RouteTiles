@@ -21,6 +21,7 @@ let private main _ =
     async {
       let! config = Config.initialize
       let! _ = Async.StartChild (Config.update)
+      let! _ = Async.StartChild (ErrorLog.update)
       Engine.AddNode (MenuV2.MenuV2Node(config))
     }
     |> Async.StartImmediate

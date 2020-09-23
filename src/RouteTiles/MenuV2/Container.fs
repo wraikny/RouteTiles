@@ -21,7 +21,7 @@ type internal Container (textMap: TextMap.TextMap) =
   member val SelectionArrow = Texture2D.LoadStrict(@"Menu/selection_more.png")
   // member val InputUsernameBackground = Texture2D.LoadStrict(@"Menu/input_username.png")
   member val Font = Font.LoadStaticFontStrict(@"Font/Makinas-4-Square-32/font.a2f")
-  // member val Font = Font.LoadDynamicFontStrict(@"Font/Makinas-4-Square.otf", 32)
+  member val ErrorMessageFont = Font.LoadDynamicFontStrict(@"Font/mplus-1c-medium.ttf", 24)
 
   // member val Font = Font.LoadDynamicFontStrict(@"mplus-1c-bold.ttf", 32)
 

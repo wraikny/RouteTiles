@@ -66,3 +66,8 @@ with
 type SetSoundVolumeEffect = SetSoundVolume of float32 * float32
 with
   static member Effect(_) = Eff.marker<unit>
+
+[<Struct>]
+type ErrorLogEffect = ErrorLogEffect of exn
+with
+  static member Effect(_) = Eff.marker<unit>

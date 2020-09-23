@@ -48,6 +48,7 @@ type Descriptions = {
   namePlaceholder: string
   waitingResponse: string
   sendToServer: string
+  error: string
 }
 
 type Modes = {
@@ -108,7 +109,7 @@ let textMapJapanese = {
     endless = "ひたすらタイルをつなぐ練習用のモードです"
     tutorial = "ゲームの遊び方を説明します"
     namesetting = "ランキングで使う名前を設定します"
-    volumeSetting = "BGMとSEの音量を設定します。"
+    volumeSetting = "BGMとSEの音量を設定します"
     backgroundsetting = "背景を設定します"
     settingsave = "設定を保存します"
     selectController = "使いたいコントローラを選びます"
@@ -120,6 +121,7 @@ let textMapJapanese = {
     namePlaceholder = "username"
     waitingResponse = "しばらくお待ち下さい..."
     sendToServer = "オンラインランキングに結果を送信しますか？"
+    error = "エラーが発生しました"
   }
 
   modes = {

@@ -209,6 +209,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
           match! Ranking.Rankings.Waiting |> stateEnter with
           | Error e ->
             do! SinglePage.SinglePageState e |> stateEnter
+            do! ErrorLogEffect e
             return state
           | Ok dataMap ->
             let gameMode = SoloGame.GameMode.TimeAttack2000
@@ -375,19 +376,21 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
 }
 
 #if DEBUG
-type Handler = Handler with
-  static member inline Handle(x) = x
-  static member inline Handle(e, k) = handle (e, k)
-  static member inline Handle(_: SoundEffect, k) = failwith "" |> k
-  static member inline Handle(_: CurrentControllers, k) = failwith "" |> k
-  static member inline Handle(_: GameControlEffect, k) = failwith "" |> k
-  static member inline Handle(_: SetControllerEffect, k) = failwith "" |> k
-  static member inline Handle(_: SaveConfig, k) = failwith "" |> k
-  static member inline Handle(_: GameRankingEffect, k) = failwith "" |> k
-  static member inline Handle(_: SetSoundVolumeEffect, k) = failwith "" |> k
-  // static member inline Handle(_: GetStateEffect<'a>, k) = k Unchecked.defaultof<'a>
+module Debug =
+  type Handler = Handler with
+    static member inline Handle(x) = x
+    static member inline Handle(e, k) = handle (e, k)
+    static member inline Handle(_: SoundEffect, k) = failwith "" |> k
+    static member inline Handle(_: CurrentControllers, k) = failwith "" |> k
+    static member inline Handle(_: GameControlEffect, k) = failwith "" |> k
+    static member inline Handle(_: SetControllerEffect, k) = failwith "" |> k
+    static member inline Handle(_: SaveConfig, k) = failwith "" |> k
+    static member inline Handle(_: GameRankingEffect, k) = failwith "" |> k
+    static member inline Handle(_: SetSoundVolumeEffect, k) = failwith "" |> k
+    static member inline Handle(_: ErrorLogEffect, k) = failwith "" |> k
+    // static member inline Handle(_: GetStateEffect<'a>, k) = k Unchecked.defaultof<'a>
 
-let update' msg state =
-  update msg state
-  |> Eff.handle Handler
+  let update' msg state =
+    update msg state
+    |> Eff.handle Handler
 #endif

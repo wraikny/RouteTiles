@@ -129,6 +129,11 @@ type MenuV2Handler = {
       k()
     )
 
+  static member Handle(ErrorLogEffect error as e, k) =
+    Utils.DebugLogn (sprintf "Effect: %A" e)
+    ErrorLog.save error
+    k ()
+
   static member Handle(SetSoundVolume(bgmVolume, seVolume) as e, k) =
     Eff.capture(fun h ->
       Utils.DebugLogn (sprintf "Effect: %A" e)
