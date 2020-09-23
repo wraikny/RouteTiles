@@ -12,7 +12,7 @@
 - 本アプリケーションによって保存されるファイル
 - 本アプリケーションの通信する内容
 
-その他依存ライブラリのライセンスは LICENSE.txt を御覧ください。
+その他依存ライブラリのライセンスは`LICENSE.txt`を御覧ください。
 
 ## Resources
 - [マキナス Square 4 (c) もじワク研究](https://moji-waku.com/makinas/)
@@ -36,3 +36,4 @@
   - [ワンポイント](https://maoudamashii.jokersounds.com/list/se2.html)
     - ワンポイント9
     - ワンポイント23
+
