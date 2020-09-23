@@ -16,7 +16,9 @@ let private main _ =
     Engine.ClearColor <- clearColor
 
   let initGame() =
-    let progressSum = 1 + MenuV2.Container.ProgressCount
+    let soundProgress, soundInit = SoundControl.loading
+
+    let progressSum = 1 + MenuV2.Container.ProgressCount + soundProgress
     let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.125f)
     let loading =
       Loading
@@ -30,15 +32,23 @@ let private main _ =
     Engine.AddNode loading
 
     async {
-      let! container = Async.StartChild (async { return MenuV2.Container(TextMap.textMapJapanese, loading.Progress) })
-
       let! config = Config.initialize
       loading.Progress() |> ignore
+
+      let! child = Async.StartChild (async {
+        let container = MenuV2.Container(TextMap.textMapJapanese, loading.Progress)
+
+        do! soundInit loading.Progress
+
+        return container
+      })
+
+
 
 
       let! _ = Async.StartChild (Config.update)
       let! _ = Async.StartChild (ErrorLog.update)
-      let! container = container
+      let! container = child
 
       Engine.RemoveNode loading
       Engine.AddNode (MenuV2.MenuV2Node(config, container))

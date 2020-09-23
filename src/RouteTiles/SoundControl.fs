@@ -47,6 +47,11 @@ module internal BGM =
       volumeRate = 0.1f
     }
 
+  let gameBGMs = [|
+    sikoumeikyu
+    rasenkouro
+    hodoku
+  |]
 
 [<RequireQualifiedAccess>]
 type SEKind =
@@ -78,6 +83,40 @@ module internal SE =
   let gameVanishTiles = { path = @"SE/se_maoudamashii_se_sound15.ogg"; volumeRate = 0.5f }
   let readyGame = { path = @"SE/se_maoudamashii_onepoint23.ogg"; volumeRate = 0.25f }
   let startGame = { path = @"SE/se_maoudamashii_onepoint09.ogg"; volumeRate = 0.25f }
+
+  let sePairs = [|
+    SEKind.CursorMove, cursorMove
+    SEKind.Enter, enter
+    SEKind.Cancel, cancel
+    SEKind.GameMoveCursor, gameMoveCursor
+    SEKind.GameMoveTiles, gameMoveTiles
+    SEKind.Pause, pause
+    SEKind.GameVanishTiles, gameVanishTiles
+    SEKind.ReadyGame, readyGame
+    SEKind.StartGame, startGame
+    // SEKind.Invalid, SE.invalid
+  |]
+
+module SoundControl =
+
+  let loading =
+    let bgms = [|
+      yield! BGM.gameBGMs
+      BGM.sikoumeikyumaborosi
+    |]
+    
+    let ses = SE.sePairs
+
+    (bgms.Length + ses.Length), fun (progress: unit -> int) -> async {
+      for bgm in bgms do
+        Sound.LoadStrict(bgm.path, false) |> ignore
+        progress () |> ignore
+      
+      for (_, se) in ses do
+        Sound.Load(se.path, true) |> ignore
+        progress () |> ignore
+    }
+
 
 [<RequireQualifiedAccess>]
 type SoundControlState =
