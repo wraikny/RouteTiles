@@ -11,7 +11,7 @@ open EffFs
 open EffFs.Library
 
 module TileDir =
-  let primitiveTiles = [|
+  let singleTiles = [|
     TileDir.UpRight
     TileDir.UpDown
     TileDir.UpLeft
@@ -24,10 +24,10 @@ module TileDir =
   |]
 
   let random =
-    Random.int 0 primitiveTiles.Length
-    |> Random.map(fun d -> primitiveTiles.[d])
+    Random.int 0 singleTiles.Length
+    |> Random.map(fun d -> singleTiles.[d])
 
-  let private primitivePairs = [|
+  let private singlePairs = [|
       TileDir.UpRight, (Dir.Up, Dir.Right)
       TileDir.UpDown, (Dir.Up, Dir.Down)
       TileDir.UpLeft, (Dir.Up, Dir.Left)
@@ -36,11 +36,11 @@ module TileDir =
       TileDir.DownLeft, (Dir.Down, Dir.Left)
     |]
 
-  let private primitiveCorrespondence = dict primitivePairs
+  let private singleCorrespondence = dict singlePairs
 
   let correspondence =
     let pairs = [|
-      yield! primitivePairs
+      yield! singlePairs
       TileDir.Cross, (Dir.Up, Dir.Down)
       TileDir.Cross, (Dir.Right, Dir.Left)
     |]
@@ -62,7 +62,7 @@ module TileDir =
     | _ -> ValueNone
 
   let (|Single|_|) x =
-    primitiveCorrespondence.TryGetValue(x)
+    singleCorrespondence.TryGetValue(x)
     |> function
     | true, res -> Some(Single(res))
     | _ -> None
@@ -151,9 +151,11 @@ module Model =
         let hState, hrl = routesDirs tile cdn Dir.Right Dir.Left
         let vState, vrl = routesDirs tile cdn Dir.Up Dir.Down
         RouteState.Cross(hState, vState), seq { yield vrl; yield hrl }
+
       | TileDir.Single(a, b) ->
         let state, rl = routesDirs tile cdn a b
         RouteState.Single state, seq { yield rl }
+
       | x -> failwithf "Unexpected pattern: %A" x
 
 
@@ -164,8 +166,8 @@ module Model =
       board.tiles
       |> Array2D.mapi (fun x y ->
         ValueOption.map(fun tile ->
-          let state, rls = getRouteState (Vector2.init x y) tile
-          rls |> Seq.iter(ValueOption.iter(routesAndLoops.Add))
+          let state, tiles = getRouteState (Vector2.init x y) tile
+          tiles |> Seq.iter (ValueOption.iter routesAndLoops.Add)
           { tile with routeState = state }
         )
       ), Set.ofSeq routesAndLoops
@@ -193,7 +195,7 @@ module Model =
       |> nextDirsToTiles tiles.Length
       |> Seq.toList,
       nextTiles2
-      |> nextDirsToTiles (tiles.Length + TileDir.primitiveTiles.Length)
+      |> nextDirsToTiles (tiles.Length + TileDir.singleTiles.Length)
       |> Seq.toList
 
     tiles, nextTilesPair
@@ -221,11 +223,11 @@ module Model =
           |> Random.array (size.x * size.y)
 
         let! nextTiles1 =
-          TileDir.primitiveTiles
+          TileDir.singleTiles
           |> Random.shuffleArray
 
         let! nextTiles2 =
-          TileDir.primitiveTiles
+          TileDir.singleTiles
           |> Random.shuffleArray
 
         return tiles, (nextTiles1, nextTiles2)
@@ -238,7 +240,7 @@ module Model =
           config = config
           markers = makeMarkers config.size
 
-          nextId = (tiles.Length + TileDir.primitiveTiles.Length * 2) * 1<TileId>
+          nextId = (tiles.Length + TileDir.singleTiles.Length * 2) * 1<TileId>
           cursor = Vector.zero
           tiles = tiles
           nextTiles = nextTiles
@@ -289,8 +291,11 @@ module Update =
         board
         |> Model.tryGetTile cdn
         |> function
+        // ボードの外
         | ValueNone -> true
+        // タイルがない
         | ValueSome ValueNone -> false
+        // タイルがある
         | _ -> isSlidedTile (cdn - dirVec)
 
       board.tiles
@@ -384,7 +389,7 @@ module Update =
           | [], next::nexts ->
             eff {
               let! newNexts =
-                TileDir.primitiveTiles
+                TileDir.singleTiles
                 |> Random.shuffleArray
 
               let newNexts =
