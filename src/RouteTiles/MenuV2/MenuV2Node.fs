@@ -244,6 +244,7 @@ type internal MenuV2Node(config: Config) =
         | GameControlEffect.Pause ->
           Engine.Pause(this)
           let config = Config.tryGet().Value
+          soundControl.PauseSE()
           soundControl.SetVolume(config.bgmVolume * 0.25f, config.seVolume)
           soundControl.PlaySE(SEKind.Pause, false)
 
@@ -251,6 +252,7 @@ type internal MenuV2Node(config: Config) =
           Engine.Resume()
           let config = Config.tryGet().Value
           soundControl.SetVolume(config.bgmVolume, config.bgmVolume)
+          soundControl.ResumeSE()
 
         | GameControlEffect.Start(gameMode, controller) ->
           soundControl.SetState(SoundControlState.Game)
