@@ -200,7 +200,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
               return gameModeState
 
             | _, ValueSome controller ->
-              do! GameControlEffect.Start(gameMode |> SoloGame.GameMode.into, controller)
+              do! GameControlEffect.Start(gameMode |> SoloGame.GameMode.into, controller, config)
               return GameState (config, controller, gameMode)
 
         | ValueSome Mode.Ranking ->

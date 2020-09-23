@@ -20,7 +20,8 @@ module internal Consts =
     let [<Literal>] BGMFadeSecond = 2.5f
 
   module PostEffect =
-    let [<Literal>] wavepath = @"Shader/wave.hlsl"
+    let [<Literal>] wavepath = @"Shader/Wave.hlsl"
+    let [<Literal>] floatingtilesPath = @"Shader/FloatingTiles.hlsl"
 
   module Board =
     let [<Literal>] nextsCountToShow = 5
@@ -151,6 +152,13 @@ module internal Helper =
       |> byte
     Color(f x.R y.R, f x.G y.G, f x.B y.B, f x.A y.A)
 
+  module PostEffect =
+    open RouteTiles.Core
+
+    let toPath = function
+      | Background.Wave -> Consts.PostEffect.wavepath
+      | Background.FloatingTiles -> Consts.PostEffect.floatingtilesPath
+
   module Board =
     open Consts.Core
     open Consts.ViewCommon
@@ -253,6 +261,8 @@ module internal ZOrder =
     let offset = (|||) (300 <<< 16)
     let blur = offset 0
     let darkMask = offset 1
+
+    let postEffectToShow  = offset 2
 
     let currentMode = offset 30
 

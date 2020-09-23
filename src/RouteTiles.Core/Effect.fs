@@ -14,7 +14,7 @@ open EffFs
 type GameControlEffect =
   | Pause
   | Resume
-  | Start of SoloGame.Mode * Controller
+  | Start of SoloGame.Mode * Controller * Config
   | Restart
   | Quit
 with

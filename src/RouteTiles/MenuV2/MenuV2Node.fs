@@ -261,13 +261,13 @@ type internal MenuV2Node(config: Config) =
           soundControl.SetVolume(config.bgmVolume, config.bgmVolume)
           soundControl.ResumeSE()
 
-        | GameControlEffect.Start(gameMode, controller) ->
+        | GameControlEffect.Start(gameMode, controller, config) ->
           soundControl.SetState(SoundControlState.Game)
 
           gameNode |> function
           | ValueSome n ->
             Engine.AddNode(n)
-            n.Initialize(gameMode, controller)
+            n.Initialize(gameMode, controller, config)
           | ValueNone ->
             let uiRootGameInfo = BoxUIRootNode(isAutoTerminated = false)
             let gameInfoElement, gameInfoScoreUpdater, gameInfoTimeUpdater =
@@ -299,7 +299,7 @@ type internal MenuV2Node(config: Config) =
                 |> updater.Dispatch
             }
             let n = Game(gameHandler, soundControl)
-            n.Initialize(gameMode, controller)
+            n.Initialize(gameMode, controller, config)
             n.AddChildNode uiRootGameInfo
             Engine.AddNode(n)
 

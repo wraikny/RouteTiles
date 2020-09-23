@@ -18,7 +18,7 @@ module Mode =
   let items = [|
     Mode.InputName
     Mode.Volume
-    // Mode.Background
+    Mode.Background
     Mode.Enter
   |]
 

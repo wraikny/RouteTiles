@@ -218,14 +218,15 @@ let createVolumeSettingModal (container: Container) (state: VolumeSetting.State)
       )
     |]
 
+let private listSelectorZOrders =
+  {|button = ZOrder.MenuModal.buttonBackground
+    buttonText = ZOrder.MenuModal.buttonText
+    desc = ZOrder.MenuModal.description
+    background = ZOrder.MenuModal.background
+  |}
 
 let createControllerSelect =
-  controllerSelect
-    {|button = ZOrder.MenuModal.buttonBackground
-      buttonText = ZOrder.MenuModal.buttonText
-      desc = ZOrder.MenuModal.description
-      background = ZOrder.MenuModal.background
-    |}
+  controllerSelect listSelectorZOrders
 
 
 let private createCurrentMode = createCurrentMode ZOrder.MenuModal.currentMode
@@ -283,8 +284,27 @@ let createModal (container: Container) (state: MenuV2.State) =
         createVolumeSettingModal container state
       |]
 
-    | MenuV2.State.ControllerSelectState (WithContext(MenuV2.ControllerSelectToPlay _), _) -> ValueNone
+    | MenuV2.State.SettingMenuState (Setting.State.Background(state, _), _) ->
+      ValueSome [|
+        PostEffect.BackgroundElement.Create
+          ( Helper.PostEffect.toPath Background.items.[state.cursor]
+          , zOrder = ZOrder.MenuModal.postEffectToShow
+          )
+        :> Element
 
+        createCurrentMode container container.TextMap.modes.volumeSetting
+
+        yield!
+          listSelectorModal
+            listSelectorZOrders
+            container
+            container.TextMap.descriptions.selectBackground
+            container.Font
+            state
+            container.BackgroundButtons
+      |]
+
+    | MenuV2.State.ControllerSelectState (WithContext(MenuV2.ControllerSelectToPlay _), _) -> ValueNone
     | MenuV2.State.PauseState(Pause.ControllerSelectState (state, _), _)
     | MenuV2.State.ControllerSelectState (WithContext (MenuV2.ControllerSelectToPlay state), _)
     | MenuV2.State.ControllerSelectState (WithContext (MenuV2.ControllerSelectWhenRejected state), _) ->

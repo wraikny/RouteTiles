@@ -8,10 +8,11 @@ open RouteTiles.App
 open Altseed2
 open Altseed2.BoxUI
 
-[<AutoOpen>]
-module private Ops =
-  let inline (|?) a b =
-    if isNull a then b else a
+module internal ElementOps =
+  let inline (|?) a f =
+    if isNull a then f() else a
+
+open ElementOps
 
 [<AllowNullLiteral; Sealed; AutoSerializable(true)>]
 type FixedHeight private () =
@@ -20,7 +21,7 @@ type FixedHeight private () =
   member val private Height = Unchecked.defaultof<_> with get, set
 
   static member Create(height: float32) =
-    let elem = BoxUISystem.RentOrNull<FixedHeight>() |? FixedHeight()
+    let elem = BoxUISystem.RentOrNull<FixedHeight>() |? (fun () -> FixedHeight())
     elem.Height <- height
     elem
 
@@ -42,7 +43,7 @@ type FixedWidth private () =
   member val private Width = Unchecked.defaultof<_> with get, set
 
   static member Create(width: float32) =
-    let elem = BoxUISystem.RentOrNull<FixedWidth>() |? FixedWidth()
+    let elem = BoxUISystem.RentOrNull<FixedWidth>() |? (fun () -> FixedWidth())
     elem.Width <- width
     elem
 
@@ -57,55 +58,52 @@ type FixedWidth private () =
     for child in this.Children do
       child.Resize(area)
 
-[<AllowNullLiteral; Sealed; AutoSerializable(true)>]
-type GaussianBlur private () =
+[<AllowNullLiteral; AbstractClass>]
+type PostEffectElement<'p when 'p :> PostEffectNode and 'p : null and 'p : (new : unit -> 'p)> () =
   inherit Element()
 
-  let mutable node: PostEffectGaussianBlurNode = null
-
-  let mutable onUpdateEvent: Event<PostEffectGaussianBlurNode> voption = ValueNone
-
-  member val private intensity = Unchecked.defaultof<float32> with get, set
-  member val private zOrder = Unchecked.defaultof<int> with get, set
-  member val private cameraGroup = Unchecked.defaultof<uint64> with get, set
+  let mutable node: 'p = null
+  member val zOrder = Unchecked.defaultof<int> with get, set
+  member val cameraGroup = Unchecked.defaultof<uint64> with get, set
   member __.Node with get() = node and set(v) = node <- v
-
-  member __.OnUpdateEvent with get() =
-    onUpdateEvent |> function
-    | ValueSome e -> e.Publish
-    | _ ->
-      let e = Event<_>()
-      onUpdateEvent <- ValueSome e
-      e.Publish
-
-
-  static member Create(?intensity: float32, ?zOrder: int, ?cameraGroup: uint64) =
-    let elem = BoxUISystem.RentOrNull<GaussianBlur>() |? GaussianBlur()
-    elem.intensity <- defaultArg intensity 5.0f
-    elem.zOrder <- defaultArg zOrder 0
-    elem.cameraGroup <- defaultArg cameraGroup 0uL
-    elem
 
   override this.ReturnSelf() =
     this.Root.Return(node)
     node <- null
-    onUpdateEvent <- ValueNone
-    BoxUISystem.Return(this)
 
   override this.OnAdded() =
-    node <- this.Root.RentOrCreate<PostEffectGaussianBlurNode>()
-    node.Intensity <- this.intensity
+    node <- this.Root.RentOrCreate<'p>()
     node.ZOrder <- this.zOrder
     node.CameraGroup <- this.cameraGroup
-
-  override this.OnUpdate() =
-    onUpdateEvent |> ValueOption.iter(fun e -> e.Trigger(node))
 
   override this.CalcSize(size) = size
 
   override this.OnResize(size) =
     for child in this.Children do
       child.Resize(size)
+
+
+[<AllowNullLiteral; Sealed; AutoSerializable(true)>]
+type GaussianBlur private () =
+  inherit PostEffectElement<PostEffectGaussianBlurNode>()
+
+  member val private intensity = Unchecked.defaultof<float32> with get, set
+
+  static member Create(?intensity: float32, ?zOrder: int, ?cameraGroup: uint64) =
+    let elem = BoxUISystem.RentOrNull<GaussianBlur>() |? (fun () -> GaussianBlur())
+    elem.intensity <- defaultArg intensity 5.0f
+    elem.zOrder <- defaultArg zOrder 0
+    elem.cameraGroup <- defaultArg cameraGroup 0uL
+    elem
+
+  override this.ReturnSelf() =
+    base.ReturnSelf()
+    BoxUISystem.Return(this)
+
+  override this.OnAdded() =
+    base.OnAdded()
+    this.Node.Intensity <- this.intensity
+
 
 
 [<AllowNullLiteral; Sealed; AutoSerializable(true)>]
@@ -116,7 +114,7 @@ type ItemList private() =
   member val private ItemMargin = Unchecked.defaultof<_> with get, set
 
   static member Create(?itemHeight, ?itemMargin) =
-    let elem = BoxUISystem.RentOrNull<ItemList>() |? ItemList()
+    let elem = BoxUISystem.RentOrNull<ItemList>() |? (fun () -> ItemList())
     elem.ItemHeight <- itemHeight
     elem.ItemMargin <- defaultArg itemMargin 0.0f
     elem
@@ -174,7 +172,7 @@ type Grid private() =
     if itemSize.X <= 0.0f || itemSize.Y <= 0.0f then
       failwithf "invalid itemSize %O" itemSize
 
-    let elem = BoxUISystem.RentOrNull<Grid>() |? Grid()
+    let elem = BoxUISystem.RentOrNull<Grid>() |? (fun () -> Grid())
     elem.ItemSize <- itemSize
     elem
 

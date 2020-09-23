@@ -25,6 +25,8 @@ type Buttons = {
   notSendToServer: string
   bgm: string
   se: string
+  backgroundWaveBlue: string
+  backgroundFloatingTiles: string
 }
 
 type Descriptions = {
@@ -40,6 +42,7 @@ type Descriptions = {
   backgroundsetting: string
   settingsave: string
   selectController: string
+  selectBackground: string
   continueGame: string
   restartGame: string
   quitGame: string
@@ -65,10 +68,19 @@ type Modes = {
   // waitingResponse: string
 }
 
+type GameInfo = {
+  score: string
+  time: string
+  tileCount: string
+  routeCount: string
+  loopCount: string
+}
+
 type TextMap = {
   buttons: Buttons
   descriptions: Descriptions
   modes: Modes
+  gameInfo: GameInfo
   others: string
 }
 
@@ -98,6 +110,8 @@ let textMapJapanese = {
     notSendToServer = "送信しない"
     bgm = "BGM"
     se = "SE"
+    backgroundWaveBlue = "Wave"
+    backgroundFloatingTiles = "FloatingTiles"
   }
 
   descriptions = {
@@ -113,6 +127,7 @@ let textMapJapanese = {
     backgroundsetting = "背景を設定します"
     settingsave = "設定を保存します"
     selectController = "使いたいコントローラを選びます"
+    selectBackground = "ゲーム中の背景を設定します"
     continueGame = "ゲームを再開します"
     restartGame = "ゲームを始めからやりなおします"
     quitGame = "ゲームをやめてタイトルに戻ります"
@@ -137,6 +152,14 @@ let textMapJapanese = {
     volumeSetting = "音量設定"
     // waitingResponse = "通信待機中..."
     // error = "エラー"
+  }
+
+  gameInfo = {
+    score = "スコア"
+    time = "タイム"
+    tileCount = "タイル数"
+    routeCount = "ルート数"
+    loopCount = "ループ数"
   }
 
   others = ":/-."

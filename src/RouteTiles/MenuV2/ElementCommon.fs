@@ -144,14 +144,14 @@ let modalFrame zOrder (container: Container) =
   :> Element
 
 
-let controllerSelect (zOrders: {| button: int; buttonText: int; desc: int; background: int |}) (container: Container) (state: ListSelector.State<Controller>) =
-  let controllers =
-    state.selection
-    |> Array.map(function
-      | Controller.Keyboard -> container.TextMap.buttons.keyboard
-      | Controller.Joystick(_, name, _) -> name
-    )
-
+let listSelectorModal
+  (zOrders: {| button: int; buttonText: int; desc: int; background: int |})
+  (container: Container)
+  (title: string)
+  (font: Font)
+  (state: ListSelector.State<'a>)
+  (selections: string[])
+  =
   let current = state.current |> Option.filter((=) state.cursor) |> Option.map(fun _ -> state.cursor)
 
   let createArrow (isUp: bool) (drawn: bool) =
@@ -184,8 +184,8 @@ let controllerSelect (zOrders: {| button: int; buttonText: int; desc: int; backg
           makeMargin 60.0f
 
           Text.Create
-            ( text = container.TextMap.descriptions.selectController
-            , font = container.Font
+            ( text = title
+            , font = font
             , zOrder = zOrders.desc
             )
           :> Element
@@ -202,7 +202,7 @@ let controllerSelect (zOrders: {| button: int; buttonText: int; desc: int; backg
             {| button = zOrders.button; buttonText = zOrders.buttonText |}
             (12.0f, false, false)
             container
-            controllers.[state.cursor..min (state.cursor+displaycount-1) (controllers.Length - 1)]
+            selections.[state.cursor..min (state.cursor+displaycount-1) (selections.Length - 1)]
             (0, current)
           :> Element
 
@@ -215,6 +215,20 @@ let controllerSelect (zOrders: {| button: int; buttonText: int; desc: int; backg
 
     // rightArea().With(createDesc container (container.TextMap.descriptions.selectController))
   |]
+
+
+let controllerSelect (zOrders: {| button: int; buttonText: int; desc: int; background: int |}) (container: Container) (state: ListSelector.State<Controller>) =
+  let selections = state.selection |> Array.map(function
+    | Controller.Keyboard -> container.TextMap.buttons.keyboard
+    | Controller.Joystick(_, name, _) -> name)
+
+  listSelectorModal
+    zOrders
+    container
+    container.TextMap.descriptions.selectController
+    container.DynamicFont
+    state
+    selections
 
 
 let gameInfoFrameSize = Vector2F(480.0f, 68.0f)

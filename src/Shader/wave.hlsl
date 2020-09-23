@@ -1,3 +1,5 @@
+#include "Utils.hlsl"
+
 cbuffer Consts : register(b1)
 {
   float4 time;
@@ -23,7 +25,7 @@ float calc(float2 p, float x, float y, float z, float w)
 float4 main(PS_INPUT input) : SV_TARGET
 {
   float2 p = input.UV1;
-  float3 o = float3(0.2, 0.4, 0.8);
+  float3 o = HSVtoRGB(0.6 + time.x * 0.02, 0.75, 0.6);
   o += calc(p, p.x, 0.4, 0.2, -0.1);
   o += calc(p, p.x + 1.0, 1.0, 0.3, 0.2);
   o += calc(p, p.x * 2.0 - 2.0, -0.5, 0.1, 0.1);

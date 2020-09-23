@@ -48,11 +48,12 @@ let createGameInfo (container: Container) name =
 
 let createSologameInfoElement (container: Container) =
   
-  let scoreElem, scoreUpdater = createGameInfo container "スコア"
-  let timeElem, timeUpdater = createGameInfo container "タイム"
-  let tileCountElem, tileCountUpdater = createGameInfo container "タイル数"
-  let routeCountElem, routeCountUpdater = createGameInfo container "ルート数"
-  let loopCountElem, loopCountUpdater = createGameInfo container "ループ数"
+  let gi = container.TextMap.gameInfo
+  let scoreElem, scoreUpdater = createGameInfo container gi.score
+  let timeElem, timeUpdater = createGameInfo container gi.time
+  let tileCountElem, tileCountUpdater = createGameInfo container gi.tileCount
+  let routeCountElem, routeCountUpdater = createGameInfo container gi.routeCount
+  let loopCountElem, loopCountUpdater = createGameInfo container gi.loopCount
 
 
   let element: ElementRoot =

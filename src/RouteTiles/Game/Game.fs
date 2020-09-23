@@ -41,6 +41,7 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
 
   let mutable gameMode = ValueNone
   let mutable controller = ValueNone
+  let mutable config = ValueNone
 
   let mutable lastModel: SoloGame.Model voption = ValueNone
   let updater = Updater<SoloGame.Model, _>()
@@ -49,6 +50,7 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
   let boardNode = BoardNode(coroutineNode.Add, Position = Helper.SoloGame.boardViewPos)
   let nextTilesNode = NextTilesNode(coroutineNode.Add, Position = Helper.SoloGame.nextsViewPos)
   // let gameInfoNode = GameInfoNode(Helper.SoloGame.gameInfoCenterPos)
+  let backgroundPostEffect = PostEffect.PostEffectBackground(ZOrder = ZOrder.posteffect)
 
   let readyStartNode =
     ReadyStart
@@ -65,6 +67,8 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
     base.AddChildNode(nextTilesNode)
 
     base.AddChildNode(readyStartNode)
+
+    base.AddChildNode(backgroundPostEffect)
     // base.AddChildNode(gameInfoNode)
 
     updater :> IObservable<_>
@@ -80,9 +84,6 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
       lastModel <- ValueSome model
     )
     |> ignore
-
-    
-    
 
   /// Binding Input
   do
@@ -156,15 +157,13 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
 
   member __.Controller with get() = controller and set(v) = controller <- v
 
-  member __.Initialize'(gameMode_, controller_) =
+  member __.Initialize'() =
     // lastModel <- updater.Model
     inputEnabled <- true
-    gameMode <- ValueSome gameMode_
-    controller <- ValueSome controller_
 
     let startTime = Engine.Time
 
-    gameMode_ |> function
+    gameMode.Value |> function
     | SoloGame.Mode.Endless ->
       uniqueCoroutine <- (seq {
         while true do
@@ -213,20 +212,27 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
           yield ()
       }).GetEnumerator()
 
-  member this.Initialize(gameMode_, controller_) =
+  member this.Initialize(gameMode_, controller_, config_: Config) =
     uniqueCoroutine <- null
+
+    gameMode <- ValueSome gameMode_
+    controller <- ValueSome controller_
+    config <- ValueSome config_
+
+    backgroundPostEffect.SetShader(config_.background |> Helper.PostEffect.toPath)
+
     if disposable <> null then
       disposable.Dispose()
       disposable <- null
 
     let initModel =
-      let config: Board.BoardConfig = {
+      let boardConfig: Board.BoardConfig = {
         nextCounts = Consts.Core.nextsCount
         size = Consts.Core.boardSize
       }
 
       SoloGame.init
-        config
+        boardConfig
         gameMode_
         // controller
       |> Eff.handle handler
@@ -240,7 +246,7 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
 
     let initTime = gameMode_ |> function
       | SoloGame.Mode.ScoreAttack time -> float32 time
-      | SoloGame.Mode.TimeAttack
+      | SoloGame.Mode.TimeAttack _
       | SoloGame.Mode.Endless -> 0.0f
 
     gameInfoViewer.SetModel(initModel)
@@ -249,11 +255,11 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
     inputEnabled <- false
 
     readyStartNode.Ready (fun () ->
-      this.Initialize'(gameMode_, controller_)
+      this.Initialize'()
     )
 
   member this.Restart() =
-    (gameMode, controller) |> function
-    | ValueSome gameMode, ValueSome controller ->
-      this.Initialize(gameMode, controller)
+    (gameMode, controller, config) |> function
+    | ValueSome gameMode, ValueSome controller, ValueSome config ->
+      this.Initialize(gameMode, controller, config)
     | _ -> failwith "invalid state"

@@ -22,6 +22,7 @@ type internal Container (textMap: TextMap.TextMap) =
   // member val InputUsernameBackground = Texture2D.LoadStrict(@"Menu/input_username.png")
   member val Font = Font.LoadStaticFontStrict(@"Font/Makinas-4-Square-32/font.a2f")
   member val ErrorMessageFont = Font.LoadDynamicFontStrict(@"Font/mplus-1c-medium.ttf", 24)
+  member val DynamicFont = Font.LoadDynamicFontStrict(@"Font/Makinas-4-Square.otf", 32)
 
   // member val Font = Font.LoadDynamicFontStrict(@"mplus-1c-bold.ttf", 32)
 
@@ -116,4 +117,10 @@ type internal Container (textMap: TextMap.TextMap) =
     VolumeSetting.VolumeMode.items |> Array.map (function
       | VolumeSetting.VolumeMode.BGM -> textMap.buttons.bgm
       | VolumeSetting.VolumeMode.SE -> textMap.buttons.se
+    )
+
+  member val BackgroundButtons =
+    Background.items |> Array.map (function
+      | Background.Wave -> textMap.buttons.backgroundWaveBlue
+      | Background.FloatingTiles -> textMap.buttons.backgroundFloatingTiles
     )

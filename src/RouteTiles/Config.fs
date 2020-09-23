@@ -5,22 +5,31 @@ open RouteTiles.Core
 open System
 open System.Threading
 open System.IO
+open System.Text
 open System.Collections.Concurrent
-open System.Runtime.Serialization
-open System.Runtime.Serialization.Formatters.Binary
+// open System.Runtime.Serialization
+// open System.Runtime.Serialization.Formatters.Binary
+open System.Security.Cryptography
 
-let [<Literal>] ConfigFile = @"Data/config.bat"
+open FSharp.Json
+
+let [<Literal>] ConfigFile = @"Data/config.json"
 
 let dirName = Path.GetDirectoryName ConfigFile
-let formatter = new BinaryFormatter()
+
+
+let private aes = new AesManaged()
+
 
 let private write (conf: Config) =
   let exists = Directory.Exists(dirName)
   if not exists then
     Directory.CreateDirectory(dirName) |> ignore
 
-  use file = new FileStream(ConfigFile, FileMode.Create)
-  formatter.Serialize(file, conf)
+  let content = Json.serialize conf
+
+  File.WriteAllTextAsync(ConfigFile, content)
+  |> Async.AwaitTask
 
 let private writeQueue = ConcurrentQueue<Config>()
 
@@ -36,7 +45,7 @@ let update = async {
   while true do
     match writeQueue.TryDequeue() with
     | true, conf ->
-      write conf
+      do! write conf
       lock lockObj (fun () -> config <- ValueSome conf)
       // do! Async.SwitchToContext ctx
     | _ -> do! Async.Sleep 100
@@ -59,11 +68,14 @@ let initialize = async {
   
   if fileExists then
     try
-      use file = new FileStream(ConfigFile, FileMode.OpenOrCreate)
-      let res = formatter.Deserialize(file) |> unbox<Config>
+      let! fileText =
+        File.ReadAllTextAsync ConfigFile
+        |> Async.AwaitTask
+
+      let res = Json.deserialize<Config> fileText
       config <- ValueSome res
       return res
-    with :? SerializationException ->
+    with _ ->
       return createNew()
   else
     return createNew()

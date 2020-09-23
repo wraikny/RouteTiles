@@ -51,6 +51,7 @@
     <Compile Include="AnimationSpriteNode.fs" />
     <Compile Include="InputControl.fs" />
     <Compile Include="ViewParams.fs" />
+    <Compile Include="PostEffect/Background.fs" />
     <Compile Include="SoundControl.fs" />
     <Compile Include="Loading.fs" />
     <Compile Include="Game/Board.fs" />
@@ -66,7 +67,6 @@
     <Compile Include="MenuV2/MenuModalElement.fs" />
     <Compile Include="MenuV2/GameInfoElement.fs" />
     <Compile Include="MenuV2/MenuV2Node.fs" />
-    <Compile Include="PostEffect/Wave.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

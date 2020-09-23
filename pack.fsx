@@ -42,6 +42,11 @@ let fonts = [|
         yield!
           TextMap.textMapJapanese.modes
           |> getStringPropertyCharacters
+        yield!
+          TextMap.textMapJapanese.gameInfo
+          |> getStringPropertyCharacters
+
+        yield! TextMap.textMapJapanese.others
 
     |] |> Array.distinct |> fun cs -> new String(cs))
   )
