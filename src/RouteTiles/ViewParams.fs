@@ -262,6 +262,14 @@ module internal ZOrder =
 
     let title = offset 1000
 
+  module PostEffect =
+
+    let offset = (|||) (250 <<< 16)
+
+    let lightBloom = offset 10
+
+    let fade = offset 20
+
   module MenuModal =
     let offset = (|||) (300 <<< 16)
     let blur = offset 0
@@ -285,13 +293,5 @@ module internal ZOrder =
     let description = offset 300
 
   let modeText = (400 <<< 16) ||| 30
-
-  module PostEffect =
-
-    let offset = (|||) (500 <<< 16)
-
-    let lightBloom = offset 10
-
-    let fade = offset 20
 
   let debug = 1 <<< 31

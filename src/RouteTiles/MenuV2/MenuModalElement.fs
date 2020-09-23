@@ -270,6 +270,18 @@ let private createErrorModal (container: Container) (error: exn) =
 
 let createModal (container: Container) (state: MenuV2.State) =
   state |> function
+    | MenuV2.State.HowToControlState (SinglePage.SinglePageState state, _) ->
+      ValueSome [|
+        yield! createBlur()
+        createCurrentMode container container.TextMap.modes.howToControl
+
+        let texture =
+          match state with
+          | MenuV2.HowToControl.Keyboard -> container.HowToKeyboard
+          | MenuV2.HowToControl.Joystick -> container.HowToJoystick
+
+        centeredSprite ZOrder.MenuModal.background texture
+      |]
     | MenuV2.State.SettingMenuState (Setting.State.InputName(state, _), _) ->
       ValueSome [|
           yield! createBlur ()

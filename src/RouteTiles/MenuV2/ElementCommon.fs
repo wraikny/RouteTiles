@@ -134,14 +134,17 @@ let buttons
       )
   )
 
-let modalFrame zOrder (container: Container) =
+let centeredSprite zOrder texture =
   Sprite.Create
     ( aspect = Aspect.Fixed
-    , texture = container.InputBackground
+    , texture = texture
     , zOrder = zOrder
     )
   |> BoxUI.alignCenter
   :> Element
+
+let modalFrame zOrder (container: Container) =
+  centeredSprite zOrder container.InputBackground
 
 
 let listSelectorModal

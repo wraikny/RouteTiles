@@ -14,7 +14,10 @@ with
 [<Struct; RequireQualifiedAccess>]
 type Msg = Enter
 
-let inline update msg _state =
+let inline update msg _state = eff {
   match msg with
-  | Msg.Enter -> Completed ()
+  | Msg.Enter ->
+    do! SoundEffect.Select
+    return Completed ()
+}
 

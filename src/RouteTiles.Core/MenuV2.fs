@@ -60,6 +60,9 @@ module ControllerSelect =
       return! state |> apply ControllerSelectWhenRejected
   }
 
+[<RequireQualifiedAccess>]
+type HowToControl = Keyboard | Joystick
+
 
 type WithState<'s> = WithContext<State, 's>
 
@@ -76,13 +79,13 @@ and State =
   | RankingState of Ranking.Rankings.State * (unit -> State)
   | WaitingResponseState of Ranking.Rankings.Waiting * (Ranking.Rankings.Response -> State)
   | ErrorViewState of SinglePage.State<exn> * (unit -> State)
+  | HowToControlState of SinglePage.State<HowToControl> * (unit -> State)
 with
   member x.IsStringInputMode = x |> function
     | SettingMenuState (s, _) -> s.IsStringInputMode
     | _ -> false
 
-  static member Init(config) =
-    MainMenuState(config, ListSelector.State<_>.Init(0, Mode.items))
+  static member inline Init(config) = MainMenuState(config, ListSelector.State<_>.Init(0, Mode.items))
 
   static member StateEnter(s, k) = GameModeSelectState (s, k)
   static member StateEnter(s, k) = ControllerSelectState (s, k)
@@ -92,6 +95,7 @@ with
   static member StateEnter(s, k) = RankingState (s, k)
   static member StateEnter(s, k) = WaitingResponseState (s, k)
   static member StateEnter(s, k) = ErrorViewState (s, k)
+  static member StateEnter(s, k) = HowToControlState (s, k)
 
 let equal a b = (a, b) |> function
   | MainMenuState(a1, a2), MainMenuState(b1, b2) -> (a1, a2) = (b1, b2)
@@ -104,6 +108,7 @@ let equal a b = (a, b) |> function
   | RankingState(a, _), RankingState(b, _) -> a = b
   | WaitingResponseState(a, _), WaitingResponseState(b, _) -> a = b
   | ErrorViewState(a, _), ErrorViewState(b, _) -> a = b
+  | HowToControlState(a, _), HowToControlState(b, _) -> a = b
   | _ -> false
 
 
@@ -122,6 +127,7 @@ type Msg =
   | SelectController
   | ReceiveRankingGameResult of Ranking.GameResult.Response
   | ReceiveRankingRankings of Ranking.Rankings.Response
+  | OpenHowToControl
 
 
 module Msg =
@@ -163,9 +169,18 @@ module Msg =
     | Enter | Cancel -> ValueSome SinglePage.Msg.Enter
     | _ -> ValueNone
 
+let inline howToControl state = eff {
+  do! SinglePage.SinglePageState HowToControl.Keyboard |> stateEnter
+  do! SinglePage.SinglePageState HowToControl.Joystick |> stateEnter
+  return state
+}
+
 
 let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
   match msg, state with
+  | Msg.OpenHowToControl, _ ->
+    return! howToControl state
+
   | _, MainMenuState(config, mainMenu) ->
     match Msg.toListSelectorMsg msg with
     // Cancelは拾う
@@ -360,13 +375,19 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
   | _, RankingState (s, k) ->
     match Msg.toSinglePageMsg msg with
     | ValueSome msg ->
-      return stateMap (SinglePage.update msg) (s, k)
+      return! stateMapEff (SinglePage.update msg) (s, k)
     | _ -> return state
 
   | _, ErrorViewState(s, k) ->
     match Msg.toSinglePageMsg msg with
     | ValueSome msg ->
-      return stateMap (SinglePage.update msg) (s, k)
+      return! stateMapEff (SinglePage.update msg) (s, k)
+    | _ -> return state
+
+  | _, HowToControlState(s, k) ->
+    match Msg.toSinglePageMsg msg with
+    | ValueSome msg ->
+      return! stateMapEff (SinglePage.update msg) (s, k)
     | _ -> return state
 
   | _, WaitingResponseState(_s, k) ->

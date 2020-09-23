@@ -65,6 +65,7 @@ type Modes = {
   gameResult: string
   rankingOf: string
   volumeSetting: string
+  howToControl: string
   // waitingResponse: string
 }
 
@@ -150,6 +151,7 @@ let textMapJapanese = {
     gameResult = "リザルト"
     rankingOf = "ランキング - "
     volumeSetting = "音量設定"
+    howToControl = "操作説明"
     // waitingResponse = "通信待機中..."
     // error = "エラー"
   }

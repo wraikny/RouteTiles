@@ -159,7 +159,7 @@ let inline update msg state = eff {
 
   | RankingListViewState(s, k) ->
     match msg |> Msg.toSinglePageMsg with
-    | ValueSome m -> return stateMap (SinglePage.update m) (s, k)
+    | ValueSome m -> return! stateMapEff (SinglePage.update m) (s, k)
     | ValueNone -> return Pending state
 
   // | ErrorViewState(s, k) ->

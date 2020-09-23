@@ -370,6 +370,11 @@ type internal MenuV2Node(config: Config, container: Container) =
 
     lastState <- updater.Model
 
+    // 名前未設定の場合は初心者っぽい。
+    if config.name.IsNone then
+      updater.Dispatch MenuV2.Msg.OpenHowToControl
+
+
   override this.OnUpdate() =
     if dispachableIntervalTime <= 0.0f then
       updater.Model.Value |> function
