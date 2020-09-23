@@ -29,6 +29,7 @@ type internal Container (textMap: TextMap.TextMap) =
     [|
       SoloGame.GameMode.TimeAttack2000, textMap.buttons.timeattack2000
       SoloGame.GameMode.ScoreAttack180, textMap.buttons.scoreattack180
+      SoloGame.GameMode.Endless, textMap.buttons.endless
     |]
     |> Array.map(fun (m, s) -> m, sprintf "%s%s" textMap.modes.rankingOf s)
     |> Map.ofArray
@@ -51,12 +52,14 @@ type internal Container (textMap: TextMap.TextMap) =
     SoloGame.GameMode.items |> Array.map(function
       | SoloGame.GameMode.TimeAttack2000 -> textMap.buttons.timeattack2000
       | SoloGame.GameMode.ScoreAttack180 -> textMap.buttons.scoreattack180
+      | SoloGame.GameMode.Endless -> textMap.buttons.endless
     )
 
   member val GameModeDescriptions: string[] =
     SoloGame.GameMode.items |> Array.map (function
     | SoloGame.GameMode.TimeAttack2000 -> textMap.descriptions.timeattack2000
     | SoloGame.GameMode.ScoreAttack180 -> textMap.descriptions.scoreattack180
+    | SoloGame.GameMode.Endless -> textMap.descriptions.endless
   )
 
   member val SettingMenuButtons: string[] =

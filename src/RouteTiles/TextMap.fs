@@ -6,6 +6,7 @@ type Buttons = {
   setting: string
   timeattack2000: string
   scoreattack180: string
+  endless: string
   tutorial: string
   namesetting: string
   volumeSetting: string
@@ -32,6 +33,7 @@ type Descriptions = {
   setting: string
   timeattack2000: string
   scoreattack180: string
+  endless: string
   tutorial: string
   namesetting: string
   volumeSetting: string
@@ -76,6 +78,7 @@ let textMapJapanese = {
     setting = "設定"
     timeattack2000 = "タイム2000"
     scoreattack180 = "スコア180"
+    endless = "エンドレス"
     tutorial = "チュートリアル"
     namesetting = "お名前"
     volumeSetting = "音量"
@@ -102,6 +105,7 @@ let textMapJapanese = {
     setting = "色々な設定を行います"
     timeattack2000 = "2000点までの時間を競うモードです"
     scoreattack180 = "180秒以内のスコアを競うモードです"
+    endless = "ひたすらタイルをつなぐ練習用のモードです"
     tutorial = "ゲームの遊び方を説明します"
     namesetting = "ランキングで使う名前を設定します"
     volumeSetting = "BGMとSEの音量を設定します。"

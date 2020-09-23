@@ -181,7 +181,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
         match mode with
         | ValueSome Mode.GamePlay ->
           match!
-            ListSelector.State<_>.Init(0, SoloGame.GameMode.items)
+            ListSelector.State<_>.Init(SoloGame.GameMode.selected, SoloGame.GameMode.items)
             |> WithContext
             |> stateEnter with
           | _, ValueNone ->
@@ -301,19 +301,8 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
   | Msg.FinishGame (model, time), GameState(config, controller, gameMode) ->
     do! GameControlEffect.Pause
 
-    // todo
-    let data: Ranking.Data =
-      { Name = ""
-        Time = time
-        Point = model.board.point
-        SlideCount = model.board.slideCount
-        TilesCount = model.board.vanishedTilesCount
-        RoutesCount = model.board.routesHistory.Length
-        LoopsCount = model.board.loopsHistory.Length
-      }
-
     match!
-      GameResult.State.Init(config, gameMode, data)
+      GameResult.State.Init(config, gameMode, model, time)
       |> stateEnter
         with
     | GameResult.GameNextSelection.Restart ->

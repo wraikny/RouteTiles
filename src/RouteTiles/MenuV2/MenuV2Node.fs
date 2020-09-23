@@ -30,11 +30,13 @@ module internal RankingServer =
   let toTable = function
     | SoloGame.GameMode.TimeAttack2000 -> Server.tableTime2000
     | SoloGame.GameMode.ScoreAttack180 -> Server.tableScore180
+    | _ -> failwith "Unexpected"
 
   let select gameMode: Async<_> =
     let orderKey, isDescending = gameMode |> function
       | SoloGame.GameMode.TimeAttack2000 -> "Time", false
       | SoloGame.GameMode.ScoreAttack180 -> "Point", true
+      | _ -> failwith "Unexpected"
 
     let table = toTable gameMode
 

@@ -165,6 +165,13 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
     let startTime = Engine.Time
 
     gameMode_ |> function
+    | SoloGame.Mode.Endless ->
+      uniqueCoroutine <- (seq {
+        while true do
+          gameInfoViewer.SetTime(Engine.Time - startTime)
+          yield ()
+      }).GetEnumerator()
+
     | SoloGame.Mode.ScoreAttack time ->
       let time = float32 time
       uniqueCoroutine <- (seq {
@@ -233,7 +240,8 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
 
     let initTime = gameMode_ |> function
       | SoloGame.Mode.ScoreAttack time -> float32 time
-      | SoloGame.Mode.TimeAttack _ -> 0.0f
+      | SoloGame.Mode.TimeAttack
+      | SoloGame.Mode.Endless -> 0.0f
 
     gameInfoViewer.SetModel(initModel)
     gameInfoViewer.SetTime(initTime)

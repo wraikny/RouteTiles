@@ -38,9 +38,31 @@ and State =
   | GameNextSelectionState of ListSelector.State<GameNextSelection> * (GameNextSelection voption -> OutStatus)
   | InputName of StringInput.State * (string voption -> OutStatus)
 with
-  static member Init(config, gameMode, data) =
-    let selector = ListSelector.State<SendToServer>.Init(SendToServer.Yes, SendToServer.items)
-    ResultWithSendToServerSelectState (config, gameMode, data, selector)
+  static member Init(config, gameMode, model: SoloGame.Model, time) =
+    match gameMode with
+    // オンラインランキング対応モード
+    | SoloGame.GameMode.TimeAttack2000
+    | SoloGame.GameMode.ScoreAttack180 ->
+      let data: Ranking.Data =
+        { Name = ""
+          Time = time
+          Point = model.board.point
+          SlideCount = model.board.slideCount
+          TilesCount = model.board.vanishedTilesCount
+          RoutesCount = model.board.routesHistory.Length
+          LoopsCount = model.board.loopsHistory.Length
+        }
+
+      let selector = ListSelector.State<SendToServer>.Init(SendToServer.Yes, SendToServer.items)
+      ResultWithSendToServerSelectState (config, gameMode, data, selector)
+
+    | SoloGame.GameMode.Endless ->
+      let selector = ListSelector.State<GameNextSelection>.Init(GameNextSelection.Quit, GameNextSelection.items)
+      GameNextSelectionState(selector,
+        function
+        | ValueNone -> failwith "Unexpected!"
+        | ValueSome selection -> Completed selection
+      )
 
   static member StateEnter(s, k) = WaitingResponseState(s, k)
   static member StateEnter(s, k) = RankingListViewState(s, k)
