@@ -13,12 +13,20 @@ open System.Security.Cryptography
 
 open FSharp.Json
 
-let [<Literal>] ConfigFile = @"Data/config.json"
+let [<Literal>] ConfigFile = @"Data/config.bat"
 
 let dirName = Path.GetDirectoryName ConfigFile
 
 
-let private aes = new AesManaged()
+let private aes =
+  new AesManaged
+    ( KeySize = 256
+    , BlockSize = 128
+    , Mode = CipherMode.CBC
+    , IV = Encoding.UTF8.GetBytes(ResourcesPassword.iv)
+    , Key = Encoding.UTF8.GetBytes(ResourcesPassword.key)
+    , Padding = PaddingMode.PKCS7
+    )
 
 
 let private write (conf: Config) =
@@ -27,9 +35,23 @@ let private write (conf: Config) =
     Directory.CreateDirectory(dirName) |> ignore
 
   let content = Json.serialize conf
+  let byteText = Encoding.UTF8.GetBytes content
+  let encryptText = aes.CreateEncryptor().TransformFinalBlock(byteText, 0, byteText.Length)
 
-  File.WriteAllTextAsync(ConfigFile, content)
+  File.WriteAllBytesAsync(ConfigFile, encryptText)
   |> Async.AwaitTask
+
+let private read () = async {
+  let! encryptText =
+    File.ReadAllBytesAsync ConfigFile
+    |> Async.AwaitTask
+
+  let byteText = aes.CreateDecryptor().TransformFinalBlock(encryptText, 0, encryptText.Length)
+
+  let content = Encoding.UTF8.GetString byteText
+
+  return Json.deserialize<Config> content
+}
 
 let private writeQueue = ConcurrentQueue<Config>()
 
@@ -45,7 +67,10 @@ let update = async {
   while true do
     match writeQueue.TryDequeue() with
     | true, conf ->
-      do! write conf
+      match! write conf |> Async.Catch with
+      | Choice1Of2 () -> Utils.DebugLogn "Succeeded to write config"
+      | Choice2Of2 e ->
+        Utils.DebugLogn (sprintf "%O" e)
       lock lockObj (fun () -> config <- ValueSome conf)
       // do! Async.SwitchToContext ctx
     | _ -> do! Async.Sleep 100
@@ -67,15 +92,12 @@ let initialize = async {
     config'
   
   if fileExists then
-    try
-      let! fileText =
-        File.ReadAllTextAsync ConfigFile
-        |> Async.AwaitTask
-
-      let res = Json.deserialize<Config> fileText
-      config <- ValueSome res
-      return res
-    with _ ->
+    match! read () |> Async.Catch with
+    | Choice1Of2 conf ->
+      config <- ValueSome conf
+      return conf
+    | Choice2Of2 e ->
+      Utils.DebugLogn (sprintf "%O" e)
       return createNew()
   else
     return createNew()

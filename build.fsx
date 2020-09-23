@@ -240,9 +240,9 @@ Target.create "CISetting" (fun _ ->
   """module ResourcesPassword
 
 module Server =
-  let [<Literal>] url = ""
-  let [<Literal>] username = ""
-  let [<Literal>] password = ""
+  let [<Literal>] url = @""
+  let [<Literal>] username = @""
+  let [<Literal>] password = @""
   let [<Literal>] tableTime2000  = @""
   let [<Literal>] tableTime5000  = @""
   let [<Literal>] tableTime10000 = @""
@@ -250,7 +250,14 @@ module Server =
   let [<Literal>] tableScore300  = @""
   let [<Literal>] tableScore600  = @""
 
-let [<Literal>] password = ""
+let [<Literal>] password = @""
+
+// 16
+let [<Literal>] iv = @""
+
+// 32
+let [<Literal>] key = @""
+
 """
   |> File.writeString false "ResourcesPassword.fs"
 )
