@@ -16,13 +16,32 @@ let private main _ =
     Engine.ClearColor <- clearColor
 
   let initGame() =
-    // Engine.AddNode(PostEffect.Wave(ZOrder = ZOrder.posteffect))
+    let progressSum = 1 + MenuV2.Container.ProgressCount
+    let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.125f)
+    let loading =
+      Loading
+        ( progressSum
+        , loadingSize
+        , 0
+        , 1
+        , Position = (Engine.WindowSize.To2F() - loadingSize) * 0.5f
+        )
+    
+    Engine.AddNode loading
 
     async {
+      let! container = Async.StartChild (async { return MenuV2.Container(TextMap.textMapJapanese, loading.Progress) })
+
       let! config = Config.initialize
+      loading.Progress() |> ignore
+
+
       let! _ = Async.StartChild (Config.update)
       let! _ = Async.StartChild (ErrorLog.update)
-      Engine.AddNode (MenuV2.MenuV2Node(config))
+      let! container = container
+
+      Engine.RemoveNode loading
+      Engine.AddNode (MenuV2.MenuV2Node(config, container))
     }
     |> Async.StartImmediate
 

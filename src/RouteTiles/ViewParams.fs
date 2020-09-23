@@ -19,6 +19,10 @@ module internal Consts =
 
     let [<Literal>] BGMFadeSecond = 2.5f
 
+    let [<Literal>] LightBloomIntensity = 1.2f
+    let [<Literal>] LightBloomExposure = 2.5f
+    let [<Literal>] LightBloomThreshold = 0.8f
+
   module PostEffect =
     let [<Literal>] wavepath = @"Shader/Wave.hlsl"
     let [<Literal>] floatingtilesPath = @"Shader/FloatingTiles.hlsl"
@@ -38,7 +42,7 @@ module internal Consts =
     let routeColor = Color(255, 255, 100, 255)
     let loopColor = Color(100, 100, 255, 255)
 
-    let cursorColor = Color(105, 255, 220, 255)
+    let cursorColor = Color(80, 200, 200, 255)
     let [<Literal>] cursorColorMin = 0.25f
 
     let [<Literal>] tileTexturePath = @"tiles.png"
@@ -279,7 +283,8 @@ module internal ZOrder =
 
     let description = offset 300
 
-  
-  let modeText = (10000 <<< 16) ||| 30
+  let modeText = (400 <<< 16) ||| 30
+
+  let lightBloom = (500 <<< 16)
 
   let debug = 1 <<< 31

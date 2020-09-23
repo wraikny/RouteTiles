@@ -177,7 +177,7 @@ type MenuV2Handler = {
     )
 
 
-type internal MenuV2Node(config: Config) =
+type internal MenuV2Node(config: Config, container: Container) =
   inherit Node()
 
   let mutable lastState = ValueNone
@@ -186,9 +186,15 @@ type internal MenuV2Node(config: Config) =
   let uiRootMenu = BoxUIRootNode()
   let uiRootModal = BoxUIRootNode()
 
-  let container = Container(TextMap.textMapJapanese)
-
   let soundControl = SoundControl(config.bgmVolume, config.seVolume)
+
+  let lightBloom =
+    PostEffectLightBloomNode
+      ( Intensity = Consts.ViewCommon.LightBloomIntensity
+      , Exposure = Consts.ViewCommon.LightBloomExposure
+      , Threshold = Consts.ViewCommon.LightBloomThreshold
+      , ZOrder = ZOrder.lightBloom
+      )
 
   let mutable gameNode: Game voption = ValueNone
 
@@ -196,6 +202,7 @@ type internal MenuV2Node(config: Config) =
     base.AddChildNode uiRootMenu
     base.AddChildNode uiRootModal
     base.AddChildNode soundControl
+    base.AddChildNode lightBloom
 
     soundControl.SetState(SoundControlState.Menu)
 

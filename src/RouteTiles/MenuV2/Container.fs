@@ -7,22 +7,27 @@ open RouteTiles.Core.Types
 
 open Altseed2
 
-type internal Container (textMap: TextMap.TextMap) =
+type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
+  let withProgress x = progress () |> ignore; x
+
+  static member val ProgressCount = 13
+
   member val TextMap = textMap
-  member val BackgroundTexture = Texture2D.LoadStrict(@"Menu/background_dark.png")
-  member val MaskTexture = Texture2D.LoadStrict(@"Menu/background_mask.png")
-  member val TitleTexture = Texture2D.LoadStrict(@"Menu/title.png")
-  member val ButtonBackground = Texture2D.LoadStrict(@"Menu/button-metalic-dark-highlight-320x80.png")
-  member val InputBackground = Texture2D.LoadStrict(@"Menu/input_background.png")
-  member val InputFrame = Texture2D.LoadStrict(@"Menu/input_frame.png")
-  member val GameInfoFrame = Texture2D.LoadStrict(@"Menu/game_info_frame.png")
-  member val RankingFrame = Texture2D.LoadStrict(@"Menu/ranking_frame.png")
-  member val ControllerBackground = Texture2D.LoadStrict(@"Menu/controller_background.png")
-  member val SelectionArrow = Texture2D.LoadStrict(@"Menu/selection_more.png")
+
+  member val BackgroundTexture = Texture2D.LoadStrict(@"Menu/background_dark.png") |> withProgress
+  member val MaskTexture = Texture2D.LoadStrict(@"Menu/background_mask.png") |> withProgress
+  member val TitleTexture = Texture2D.LoadStrict(@"Menu/title.png") |> withProgress
+  member val ButtonBackground = Texture2D.LoadStrict(@"Menu/button-metalic-dark-highlight-320x80.png") |> withProgress
+  member val InputBackground = Texture2D.LoadStrict(@"Menu/input_background.png") |> withProgress
+  member val InputFrame = Texture2D.LoadStrict(@"Menu/input_frame.png") |> withProgress
+  member val GameInfoFrame = Texture2D.LoadStrict(@"Menu/game_info_frame.png") |> withProgress
+  member val RankingFrame = Texture2D.LoadStrict(@"Menu/ranking_frame.png") |> withProgress
+  member val ControllerBackground = Texture2D.LoadStrict(@"Menu/controller_background.png") |> withProgress
+  member val SelectionArrow = Texture2D.LoadStrict(@"Menu/selection_more.png") |> withProgress
   // member val InputUsernameBackground = Texture2D.LoadStrict(@"Menu/input_username.png")
-  member val Font = Font.LoadStaticFontStrict(@"Font/Makinas-4-Square-32/font.a2f")
-  member val ErrorMessageFont = Font.LoadDynamicFontStrict(@"Font/mplus-1c-medium.ttf", 24)
-  member val DynamicFont = Font.LoadDynamicFontStrict(@"Font/Makinas-4-Square.otf", 32)
+  member val Font = Font.LoadStaticFontStrict(@"Font/Makinas-4-Square-32/font.a2f") |> withProgress
+  member val ErrorMessageFont = Font.LoadDynamicFontStrict(@"Font/mplus-1c-medium.ttf", 24) |> withProgress
+  member val DynamicFont = Font.LoadDynamicFontStrict(@"Font/Makinas-4-Square.otf", 32) |> withProgress
 
   // member val Font = Font.LoadDynamicFontStrict(@"mplus-1c-bold.ttf", 32)
 
