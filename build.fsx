@@ -24,7 +24,7 @@ open Fake.Core.TargetOperators
 open Fake.Net
 open FSharp.Json
 
-let altseed2CommitId = "f3d5c7b1a0698a594823604da191f7457ce0be6a"
+let altseed2CommitId = "95f965be486427a94b8ebc1c5e676c447cd5923d"
 let runtimes = [ "linux-x64"; "win-x64"; "osx-x64" ]
 let resourcesDirectory = @"Resources"
 let altseed2Dir = @"lib/Altseed2"
