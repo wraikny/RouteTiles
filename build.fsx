@@ -1,3 +1,7 @@
+#if run_with_bin_sh
+  exec dotnet fake run $0 $*
+#endif
+
 #r "paket:
 source https://api.nuget.org/v3/index.json
 nuget Fake.DotNet.Cli
