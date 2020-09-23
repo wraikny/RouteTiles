@@ -183,6 +183,8 @@ type internal MenuV2Node(config: Config, container: Container) =
   let mutable lastState = ValueNone
   let updater = Updater<MenuV2.State, MenuV2.Msg>()
 
+  let coroutineNode = CoroutineNode()
+
   let uiRootMenu = BoxUIRootNode()
   let uiRootModal = BoxUIRootNode()
 
@@ -193,12 +195,15 @@ type internal MenuV2Node(config: Config, container: Container) =
       ( Intensity = Consts.ViewCommon.LightBloomIntensity
       , Exposure = Consts.ViewCommon.LightBloomExposure
       , Threshold = Consts.ViewCommon.LightBloomThreshold
-      , ZOrder = ZOrder.lightBloom
+      , ZOrder = ZOrder.PostEffect.lightBloom
       )
+
+  let postEffectFade = PostEffect.PostEffectFade(ZOrder = ZOrder.PostEffect.fade)
 
   let mutable gameNode: Game voption = ValueNone
 
   do
+    base.AddChildNode coroutineNode
     base.AddChildNode uiRootMenu
     base.AddChildNode uiRootModal
     base.AddChildNode soundControl
@@ -250,6 +255,28 @@ type internal MenuV2Node(config: Config, container: Container) =
   let mutable dispachableIntervalTime = 0.0f
 
   override this.OnAdded() =
+    let initWithFading f =
+      dispachableIntervalTime <- 1.0f
+      Engine.AddNode postEffectFade
+
+      coroutineNode.Add(seq {
+        for t in Coroutine.milliseconds 500<millisec> do
+          postEffectFade.FadeRate <- t
+          yield ()
+
+        postEffectFade.FadeRate <- 1.0f
+        f()
+        yield ()
+
+        for t in Coroutine.milliseconds 500<millisec> do
+          postEffectFade.FadeRate <- 1.0f - t
+          yield ()
+
+
+        Engine.RemoveNode postEffectFade
+      })
+
+
     let handler = {
       dispatch = updater.Dispatch
       soundControl = soundControl
@@ -273,8 +300,10 @@ type internal MenuV2Node(config: Config, container: Container) =
 
           gameNode |> function
           | ValueSome n ->
-            Engine.AddNode(n)
-            n.Initialize(gameMode, controller, config)
+            initWithFading (fun () ->
+              n.Initialize(gameMode, controller, config)
+              Engine.AddNode(n)
+            )
           | ValueNone ->
             let uiRootGameInfo = BoxUIRootNode(isAutoTerminated = false)
             let gameInfoElement, gameInfoScoreUpdater, gameInfoTimeUpdater =
@@ -306,11 +335,14 @@ type internal MenuV2Node(config: Config, container: Container) =
                 |> updater.Dispatch
             }
             let n = Game(gameHandler, soundControl)
-            n.Initialize(gameMode, controller, config)
             n.AddChildNode uiRootGameInfo
-            Engine.AddNode(n)
-
             gameNode <- ValueSome n
+
+            Engine.AddNode postEffectFade
+            initWithFading (fun () ->
+              Engine.AddNode(n)
+              n.Initialize(gameMode, controller, config)
+            )
 
         | GameControlEffect.Quit ->
           soundControl.SetState(SoundControlState.Menu)

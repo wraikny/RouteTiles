@@ -24,6 +24,7 @@ module internal Consts =
     let [<Literal>] LightBloomThreshold = 0.8f
 
   module PostEffect =
+    let [<Literal>] fadepath = @"Shader/Fade.hlsl"
     let [<Literal>] wavepath = @"Shader/Wave.hlsl"
     let [<Literal>] floatingtilesPath = @"Shader/FloatingTiles.hlsl"
 
@@ -285,6 +286,12 @@ module internal ZOrder =
 
   let modeText = (400 <<< 16) ||| 30
 
-  let lightBloom = (500 <<< 16)
+  module PostEffect =
+
+    let offset = (|||) (500 <<< 16)
+
+    let lightBloom = offset 10
+
+    let fade = offset 20
 
   let debug = 1 <<< 31

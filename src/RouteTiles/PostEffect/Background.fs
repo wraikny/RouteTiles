@@ -22,10 +22,11 @@ type internal PostEffectBackground() =
     material.SetVector4F("time", Vector4F(x, 0.0f, 0.0f, 0.0f))
 
   member __.SetShader(path) =
-    let mutable shader = null
-    let msg = Shader.TryCreateFromFile("Background", path, ShaderStage.Pixel, &shader)
-    if isNull shader then failwith msg
-    material.SetShader(shader)
+    Shader.tryCreateFromFile "Background" path ShaderStage.Pixel
+    |> function
+    | Ok shader -> material.SetShader(shader)
+    | Error e -> failwith e
+    
 
     setTime 0.0f
 

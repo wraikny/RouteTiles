@@ -15,6 +15,12 @@ type Joystick with
   member inline x.IsHoldState(index, button: JoystickButton) = x.GetButtonState(index, button) = ButtonState.Hold
   member inline x.IsReleaseState(index, button: JoystickButton) = x.GetButtonState(index, button) = ButtonState.Release
 
+module Shader =
+  let tryCreateFromFile name path stage =
+    let mutable shader = null
+    let msg = Shader.TryCreateFromFile(name, path, stage, &shader)
+    if isNull shader then Error msg else Ok shader
+
 
 let mutable time = 0.0f
 

@@ -52,6 +52,7 @@
     <Compile Include="InputControl.fs" />
     <Compile Include="ViewParams.fs" />
     <Compile Include="PostEffect/Background.fs" />
+    <Compile Include="PostEffect/Fade.fs" />
     <Compile Include="SoundControl.fs" />
     <Compile Include="Loading.fs" />
     <Compile Include="Game/Board.fs" />
