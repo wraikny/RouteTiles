@@ -180,8 +180,8 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
       }).GetEnumerator()
 
     | SoloGame.Mode.ScoreAttack time ->
-      let time = float32 time
       uniqueCoroutine <- (seq {
+        let time = float32 time
         while Engine.Time - startTime < time do
           setTime(time - (Engine.Time - startTime))
           yield ()
@@ -197,7 +197,9 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
           setTime(Engine.Time - startTime)
           yield ()
         
-        yield! finishGame time
+        let resTime = Engine.Time - startTime
+        setTime resTime
+        yield! finishGame resTime
       }).GetEnumerator()
 
   member this.Initialize(gameMode_, controller_, config_: Config) =

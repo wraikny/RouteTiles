@@ -61,7 +61,7 @@ module internal RankingServer =
     async {
       let! id = client.AsyncInsert(table, guid, data)
 
-      Utils.DebugLogn (sprintf "insert to %s: %A" table id)
+      Utils.DebugLogn (sprintf "insert '%A' to %s: %A" data table id)
 
       let! data = select gameMode
 
