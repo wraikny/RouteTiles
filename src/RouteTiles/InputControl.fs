@@ -27,10 +27,10 @@ let pauseInput controller =
 
 
 let dirPairs = [|
-  Key.W, JoystickButton.DPadUp, JoystickButton.RightUp, Dir.Up
-  Key.D, JoystickButton.DPadRight, JoystickButton.RightRight, Dir.Right
-  Key.S, JoystickButton.DPadDown, JoystickButton.RightDown, Dir.Down
-  Key.A, JoystickButton.DPadLeft, JoystickButton.RightLeft, Dir.Left
+  [| Key.W; Key.Up|], JoystickButton.DPadUp, JoystickButton.RightUp, Dir.Up
+  [| Key.D; Key.Right|], JoystickButton.DPadRight, JoystickButton.RightRight, Dir.Right
+  [| Key.S; Key.Down|], JoystickButton.DPadDown, JoystickButton.RightDown, Dir.Down
+  [| Key.A; Key.Left|], JoystickButton.DPadLeft, JoystickButton.RightLeft, Dir.Left
 |]
 
 module Board =
@@ -39,9 +39,10 @@ module Board =
 
   let keyboardMapping =
     [|
-      for (key, _, _, dir) in dirPairs do
-        yield [|Key.RightShift, ButtonState.Hold; key, ButtonState.Push|], Msg.Slide dir
-        yield [|key, ButtonState.Push|], Msg.MoveCursor dir
+      for (keys, _, _, dir) in dirPairs do
+        for key in keys do
+          yield [|Key.RightShift, ButtonState.Hold; key, ButtonState.Push|], Msg.Slide dir
+          yield [|key, ButtonState.Push|], Msg.MoveCursor dir
     |]
 
   let joystickMapping = [|
@@ -73,23 +74,30 @@ module MenuV2 =
 
   let keyboard =
     [|
-      yield [|Key.W, ButtonState.Push|], Msg.Decr
-      yield [|Key.S, ButtonState.Push|], Msg.Incr
-      yield [|Key.D, ButtonState.Push|], Msg.Right
-      yield [|Key.A, ButtonState.Push|], Msg.Left
-      yield [|Key.Space, ButtonState.Push|], Msg.Enter
-      yield [|Key.Enter, ButtonState.Push|], Msg.Enter
-      yield [|Key.Escape, ButtonState.Push|], Msg.Cancel
+      [|Key.W, ButtonState.Push|], Msg.Decr
+      [|Key.S, ButtonState.Push|], Msg.Incr
+      [|Key.D, ButtonState.Push|], Msg.Right
+      [|Key.A, ButtonState.Push|], Msg.Left
+
+      [|Key.Up, ButtonState.Push|], Msg.Decr
+      [|Key.Down, ButtonState.Push|], Msg.Incr
+      [|Key.Right, ButtonState.Push|], Msg.Right
+      [|Key.Left, ButtonState.Push|], Msg.Left
+
+      [|Key.Space, ButtonState.Push|], Msg.Enter
+      [|Key.Enter, ButtonState.Push|], Msg.Enter
+
+      [|Key.Escape, ButtonState.Push|], Msg.Cancel
     |]
 
   let joystick = [|
-    yield (JoystickButton.DPadUp, ButtonState.Push), Msg.Decr
-    yield (JoystickButton.DPadDown, ButtonState.Push), Msg.Incr
-    yield (JoystickButton.DPadRight, ButtonState.Push), Msg.Right
-    yield (JoystickButton.DPadLeft, ButtonState.Push), Msg.Left
-    yield (JoystickButton.RightRight, ButtonState.Push), Msg.Enter
-    yield (JoystickButton.RightDown, ButtonState.Push), Msg.Cancel
-    yield (JoystickButton.Guide, ButtonState.Push), Msg.Cancel
+    (JoystickButton.DPadUp, ButtonState.Push), Msg.Decr
+    (JoystickButton.DPadDown, ButtonState.Push), Msg.Incr
+    (JoystickButton.DPadRight, ButtonState.Push), Msg.Right
+    (JoystickButton.DPadLeft, ButtonState.Push), Msg.Left
+    (JoystickButton.RightRight, ButtonState.Push), Msg.Enter
+    (JoystickButton.RightDown, ButtonState.Push), Msg.Cancel
+    (JoystickButton.Guide, ButtonState.Push), Msg.Cancel
   |]
 
   let keys (a: Key) (b: Key) = [| for i in (int a)..(int b) -> enum<Key> i |]

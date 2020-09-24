@@ -159,6 +159,13 @@ Target.create "Publish" (fun _ ->
     packedResources
     |> Shell.copyFile (sprintf "%s/%s" outputPath packedResources)
 
+    if target.Contains("osx") then
+      "publishContents/RouteTiles.command"
+    |> Shell.copyFile (sprintf "%s/RouteTiles.command" outputPath)
+
+    let binaryOutputDirectory =
+      if target.Contains("osx") then sprintf "%s/Bin" outputPath else outputPath
+
     // Publish
     "src/RouteTiles/RouteTiles.fsproj"
     |> DotNet.publish (fun p ->
@@ -173,7 +180,7 @@ Target.create "Publish" (fun _ ->
                 :: ("PublishTrimmed", "true")
                 :: p.MSBuildParams.Properties
           }
-          OutputPath = outputPath |> Some
+          OutputPath = binaryOutputDirectory |> Some
       }
     )
 

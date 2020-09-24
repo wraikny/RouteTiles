@@ -4,5 +4,6 @@
 *.cmd               text eol=crlf
 
 *.sh                text eol=lf
+*.command           text eol=lf
 
 *.md                text eol=lf
