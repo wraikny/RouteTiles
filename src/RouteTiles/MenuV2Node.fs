@@ -305,23 +305,7 @@ type internal MenuV2Node(config: Config, container: Container) =
               Engine.AddNode(n)
             )
           | ValueNone ->
-            let uiRootGameInfo = BoxUIRootNode(isAutoTerminated = false)
-            let gameInfoElement, gameInfoScoreUpdater, gameInfoTimeUpdater =
-              GameInfoElement.createSologameInfoElement container
-
-            uiRootGameInfo.SetElement gameInfoElement
-            // let gameInfo = GameInfoNode(Position = Helper.SoloGame.gameInfoCenterPos)
             let gameHandler = { new IGameHandler with
-              member __.SetModel(model) =
-                BoxUISystem.Post (fun () ->
-                  gameInfoScoreUpdater model
-                )
-              
-              member __.SetTime(second) =
-                BoxUISystem.Post (fun () ->
-                  gameInfoTimeUpdater second
-                )
-
               member __.FinishGame(model, t) =
                 soundControl.StopSE()
                 soundControl.SetState(SoundControlState.Menu)
@@ -335,8 +319,7 @@ type internal MenuV2Node(config: Config, container: Container) =
                 MenuV2.Msg.SelectController
                 |> updater.Dispatch
             }
-            let n = Game(gameHandler, soundControl)
-            n.AddChildNode uiRootGameInfo
+            let n = Game(container, gameHandler, soundControl)
             gameNode <- ValueSome n
 
             Engine.AddNode postEffectFade
@@ -368,8 +351,6 @@ type internal MenuV2Node(config: Config, container: Container) =
         else
           false
     }
-
-    // let config = Config.tryGetConfig().Value
 
     updater.Init(MenuV2.State.Init (config), fun msg state ->
       let newState = MenuV2.update msg state |> Eff.handle handler

@@ -8,6 +8,7 @@ open System
 open System.Collections.Generic
 open Affogato
 open Altseed2
+open Altseed2.BoxUI
 open EffFs
 open EffFs.Library
 
@@ -20,37 +21,40 @@ type Handler = {
   static member Handle(Random.RandomEffect f, k) =
     Eff.capture(fun h -> f h.rand |> k)
 
-  static member Handle(Log.LogEffect s, k) =
-    Engine.Log.Warn(LogCategory.User, s)
-    k ()
-
-  // static member Handle(EmitVanishParticleEffect particleSet, k) =
-  //   Eff.capture(fun h ->
-  //     h.emitVanishmentParticle particleSet
-  //     k()
-  //   )
+  // static member Handle(Log.LogEffect s, k) =
+  //   Engine.Log.Warn(LogCategory.User, s)
+  //   k ()
 
 type internal IGameHandler =
-  abstract SetModel: SoloGame.Model -> unit
-  abstract SetTime: float32 -> unit
+  // abstract SetModel: SoloGame.Model -> unit
+  // abstract SetTime: float32 -> unit
   abstract FinishGame: SoloGame.Model * time:float32 -> unit
   abstract SelectController: unit -> unit
 
-type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
+type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, soundControl: SoundControl) =
   inherit Node()
 
   let mutable gameMode = ValueNone
   let mutable controller = ValueNone
   let mutable config = ValueNone
 
-  let mutable lastModel: SoloGame.Model voption = ValueNone
   let updater = Updater<SoloGame.Model, _>()
 
   let coroutineNode = CoroutineNode()
   let childrenCoroutineNode = CoroutineNode()
   let boardNode = BoardNode(childrenCoroutineNode.Add, Position = Helper.SoloGame.boardViewPos)
   let nextTilesNode = NextTilesNode(childrenCoroutineNode.Add, Position = Helper.SoloGame.nextsViewPos)
-  // let gameInfoNode = GameInfoNode(Helper.SoloGame.gameInfoCenterPos)
+  let uiRootGameInfoNode = BoxUIRootNode(isAutoTerminated = false)
+
+  let setModel, setTime =
+    let gameInfoElement, gameInfoScoreUpdater, gameInfoTimeUpdater =
+      MenuV2.GameInfoElement.createSologameInfoElement container
+
+    uiRootGameInfoNode.SetElement gameInfoElement
+
+    (fun model -> BoxUISystem.Post(fun () -> gameInfoScoreUpdater model)),
+    (fun time -> BoxUISystem.Post(fun () -> gameInfoTimeUpdater time))
+
   let backgroundPostEffect = PostEffect.PostEffectBackground(ZOrder = ZOrder.posteffect)
 
   let readyStartNode =
@@ -67,23 +71,18 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
 
     base.AddChildNode(boardNode)
     base.AddChildNode(nextTilesNode)
+    base.AddChildNode(uiRootGameInfoNode)
 
     base.AddChildNode(readyStartNode)
 
     base.AddChildNode(backgroundPostEffect)
-    // base.AddChildNode(gameInfoNode)
 
     updater :> IObservable<_>
     |> Observable.subscribe(fun model ->
       boardNode.OnNext(model.board)
       nextTilesNode.OnNext(model.board)
-      gameInfoViewer.SetModel(model)
-    )
-    |> ignore
-
-    updater :> IObservable<_>
-    |> Observable.subscribe(fun model ->
-      lastModel <- ValueSome model
+      
+      setModel model
     )
     |> ignore
 
@@ -114,26 +113,22 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
 
     coroutineNode.Add(seq {
       while true do
-#if DEBUG
-        if Engine.Keyboard.IsPushState Key.Num0 then
-          printfn "%A" lastModel
-#endif
-
         if inputEnabled then
           match controller with
           | ValueSome Controller.Keyboard ->
             let msg = InputControl.SoloGame.getKeyboardInput()
             yield! invokeInput msg
+
           | ValueSome (Controller.Joystick (index, name, guid)) ->
             let info = Engine.Joystick.GetJoystickInfo(index)
             if info <> null && info.GUID = guid then
               let msg = InputControl.SoloGame.getJoystickInput index
               yield! invokeInput msg
             else
-              let s = sprintf "joystick '%s' is not found at %d" name index
-              Engine.Log.Warn(LogCategory.User, s)
+              Utils.DebugLogn(sprintf "joystick '%s' is not found at %d" name index)
               gameInfoViewer.SelectController()
               yield ()
+
           | ValueNone ->
             yield ()
         else
@@ -146,11 +141,18 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
 #else
       rand = Random()
 #endif
-      // emitVanishmentParticle = 
     }
 
   let mutable uniqueCoroutine:IEnumerator<unit> = null
-  let mutable disposable: IDisposable = null
+
+
+  let finishGame time =
+    seq {
+      inputEnabled <- false
+      yield! Coroutine.sleep Consts.GameCommon.inputInterval
+      yield! Coroutine.sleep Consts.Board.tilesVanishInterval
+      gameInfoViewer.FinishGame(updater.Model.Value, time)
+    }
 
   override __.OnUpdate() =
     if uniqueCoroutine <> null then
@@ -166,7 +168,6 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
   member __.Controller with get() = controller and set(v) = controller <- v
 
   member __.Initialize'() =
-    // lastModel <- updater.Model
     inputEnabled <- true
 
     let startTime = Engine.Time
@@ -175,7 +176,7 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
     | SoloGame.Mode.Endless ->
       uniqueCoroutine <- (seq {
         while true do
-          gameInfoViewer.SetTime(Engine.Time - startTime)
+          setTime(Engine.Time - startTime)
           yield ()
       }).GetEnumerator()
 
@@ -183,41 +184,21 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
       let time = float32 time
       uniqueCoroutine <- (seq {
         while Engine.Time - startTime < time do
-          gameInfoViewer.SetTime(time - (Engine.Time - startTime))
+          setTime(time - (Engine.Time - startTime))
           yield ()
 
-        gameInfoViewer.SetTime(0.0f)
-        inputEnabled <- false
-
-        yield! Coroutine.sleep Consts.GameCommon.inputInterval
-        yield! Coroutine.sleep Consts.Board.tilesVanishInterval
-
-        gameInfoViewer.FinishGame(lastModel.Value, 0.0f)
-
-        ()
+        setTime(0.0f)
+        yield! finishGame 0.0f
       }).GetEnumerator()
 
     | SoloGame.Mode.TimeAttack score ->
-      let mutable finished = false
-      disposable <- updater.Subscribe(fun model ->
-        if model.board.point > score then
-          finished <- true
 
-          if disposable <> null then
-            disposable.Dispose()
-            disposable <- null
-
-          coroutineNode.Add(seq {
-            inputEnabled <- false
-            yield! Coroutine.sleep Consts.GameCommon.inputInterval
-            yield! Coroutine.sleep Consts.Board.tilesVanishInterval
-            gameInfoViewer.FinishGame(model, time)
-          })
-      )
       uniqueCoroutine <- (seq {
-        while not finished do
-          gameInfoViewer.SetTime(Engine.Time - startTime)
+        while updater.Model.Value.board.point < score do
+          setTime(Engine.Time - startTime)
           yield ()
+        
+        yield! finishGame time
       }).GetEnumerator()
 
   member this.Initialize(gameMode_, controller_, config_: Config) =
@@ -229,20 +210,14 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
 
     backgroundPostEffect.SetShader(config_.background |> Helper.PostEffect.toPath)
 
-    if disposable <> null then
-      disposable.Dispose()
-      disposable <- null
-
+    // initialize GameModel
     let initModel =
       let boardConfig: Board.BoardConfig = {
         nextCounts = Consts.Core.nextsCount
         size = Consts.Core.boardSize
       }
 
-      SoloGame.init
-        boardConfig
-        gameMode_
-        // controller
+      SoloGame.init boardConfig gameMode_
       |> Eff.handle handler
 
     updater.Init(initModel, fun msg model ->
@@ -257,14 +232,11 @@ type internal Game(gameInfoViewer: IGameHandler, soundControl: SoundControl) =
       | SoloGame.Mode.TimeAttack _
       | SoloGame.Mode.Endless -> 0.0f
 
-    gameInfoViewer.SetModel(initModel)
-    gameInfoViewer.SetTime(initTime)
+    setModel(initModel)
+    setTime(initTime)
 
     inputEnabled <- false
-
-    readyStartNode.Ready (fun () ->
-      this.Initialize'()
-    )
+    readyStartNode.Ready (fun () -> this.Initialize'())
 
   member this.Restart() =
     (gameMode, controller, config) |> function
