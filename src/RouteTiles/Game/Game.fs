@@ -163,7 +163,6 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
     boardNode.Clear()
     nextTilesNode.Clear()
     childrenCoroutineNode.Clear()
-    this.FlushQueue()
 
   member __.Controller with get() = controller and set(v) = controller <- v
 

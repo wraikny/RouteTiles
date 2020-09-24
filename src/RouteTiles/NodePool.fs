@@ -24,6 +24,7 @@ type internal NodePool<'key, 'node, 'arg when 'key : equality and 'node :> Node>
   member this.Clear() =
     for x in objects do
       this.ClearItem x.Key
+    this.FlushQueue()
 
   member this.Update(args) =
     for (key, arg) in args do

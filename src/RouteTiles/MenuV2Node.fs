@@ -332,17 +332,23 @@ type internal MenuV2Node(config: Config, container: Container) =
           if soundControl.State <> ValueSome SoundControlState.Menu then
             soundControl.SetState(SoundControlState.Menu)
 
-          let n = gameNode.Value
-          n.Clear()
+          gameNode.Value.Clear()
+          // gameNode.Value.FlushQueue()
           async {
             do! Async.Sleep 1
-            Engine.RemoveNode n
+            Engine.RemoveNode gameNode.Value
           }
           |> Async.StartImmediate
 
         | GameControlEffect.Restart ->
           soundControl.SetState(SoundControlState.Game)
-          gameNode.Value.Restart()
+          gameNode.Value.Clear()
+          // gameNode.Value.FlushQueue()
+          async {
+            do! Async.Sleep 1
+            gameNode.Value.Restart()
+          }
+          |> Async.StartImmediate
 
       handleSetController = fun controller ->
         if isAvailableController controller then
