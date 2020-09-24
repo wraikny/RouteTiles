@@ -37,7 +37,7 @@ type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
 
   member val RankingGameMode: Map<SoloGame.GameMode, string> =
     [|
-      SoloGame.GameMode.TimeAttack2000, textMap.buttons.timeattack2000
+      SoloGame.GameMode.TimeAttack5000, textMap.buttons.timeattack5000
       SoloGame.GameMode.ScoreAttack180, textMap.buttons.scoreattack180
       SoloGame.GameMode.Endless, textMap.buttons.endless
     |]
@@ -60,14 +60,14 @@ type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
 
   member val GameModeButtons: string[] =
     SoloGame.GameMode.items |> Array.map(function
-      | SoloGame.GameMode.TimeAttack2000 -> textMap.buttons.timeattack2000
+      | SoloGame.GameMode.TimeAttack5000 -> textMap.buttons.timeattack5000
       | SoloGame.GameMode.ScoreAttack180 -> textMap.buttons.scoreattack180
       | SoloGame.GameMode.Endless -> textMap.buttons.endless
     )
 
   member val GameModeDescriptions: string[] =
     SoloGame.GameMode.items |> Array.map (function
-    | SoloGame.GameMode.TimeAttack2000 -> textMap.descriptions.timeattack2000
+    | SoloGame.GameMode.TimeAttack5000 -> textMap.descriptions.timeattack5000
     | SoloGame.GameMode.ScoreAttack180 -> textMap.descriptions.scoreattack180
     | SoloGame.GameMode.Endless -> textMap.descriptions.endless
   )

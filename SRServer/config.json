@@ -22,7 +22,7 @@
             "username": "username",
             "password": "password",
             "tables": {
-                "SG_v1_Time2000": {
+                "SG_v1_Time5000": {
                     "Name": "Text",
                     "Time": "Float",
                     "Point": "Int",

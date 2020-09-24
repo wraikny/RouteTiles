@@ -4,7 +4,7 @@ type Buttons = {
   play: string
   ranking: string
   setting: string
-  timeattack2000: string
+  timeattack5000: string
   scoreattack180: string
   endless: string
   tutorial: string
@@ -33,7 +33,7 @@ type Descriptions = {
   play: string
   ranking: string
   setting: string
-  timeattack2000: string
+  timeattack5000: string
   scoreattack180: string
   endless: string
   tutorial: string
@@ -90,7 +90,7 @@ let textMapJapanese = {
     play = "遊ぶ"
     ranking = "ランキング"
     setting = "設定"
-    timeattack2000 = "タイム2000"
+    timeattack5000 = "タイム5000"
     scoreattack180 = "スコア180"
     endless = "エンドレス"
     tutorial = "チュートリアル"
@@ -119,7 +119,7 @@ let textMapJapanese = {
     play = "ゲームを遊びます"
     ranking = "オンラインランキングを確認します"
     setting = "色々な設定を行います"
-    timeattack2000 = "2000点までの時間を競うモードです"
+    timeattack5000 = "5000点までの時間を競うモードです"
     scoreattack180 = "180秒以内のスコアを競うモードです"
     endless = "ひたすらタイルをつなぐ練習用のモードです"
     tutorial = "ゲームの遊び方を説明します"

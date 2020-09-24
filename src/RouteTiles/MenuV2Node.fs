@@ -28,13 +28,13 @@ module internal RankingServer =
     )
 
   let toTable = function
-    | SoloGame.GameMode.TimeAttack2000 -> Server.tableTime2000
+    | SoloGame.GameMode.TimeAttack5000 -> Server.tableTime5000
     | SoloGame.GameMode.ScoreAttack180 -> Server.tableScore180
     | _ -> failwith "Unexpected"
 
   let select gameMode: Async<_> =
     let orderKey, isDescending = gameMode |> function
-      | SoloGame.GameMode.TimeAttack2000 -> "Time", false
+      | SoloGame.GameMode.TimeAttack5000 -> "Time", false
       | SoloGame.GameMode.ScoreAttack180 -> "Point", true
       | _ -> failwith "Unexpected"
 
@@ -154,9 +154,9 @@ type MenuV2Handler = {
 
         | GameRankingEffect.SelectAll ->
           let! res =
-            RankingServer.select SoloGame.GameMode.TimeAttack2000
+            RankingServer.select SoloGame.GameMode.TimeAttack5000
             |> Async.CatchResult
-            |> AsyncResult.bind (fun time2000 -> async {
+            |> AsyncResult.bind (fun time5000 -> async {
               let! resScore180 =
                 RankingServer.select SoloGame.GameMode.ScoreAttack180
                 |> Async.CatchResult
@@ -165,7 +165,7 @@ type MenuV2Handler = {
                 resScore180
                 |> Result.map(fun score180 ->
                   Map.ofArray [|
-                    SoloGame.GameMode.TimeAttack2000, time2000
+                    SoloGame.GameMode.TimeAttack5000, time5000
                     SoloGame.GameMode.ScoreAttack180, score180
                   |]
                 )

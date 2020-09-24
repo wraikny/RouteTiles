@@ -247,12 +247,8 @@ module Server =
   let [<Literal>] url = @""
   let [<Literal>] username = @""
   let [<Literal>] password = @""
-  let [<Literal>] tableTime2000  = @""
   let [<Literal>] tableTime5000  = @""
-  let [<Literal>] tableTime10000 = @""
   let [<Literal>] tableScore180  = @""
-  let [<Literal>] tableScore300  = @""
-  let [<Literal>] tableScore600  = @""
 
 let [<Literal>] password = @""
 

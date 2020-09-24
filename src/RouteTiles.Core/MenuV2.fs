@@ -227,7 +227,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
             do! ErrorLogEffect e
             return state
           | Ok dataMap ->
-            let gameMode = SoloGame.GameMode.TimeAttack2000
+            let gameMode = SoloGame.GameMode.TimeAttack5000
             do! Ranking.Rankings.init (config, gameMode, dataMap.[gameMode]) |> stateEnter
             
             let gameMode = SoloGame.GameMode.ScoreAttack180

@@ -41,7 +41,7 @@ with
   static member Init(config, gameMode, model: SoloGame.Model, time) =
     match gameMode with
     // オンラインランキング対応モード
-    | SoloGame.GameMode.TimeAttack2000
+    | SoloGame.GameMode.TimeAttack5000
     | SoloGame.GameMode.ScoreAttack180 ->
       let data: Ranking.Data =
         { Name = ""

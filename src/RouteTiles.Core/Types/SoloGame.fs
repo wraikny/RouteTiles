@@ -16,25 +16,25 @@ type Model = {
 
 [<Struct>]
 type GameMode =
-  | TimeAttack2000
+  | TimeAttack5000
   | ScoreAttack180
   | Endless
 
 module GameMode =
   let items = [|
-    TimeAttack2000
+    TimeAttack5000
     ScoreAttack180
     Endless
   |]
 
-  let selected = TimeAttack2000
+  let selected = TimeAttack5000
 
   let into = function
     | Endless -> Mode.Endless
 #if DEBUG
-    | TimeAttack2000 -> Mode.TimeAttack 2000
+    | TimeAttack5000 -> Mode.TimeAttack 5000
     | ScoreAttack180 -> Mode.ScoreAttack 180
 #else
-    | TimeAttack2000 -> Mode.TimeAttack 2000
+    | TimeAttack5000 -> Mode.TimeAttack 5000
     | ScoreAttack180 -> Mode.ScoreAttack 180
 #endif
