@@ -1,6 +1,7 @@
 ﻿module RouteTiles.App.Program
 
 open System.Threading
+open System.IO
 
 open Altseed2
 open RouteTiles.Core
@@ -88,10 +89,13 @@ let private main _ =
       reraise()
 
     Engine.TerminateEx()
+
   with e ->
     eprintfn "%O" e
-    System.IO.File.AppendAllText(CriticalErrorLogFile, ErrorLog.toString e)
+    File.AppendAllText(CriticalErrorLogFile, ErrorLog.toString e)
     reraise e
+
+    ()
 #endif
 
   0 // return an integer exit code
