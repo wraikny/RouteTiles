@@ -20,6 +20,7 @@
 - [かゆいところに手が届くBGM集 vol.3 (c) みろく](https://booth.pm/ja/items/2037124)
   - 思考迷宮・虚
   - 螺旋考路
+  - 幕間
   - ほどく
   - 思考迷宮・幻
 - [555 UI Sound FX (c) MATSU(MA2 Sound)](https://booth.pm/ja/items/254302)
