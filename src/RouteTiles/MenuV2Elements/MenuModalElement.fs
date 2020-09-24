@@ -48,15 +48,6 @@ let private modalText font color text =
     , zOrder = ZOrder.MenuModal.text
     )
 
-// let private createTextsModal (container: Container) texts =
-//   createModalWithChildren container 120.0f (
-//     texts |> Array.map(fun text ->
-//       modalText container.Font (Color(255, 255, 255, 255)) text
-//       |> BoxUI.alignX Align.Center
-//       |> BoxUI.debug
-//     )
-//   )
-
 let modalWithDescriptionAndChildren (container: Container) marginBottom (description: string) (children) =
   modalFrame ZOrder.MenuModal.background container
   |> BoxUI.withChild(
@@ -73,6 +64,20 @@ let modalWithDescriptionAndChildren (container: Container) marginBottom (descrip
     )
     |> BoxUI.withChildren children
   )
+
+let private createTextsModal (container: Container) (description: string) alignX texts =
+  modalWithDescriptionAndChildren container 80.0f description [|
+    ItemList.Create(itemMargin = 12.0f)
+    |> BoxUI.alignX Align.Center
+    |> BoxUI.alignY Align.Max
+    |> BoxUI.withChildren (
+      texts |> Array.map(fun text ->
+        modalText container.Font (Color(255, 255, 255, 255)) text
+        |> BoxUI.alignX alignX
+        |> BoxUI.debug
+      )
+    )
+  |]
 
 let createInputUsernameModal (container: Container) (state: StringInput.State) =
   let frameSize = Vector2F(520.0f, 80.0f)
@@ -269,30 +274,41 @@ let private createErrorModal (container: Container) (error: exn) =
 
 
 let createModal (container: Container) (state: MenuV2.State) =
+  let tm = container.TextMap
+
   state |> function
-    | MenuV2.State.HowToControlState (SinglePage.SinglePageState state, _) ->
+    | MenuV2.State.HowToState (SinglePage.SinglePageState state, _) ->
       ValueSome [|
         yield! createBlur()
-        createCurrentMode container container.TextMap.modes.howToControl
+        yield createCurrentMode container tm.modes.howTo
 
-        let texture =
-          match state with
-          | MenuV2.HowToControl.Keyboard -> container.HowToKeyboard
-          | MenuV2.HowToControl.Joystick -> container.HowToJoystick
+        let f x = centeredSprite ZOrder.MenuModal.background x
 
-        centeredSprite ZOrder.MenuModal.background texture
+        // TODO: wazap
+        let elem = state |> function
+          | x when x = MenuV2.HowToMode.Keyboard -> f container.HowToKeyboard
+          | x when x = MenuV2.HowToMode.Joystick -> f container.HowToJoystick
+          | x when x = MenuV2.HowToMode.Slide -> f container.HowToSlide
+          | x when x = MenuV2.HowToMode.Route -> f container.HowToRoute
+          | x when x = MenuV2.HowToMode.Loop -> f container.HowToLoop
+          | x when x = MenuV2.HowToMode.Game -> f container.HowToGame
+          | x when x = MenuV2.HowToMode.Point -> f container.HowToPoint
+          | _ -> failwith "unexpected: WAZAP!!!!!!!!!!!"
+
+        yield elem
       |]
+
     | MenuV2.State.SettingMenuState (Setting.State.InputName(state, _), _) ->
       ValueSome [|
           yield! createBlur ()
-          createCurrentMode container container.TextMap.modes.nameSetting
+          createCurrentMode container tm.modes.nameSetting
           createInputUsernameModal container state
       |]
 
     | MenuV2.State.SettingMenuState (Setting.State.Volume(state, _), _) ->
       ValueSome [|
         yield! createBlur ()
-        createCurrentMode container container.TextMap.modes.volumeSetting
+        createCurrentMode container tm.modes.volumeSetting
         createVolumeSettingModal container state
       |]
 
@@ -304,13 +320,13 @@ let createModal (container: Container) (state: MenuV2.State) =
           )
         :> Element
 
-        createCurrentMode container container.TextMap.modes.volumeSetting
+        createCurrentMode container tm.modes.volumeSetting
 
         yield!
           listSelectorModal
             listSelectorZOrders
             container
-            container.TextMap.descriptions.selectBackground
+            tm.descriptions.selectBackground
             container.Font
             state
             container.BackgroundButtons
@@ -325,7 +341,7 @@ let createModal (container: Container) (state: MenuV2.State) =
 
         yield! createBlur () // ZOrder.Menu.blurOverGameInfo ZOrder.Menu.darkMaskOverGameInfo
 
-        createCurrentMode container container.TextMap.modes.controllerSelect
+        createCurrentMode container tm.modes.controllerSelect
 
         yield! createControllerSelect container state
       |]

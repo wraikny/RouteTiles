@@ -3,6 +3,7 @@ module internal RouteTiles.App.TextMap
 type Buttons = {
   play: string
   ranking: string
+  howTo: string
   setting: string
   timeattack5000: string
   scoreattack180: string
@@ -32,6 +33,7 @@ type Buttons = {
 type Descriptions = {
   play: string
   ranking: string
+  howTo: string
   setting: string
   timeattack5000: string
   scoreattack180: string
@@ -65,7 +67,8 @@ type Modes = {
   gameResult: string
   rankingOf: string
   volumeSetting: string
-  howToControl: string
+  // howToControl: string
+  howTo: string
   // waitingResponse: string
 }
 
@@ -89,6 +92,7 @@ let textMapJapanese = {
   buttons = {
     play = "遊ぶ"
     ranking = "ランキング"
+    howTo = "遊び方"
     setting = "設定"
     timeattack5000 = "タイム5000"
     scoreattack180 = "スコア180"
@@ -118,6 +122,7 @@ let textMapJapanese = {
   descriptions = {
     play = "ゲームを遊びます"
     ranking = "オンラインランキングを確認します"
+    howTo = "遊び方の説明をします"
     setting = "色々な設定を行います"
     timeattack5000 = "5000点までの時間を競うモードです"
     scoreattack180 = "180秒以内のスコアを競うモードです"
@@ -151,7 +156,8 @@ let textMapJapanese = {
     gameResult = "リザルト"
     rankingOf = "ランキング - "
     volumeSetting = "音量設定"
-    howToControl = "操作説明"
+    // howToControl = "操作説明"
+    howTo = "遊び方"
     // waitingResponse = "通信待機中..."
     // error = "エラー"
   }

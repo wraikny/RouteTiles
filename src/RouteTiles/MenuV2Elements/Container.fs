@@ -10,7 +10,7 @@ open Altseed2
 type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
   let withProgress x = progress () |> ignore; x
 
-  static member val ProgressCount = 15
+  static member val ProgressCount = 20
 
   member val TextMap = textMap
 
@@ -27,6 +27,12 @@ type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
 
   member val HowToKeyboard = Texture2D.LoadStrict(@"Menu/howto_keyboard.png") |> withProgress
   member val HowToJoystick = Texture2D.LoadStrict(@"Menu/howto_joystick.png") |> withProgress
+
+  member val HowToSlide = Texture2D.LoadStrict(@"Menu/howtoplay_slide.png") |> withProgress
+  member val HowToRoute = Texture2D.LoadStrict(@"Menu/howtoplay_route.png") |> withProgress
+  member val HowToLoop = Texture2D.LoadStrict(@"Menu/howtoplay_loop.png") |> withProgress
+  member val HowToGame = Texture2D.LoadStrict(@"Menu/howtoplay_game.png") |> withProgress
+  member val HowToPoint = Texture2D.LoadStrict(@"Menu/howtoplay_point.png") |> withProgress
 
   // member val InputUsernameBackground = Texture2D.LoadStrict(@"Menu/input_username.png")
   member val Font = Font.LoadStaticFontStrict(@"Font/Makinas-4-Square-32/font.a2f") |> withProgress
@@ -48,6 +54,7 @@ type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
     MenuV2.Mode.items |> Array.map (function
       | MenuV2.Mode.GamePlay -> textMap.buttons.play
       | MenuV2.Mode.Ranking -> textMap.buttons.ranking
+      | MenuV2.Mode.HowTo -> textMap.buttons.howTo
       | MenuV2.Mode.Setting -> textMap.buttons.setting
     )
 
@@ -55,6 +62,7 @@ type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
     MenuV2.Mode.items |> Array.map (function
       | MenuV2.Mode.GamePlay -> textMap.descriptions.play
       | MenuV2.Mode.Ranking -> textMap.descriptions.ranking
+      | MenuV2.Mode.HowTo -> textMap.descriptions.howTo
       | MenuV2.Mode.Setting -> textMap.descriptions.setting
     )
 

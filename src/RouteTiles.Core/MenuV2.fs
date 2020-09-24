@@ -12,12 +12,14 @@ open EffFs.Library.StateMachine
 type Mode =
   | GamePlay
   | Ranking
+  | HowTo
   | Setting
 
 module Mode =
   let items = [|
     Mode.GamePlay
     Mode.Ranking
+    Mode.HowTo
     Mode.Setting
   |]
 
@@ -61,7 +63,14 @@ module ControllerSelect =
   }
 
 [<RequireQualifiedAccess>]
-type HowToControl = Keyboard | Joystick
+type HowToMode =
+  | Keyboard
+  | Joystick
+  | Game
+  | Slide
+  | Route
+  | Loop
+  | Point
 
 
 type WithState<'s> = WithContext<State, 's>
@@ -79,7 +88,7 @@ and State =
   | RankingState of Ranking.Rankings.State * (unit -> State)
   | WaitingResponseState of Ranking.Rankings.Waiting * (Ranking.Rankings.Response -> State)
   | ErrorViewState of SinglePage.State<exn> * (unit -> State)
-  | HowToControlState of SinglePage.State<HowToControl> * (unit -> State)
+  | HowToState of SinglePage.State<HowToMode> * (unit -> State)
 with
   member x.IsStringInputMode = x |> function
     | SettingMenuState (s, _) -> s.IsStringInputMode
@@ -95,7 +104,7 @@ with
   static member StateEnter(s, k) = RankingState (s, k)
   static member StateEnter(s, k) = WaitingResponseState (s, k)
   static member StateEnter(s, k) = ErrorViewState (s, k)
-  static member StateEnter(s, k) = HowToControlState (s, k)
+  static member StateEnter(s, k) = HowToState (s, k)
 
 let equal a b = (a, b) |> function
   | MainMenuState(a1, a2), MainMenuState(b1, b2) -> (a1, a2) = (b1, b2)
@@ -108,7 +117,7 @@ let equal a b = (a, b) |> function
   | RankingState(a, _), RankingState(b, _) -> a = b
   | WaitingResponseState(a, _), WaitingResponseState(b, _) -> a = b
   | ErrorViewState(a, _), ErrorViewState(b, _) -> a = b
-  | HowToControlState(a, _), HowToControlState(b, _) -> a = b
+  | HowToState(a, _), HowToState(b, _) -> a = b
   | _ -> false
 
 
@@ -169,17 +178,12 @@ module Msg =
     | Enter | Cancel -> ValueSome SinglePage.Msg.Enter
     | _ -> ValueNone
 
-let inline howToControl state = eff {
-  do! SinglePage.SinglePageState HowToControl.Keyboard |> stateEnter
-  do! SinglePage.SinglePageState HowToControl.Joystick |> stateEnter
-  return state
-}
-
-
 let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
   match msg, state with
   | Msg.OpenHowToControl, _ ->
-    return! howToControl state
+    do! SinglePage.SinglePageState HowToMode.Keyboard |> stateEnter
+    do! SinglePage.SinglePageState HowToMode.Joystick |> stateEnter
+    return state
 
   | _, MainMenuState(config, mainMenu) ->
     match Msg.toListSelectorMsg msg with
@@ -234,6 +238,16 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
             do! Ranking.Rankings.init (config, gameMode, dataMap.[gameMode]) |> stateEnter
 
             return state
+
+        | ValueSome Mode.HowTo ->
+          do! SinglePage.SinglePageState HowToMode.Game |> stateEnter
+          do! SinglePage.SinglePageState HowToMode.Slide |> stateEnter
+          do! SinglePage.SinglePageState HowToMode.Route |> stateEnter
+          do! SinglePage.SinglePageState HowToMode.Loop |> stateEnter
+          do! SinglePage.SinglePageState HowToMode.Point |> stateEnter
+          do! SinglePage.SinglePageState HowToMode.Keyboard |> stateEnter
+          do! SinglePage.SinglePageState HowToMode.Joystick |> stateEnter
+          return state
 
         | ValueSome Mode.Setting ->
           match!
@@ -384,7 +398,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
       return! stateMapEff (SinglePage.update msg) (s, k)
     | _ -> return state
 
-  | _, HowToControlState(s, k) ->
+  | _, HowToState(s, k) ->
     match Msg.toSinglePageMsg msg with
     | ValueSome msg ->
       return! stateMapEff (SinglePage.update msg) (s, k)
