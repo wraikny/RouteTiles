@@ -29,35 +29,28 @@ let private errorToMessage date (error: exn) =
       error.Message
       error.StackTrace
 
-let private write (error: exn) =
+let toString (error: exn) =
   let now = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss")
-  let message =
-    error |> function
-    | :? AggregateException as e ->
-      e.Flatten().InnerExceptions
-      |> Seq.map (errorToMessage now)
-      |> String.concat "\n"
-    | _ -> errorToMessage now error
 
-  File.AppendAllTextAsync(ErrorLogFile, message)
-
+  error |> function
+  | :? AggregateException as e ->
+    e.Flatten().InnerExceptions
+    |> Seq.map (errorToMessage now)
+    |> String.concat "\n"
+  | _ -> errorToMessage now error
 
 let private writeQueue = ConcurrentQueue<exn>()
 
 let save = writeQueue.Enqueue
-
-let private lockObj = obj()
-let mutable private config = ValueNone
-let tryGet() = lock lockObj (fun () -> config)
 
 let update = async {
   // let ctx = SynchronizationContext.Current
   do! Async.SwitchToThreadPool()
   while true do
     match writeQueue.TryDequeue() with
-    | true, conf ->
-      do! write conf |> Async.AwaitTask
-      lock lockObj (fun () -> config <- ValueSome conf)
+    | true, error ->
+      let message = toString error
+      do! File.AppendAllTextAsync(ErrorLogFile, message) |> Async.AwaitTask
       // do! Async.SwitchToContext ctx
-    | _ -> do! Async.Sleep 100
+    | _ -> do! Async.Sleep 5
 }

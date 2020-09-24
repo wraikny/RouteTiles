@@ -8,6 +8,8 @@ open RouteTiles.Core.Types
 
 open RouteTiles.App.Consts.ViewCommon
 
+let [<Literal>] CriticalErrorLogFile = @"RouteTiles.CriticalError.log"
+
 [<EntryPoint; System.STAThread>]
 let private main _ =
   let inline init(config) =
@@ -43,11 +45,8 @@ let private main _ =
         return container
       })
 
-
-
-
-      let! _ = Async.StartChild (Config.update)
-      let! _ = Async.StartChild (ErrorLog.update)
+      let! _ = Async.StartChild Config.update
+      let! _ = Async.StartChild ErrorLog.update
       let! container = child
 
       Engine.RemoveNode loading
@@ -90,7 +89,9 @@ let private main _ =
 
     Engine.TerminateEx()
   with e ->
-    eprintfn "%A: %s" (e.GetType()) e.Message
+    eprintfn "%O" e
+    System.IO.File.AppendAllText(CriticalErrorLogFile, ErrorLog.toString e)
+    reraise e
 #endif
 
   0 // return an integer exit code
