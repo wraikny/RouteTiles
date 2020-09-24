@@ -86,6 +86,10 @@ Target.create "Serve" (fun _ ->
 
 
 Target.create "Resources" (fun _ ->
+  Shell.rm "Resources.pack"
+  Shell.rm "Resources.zip"
+  Shell.cleanDir (resourcesf "/Shader")
+
   Shell.copyDir (resourcesf "/Shader") @"src/Shader" (fun _ -> true)
 
   dotnet "fsi" "--exec pack.fsx"

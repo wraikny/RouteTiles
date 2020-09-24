@@ -4,6 +4,11 @@
 - [Twitter](https://twitter.com/wraikny)
 - [Email](writtenknown@gmail.com)
 
+## Macでの注意点
+1. `Bin/RouteTiles`を右クリック -> 開く -> 許可
+1. `RouteTiles.command` を右クリック -> 開く -> 許可
+1. 以降は`RouteTiles.command`をダブルクリックで実行可能になります。
+
 ## License
 本ゲームのソースコードの一部はMITライセンスで公開されています。
 以下を無断で解析・再配布することを禁止します。
