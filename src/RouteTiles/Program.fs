@@ -93,9 +93,7 @@ let private main _ =
   with e ->
     eprintfn "%O" e
     File.AppendAllText(CriticalErrorLogFile, ErrorLog.toString e)
-    reraise e
-
-    ()
+    reraise()
 #endif
 
   0 // return an integer exit code
