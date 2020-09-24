@@ -52,7 +52,7 @@ float3 getColor(float2 p) {
 
     float a = argP.y * argP.y;
 
-    float3 baseColor = HSVtoRGB(0.66 + time.x * 0.02, 1.0, 0.2);
+    float3 baseColor = HSVtoRGB(0.66 + time.x * 0.02, 1.0, 0.3);
 
     float3 color = d < 0.1 ? (1 - a) * baseColor.xyz + (p.y + 0.5) * 0.1 : a * baseColor.xyz;
 
