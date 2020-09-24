@@ -104,7 +104,7 @@ module Model =
 
   let routeTiles (board: Model) =
     // タイルを辿ってその結果を返す。
-    let routes firstTile cdn firstDir =
+    let routes firstTile cdn firstDir: RouteResult =
       let rec f tiles cdn dir =
         let cdn = cdn + Dir.toVector dir
         let rDir = Dir.rev dir
@@ -132,7 +132,7 @@ module Model =
 
       f [cdn, firstTile.id] cdn firstDir
 
-    let routesDirs id cdn dir1 dir2 =
+    let routesDirs id cdn dir1 dir2: LineState * RouteOrLoop voption =
       (routes id cdn dir1, routes id cdn dir2) |> function
       | RouteResult.Self tiles, RouteResult.Self _ ->
         LineState.Looped,
@@ -173,7 +173,14 @@ module Model =
           tiles |> Seq.iter (ValueOption.iter routesAndLoops.Add)
           { tile with routeState = state }
         )
-      ), Set.ofSeq routesAndLoops
+      ), (
+        routesAndLoops
+        |> Seq.distinctBy(function
+          | RouteOrLoop.Route tiles -> tiles |> Array.map snd |> Set.ofArray
+          | RouteOrLoop.Loop tiles -> tiles |> Array.map snd |> Set.ofArray
+        )
+        |> Set.ofSeq
+      )
 
     { board with tiles = tiles; routesAndLoops = routesAndLoops }
 
@@ -274,14 +281,23 @@ module Update =
   /// 得点計算を行う
   let calculatePoint (routesAndLoops: Set<RouteOrLoop>) =
 
+    let synchronousBonus = 1.0f + float32 routesAndLoops.Count * 0.5f
 
     routesAndLoops
-    |> Seq.sumBy(function
-      | RouteOrLoop.Route tiles -> tiles.Length * tiles.Length * 3
-      | RouteOrLoop.Loop tiles -> tiles.Length * tiles.Length * 2
+    |> Seq.sumBy(fun rl ->
+      let kindBonus, tiles = rl |> function
+        | RouteOrLoop.Route tiles -> 3.0f, tiles
+        | RouteOrLoop.Loop tiles -> 4.0f, tiles
+
+      let connectionBonus = pown tiles.Length 2 |> float32
+
+      let crossBonus =
+        let idDistinctedLength = tiles |> Array.distinctBy snd |> Array.length
+        float32 (pown 1.2f <| tiles.Length - idDistinctedLength)
+
+      kindBonus * connectionBonus * crossBonus
     )
-    |> float32
-    |> ( * ) (1.0f + float32 routesAndLoops.Count / 5.0f)
+    |> ( * ) synchronousBonus
     |> int
 
   /// タイルを移動する
