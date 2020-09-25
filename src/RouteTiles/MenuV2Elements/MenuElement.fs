@@ -212,7 +212,7 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
             |> BoxUI.withChild (
               Text.Create
                 ( font = container.Font
-                , text = data.utcDate.ToLocalTime().ToString("yyyy/MM/dd hh:mm")
+                , text = data.utcDate.ToLocalTime().ToString("yyyy/MM/dd HH:mm")
                 , color = Nullable(Color(0uy, 0uy, 0uy))
                 , zOrder = ZOrder.Menu.buttonText
                 )
