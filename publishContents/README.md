@@ -4,10 +4,17 @@
 - [Twitter](https://twitter.com/wraikny)
 - [Email](writtenknown@gmail.com)
 
-## Macでの注意点
+
+## 実行
+### Windows
+`RouteTiles.exe`をダブルクリックで実行。
+
+### Mac
 1. `Bin/RouteTiles`を右クリック -> 開く -> 許可
+1. 「RouteTilesが予期しない理由で終了しました。」と表示されますが、問題ありません。
 1. `RouteTiles.command` を右クリック -> 開く -> 許可
-1. 以降は`RouteTiles.command`をダブルクリックで実行可能になります。
+1. 以降は`RouteTiles.command`をダブルクリックで実行可能です。
+
 
 ## License
 本ゲームのソースコードの一部はMITライセンスで公開されています。
