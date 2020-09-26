@@ -20,8 +20,12 @@ type internal DrawnNodePool<'key, 'node, 'arg when 'key : equality and 'node :> 
 
   member this.Clear() =
     for x in objects do
-      this.ClearItem x.Key
-    this.FlushQueue()
+      let item = x.Value
+      pool.Push(item)
+      item |> setIsDrawn false
+
+    objects.Clear()
+
 
   member this.Update(args: #seq<'key * 'arg>) =
     for (key, arg) in args do
@@ -42,9 +46,17 @@ type internal DrawnNodePool<'key, 'node, 'arg when 'key : equality and 'node :> 
 
       existKeys.Add(key) |> ignore
 
-    for x in objects do
-      if not <| existKeys.Contains(x.Key) then
-        this.ClearItem x.Key
+    let removeKeys =
+      [|
+        for x in objects do
+          if not <| existKeys.Contains(x.Key) then
+            (x.Key, x.Value)
+      |]
+
+    for (key, value) in removeKeys do
+      pool.Push(value)
+      value |> setIsDrawn false
+      objects.Remove(key) |> ignore
 
     existKeys.Clear()
 
