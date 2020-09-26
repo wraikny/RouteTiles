@@ -96,7 +96,34 @@ module Model =
 
   let inline tryGetTile (cdn: int Vector2) (board: Model) = board.tiles |> Array2D.tryGet cdn.x cdn.y
 
-  open System.Collections.Generic
+  /// 得点計算を行う
+  let calculatePoint (routesAndLoops: Set<RouteOrLoop>) =
+
+    let synchronousBonus = 1.0f + float32 routesAndLoops.Count * 0.5f
+
+    let crossBonus: float32 =
+      let allVanishedTileIds =
+        [|
+          for rl in routesAndLoops do
+            for (_, id) in RouteOrLoop.value rl do
+              yield id
+        |]
+
+      let idDistinctedLength = allVanishedTileIds |> Array.distinct |> Array.length
+      (pown 2.0f <| allVanishedTileIds.Length - idDistinctedLength)
+
+    routesAndLoops
+    |> Seq.sumBy(fun rl ->
+      let kindBonus, tiles = rl |> function
+        | RouteOrLoop.Route tiles -> 3.0f, tiles
+        | RouteOrLoop.Loop tiles -> 12.0f, tiles
+
+      let connectionBonus = pown tiles.Length 2 |> float32
+
+      kindBonus * connectionBonus
+    )
+    |> ( * ) (synchronousBonus * crossBonus)
+    |> int
 
   [<RequireQualifiedAccess>]
   type private RouteResult =
@@ -184,7 +211,13 @@ module Model =
         |> Set.ofSeq
       )
 
-    { board with tiles = tiles; routesAndLoops = routesAndLoops }
+    let routesAndLoopsResult =
+      if routesAndLoops.IsEmpty then
+        ValueNone
+      else
+        ValueSome(routesAndLoops, calculatePoint routesAndLoops)
+
+    { board with tiles = tiles; routesAndLoops = routesAndLoopsResult }
 
   let nextDirsToTiles offset =
     Seq.mapi (fun i d ->
@@ -260,7 +293,7 @@ module Model =
 
           slideCount = 0
 
-          routesAndLoops = Set.empty
+          routesAndLoops = ValueNone
           routesHistory = List.empty
           loopsHistory = List.empty
 
@@ -279,35 +312,6 @@ type Msg =
 
 module Update =
   let incr model = { model with slideCount = model.slideCount + 1 }
-
-  /// 得点計算を行う
-  let calculatePoint (routesAndLoops: Set<RouteOrLoop>) =
-
-    let synchronousBonus = 1.0f + float32 routesAndLoops.Count * 0.5f
-
-    let crossBonus: float32 =
-      let allVanishedTileIds =
-        [|
-          for rl in routesAndLoops do
-            for (_, id) in RouteOrLoop.value rl do
-              yield id
-        |]
-
-      let idDistinctedLength = allVanishedTileIds |> Array.distinct |> Array.length
-      (pown 2.0f <| allVanishedTileIds.Length - idDistinctedLength)
-
-    routesAndLoops
-    |> Seq.sumBy(fun rl ->
-      let kindBonus, tiles = rl |> function
-        | RouteOrLoop.Route tiles -> 3.0f, tiles
-        | RouteOrLoop.Loop tiles -> 12.0f, tiles
-
-      let connectionBonus = pown tiles.Length 2 |> float32
-
-      kindBonus * connectionBonus
-    )
-    |> ( * ) (synchronousBonus * crossBonus)
-    |> int
 
   /// タイルを移動する
   let sldieTiles (slideDir: Dir) (nextTile) (board: Model): Model =
@@ -351,7 +355,7 @@ module Update =
     |> Model.routeTiles
 
   let vanish board =
-    let routesAndLoops = board.routesAndLoops
+    let routesAndLoops, newPoint = board.routesAndLoops.Value
 
     let extractRouteOrLoopBy f = routesAndLoops |> Seq.filterMapV f |> Seq.map (Array.map snd) |> Seq.toList
 
@@ -367,7 +371,7 @@ module Update =
       |> Seq.length
 
     { board with
-        point = board.point + calculatePoint routesAndLoops
+        point = board.point + newPoint
         tiles =
           board.tiles
           |> Array2D.map(function
@@ -380,7 +384,7 @@ module Update =
             | ValueNone -> ValueNone
             | x -> x
           )
-        routesAndLoops = Set.empty
+        routesAndLoops = ValueNone
 
         routesHistory = board.routesHistory |> List.append vanishedRoutes
         loopsHistory = board.loopsHistory |> List.append vanishedLoops
@@ -392,12 +396,7 @@ module Update =
 
     msg |> function
     | ApplyVanishment ->
-      eff {
-        // if not board.routesAndLoops.IsEmpty then
-        //   do! EmitVanishParticleEffect board.routesAndLoops
-
-        return vanish board
-      }
+      vanish board |> Eff.pure'
 
     | MoveCursor dir ->
       let cursor = board.cursor + Dir.toVector dir

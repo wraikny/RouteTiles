@@ -103,11 +103,14 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
 
         yield! Coroutine.sleep Consts.GameCommon.inputInterval
 
-        if not m.board.routesAndLoops.IsEmpty then
+        match m.board.routesAndLoops with
+        | ValueNone -> ()
+        | ValueSome (routesAndLoops, newPoint) ->
           yield! Coroutine.sleep Consts.Board.tilesVanishInterval
           soundControl.PlaySE(SEKind.GameVanishTiles, true)
-          boardNode.EmitVanishmentParticle(m.board.routesAndLoops)
+          boardNode.EmitVanishmentParticle(routesAndLoops)
           updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
+
       | _ -> yield ()
     }
 

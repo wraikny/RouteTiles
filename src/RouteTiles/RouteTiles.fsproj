@@ -48,7 +48,7 @@
     <Compile Include="BoxUIExtension.fs" />
     <Compile Include="BoxUIElements.fs" />
     <Compile Include="Coroutine.fs" />
-    <Compile Include="NodePool.fs" />
+    <Compile Include="DrawnNodePool.fs" />
     <Compile Include="AnimationSpriteNode.fs" />
     <Compile Include="InputControl.fs" />
     <Compile Include="ViewParams.fs" />

@@ -16,11 +16,10 @@ type internal NextTilesNode(addCoroutine) =
   let updateTile = BoardHelper.updateTile >> addCoroutine
 
   let nextsPool =
-    { new NodePool<int<TileId>, _, _>() with
-        member __.Create() = BoardHelper.createTile()
-        member __.Update(node, (index: int, tile: Tile), isNewTile) =
-          updateTile(node, (Helper.Board.nextsIndexToCoordinate index, tile), isNewTile)
-    }
+    DrawnNodePool.init
+      BoardHelper.createTile
+      (fun (node, (index: int, tile: Tile), isNewTile) ->
+        updateTile(node, (Helper.Board.nextsIndexToCoordinate index, tile), isNewTile))
 
   let nextsBackground =
     RectangleNode(

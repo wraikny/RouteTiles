@@ -69,12 +69,7 @@ type internal BoardNode(addCoroutine) =
       ZOrder = ZOrder.Board.background
     )
 
-  let tilesPool =
-    { new NodePool<int<TileId>, _, _>() with
-        member __.Create() = BoardHelper.createTile()
-        member __.Update(node, (cdn: int Vector2, tile: Tile), isNewTile) =
-          updateTile(node, (cdn, tile), isNewTile)
-    }
+  let tilesPool = DrawnNodePool.init BoardHelper.createTile updateTile
 
   let cursorX =
     RectangleNode(

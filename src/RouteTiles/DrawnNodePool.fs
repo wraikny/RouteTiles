@@ -3,8 +3,8 @@ namespace RouteTiles.App
 open System.Collections.Generic
 open Altseed2
 
-[<AbstractClass>]
-type internal NodePool<'key, 'node, 'arg when 'key : equality and 'node :> Node>() =
+
+type internal DrawnNodePool<'key, 'node, 'arg when 'key : equality and 'node :> Node> (setIsDrawn, create, update) =
   inherit Node()
 
   let objects = Dictionary<'key, 'node>()
@@ -12,13 +12,10 @@ type internal NodePool<'key, 'node, 'arg when 'key : equality and 'node :> Node>
 
   let existKeys = HashSet<'key>()
 
-  abstract Create: unit -> 'node
-  abstract Update: node:'node * arg:'arg * isFirstUpdate:bool -> unit
-
   member private this.ClearItem(key) =
     let object = objects.Item(key)
     pool.Push(object)
-    this.RemoveChildNode(object)
+    object |> setIsDrawn false
     objects.Remove(key) |> ignore
 
   member this.Clear() =
@@ -26,19 +23,22 @@ type internal NodePool<'key, 'node, 'arg when 'key : equality and 'node :> Node>
       this.ClearItem x.Key
     this.FlushQueue()
 
-  member this.Update(args) =
+  member this.Update(args: #seq<'key * 'arg>) =
     for (key, arg) in args do
       objects.TryGetValue(key) |> function
       | true, object ->
-        this.Update(object, arg, false)
+        update(object, arg, false)
       | _ ->
         let object = pool.TryPop() |> function
           | true, res -> res
-          | _ -> this.Create()
+          | _ ->
+            let n = create()
+            this.AddChildNode(n)
+            n
 
-        this.Update(object, arg, true)
+        object |> setIsDrawn true
+        update(object, arg, true)
         objects.Add(key, object)
-        this.AddChildNode(object)
 
       existKeys.Add(key) |> ignore
 
@@ -47,3 +47,10 @@ type internal NodePool<'key, 'node, 'arg when 'key : equality and 'node :> Node>
         this.ClearItem x.Key
 
     existKeys.Clear()
+
+module internal DrawnNodePool =
+  let inline private setIsDrawn (isDrawn) (x: ^a) =
+    (^a: (member set_IsDrawn: bool -> unit) (x, isDrawn))
+
+  let inline init create update =
+    DrawnNodePool<_,_,_>(setIsDrawn, create, update)

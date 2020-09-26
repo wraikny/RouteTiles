@@ -61,7 +61,7 @@ type Model = {
 
   point: int
 
-  routesAndLoops: Set<RouteOrLoop>
+  routesAndLoops: (Set<RouteOrLoop> * int) voption
   routesHistory: int<TileId>[] list
   loopsHistory: int<TileId>[] list
   vanishedTilesCount: int
