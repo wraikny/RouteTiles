@@ -12,8 +12,8 @@ module internal Coroutine =
       let msf = float32 ms
       let mutable t = 0.0f
       while t < msf do
-        t <- t + Engine.DeltaSecond * 1000.0f
         yield (t / msf)
+        t <- t + Engine.DeltaSecond * 1000.0f
     }
 
   let sleep ms = seq { for _ in milliseconds ms -> () }

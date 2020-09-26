@@ -48,8 +48,6 @@
     <Compile Include="BoxUIExtension.fs" />
     <Compile Include="BoxUIElements.fs" />
     <Compile Include="Coroutine.fs" />
-    <Compile Include="DrawnNodePool.fs" />
-    <Compile Include="AnimationSpriteNode.fs" />
     <Compile Include="InputControl.fs" />
     <Compile Include="ViewParams.fs" />
     <Compile Include="PostEffect/Background.fs" />
@@ -61,6 +59,9 @@
     <Compile Include="MenuV2Elements/MenuElement.fs" />
     <Compile Include="MenuV2Elements/MenuModalElement.fs" />
     <Compile Include="MenuV2Elements/GameInfoElement.fs" />
+    <Compile Include="Game/DrawnNodePool.fs" />
+    <Compile Include="Game/AnimationSpriteNode.fs" />
+    <Compile Include="Game/ScoreEffect.fs" />
     <Compile Include="Game/Board.fs" />
     <Compile Include="Game/NextTiles.fs" />
     <Compile Include="Game/ReadyStart.fs" />

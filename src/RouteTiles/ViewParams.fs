@@ -231,6 +231,8 @@ module internal ZOrder =
     let tiles = offset 2
     let particles = offset 3
 
+    let scoreEffect = offset 10
+
     let readyStart = offset 100
 
   module Menu =

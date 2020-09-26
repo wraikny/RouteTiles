@@ -42,7 +42,10 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
 
   let coroutineNode = CoroutineNode()
   let childrenCoroutineNode = CoroutineNode()
+
   let boardNode = BoardNode(childrenCoroutineNode.Add, Position = Helper.SoloGame.boardViewPos)
+  let scoreEffect = ScoreEffect(container.Font, Color(255, 255, 255, 255), childrenCoroutineNode.Add)
+
   let nextTilesNode = NextTilesNode(childrenCoroutineNode.Add, Position = Helper.SoloGame.nextsViewPos)
   let uiRootGameInfoNode = BoxUIRootNode(isAutoTerminated = false)
 
@@ -70,6 +73,8 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
     base.AddChildNode(childrenCoroutineNode)
 
     base.AddChildNode(boardNode)
+    boardNode.AddChildNode(scoreEffect)
+    
     base.AddChildNode(nextTilesNode)
     base.AddChildNode(uiRootGameInfoNode)
 
@@ -107,8 +112,26 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
         | ValueNone -> ()
         | ValueSome (routesAndLoops, newPoint) ->
           yield! Coroutine.sleep Consts.Board.tilesVanishInterval
+
           soundControl.PlaySE(SEKind.GameVanishTiles, true)
           boardNode.EmitVanishmentParticle(routesAndLoops)
+
+          let scoreEffectPosition =
+            let tileCenterPoses =
+              [|
+                for rl in routesAndLoops do
+                  for (cdn, id) in Board.RouteOrLoop.value rl do
+                    (cdn, id)
+              |]
+              |> Array.distinctBy snd
+              |> Array.map(fun (cdn, _) ->
+                let v = Helper.Board.calcTilePosCenter cdn
+                Vector2.init v.X v.Y
+              )
+            
+            (Array.sum tileCenterPoses) ./ (float32 tileCenterPoses.Length)
+          scoreEffect.Add(newPoint, scoreEffectPosition |> fromAffogato)
+
           updater.Dispatch(lift Board.Msg.ApplyVanishment) |> ignore
 
       | _ -> yield ()

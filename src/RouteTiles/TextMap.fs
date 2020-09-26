@@ -170,5 +170,5 @@ let textMapJapanese = {
     loopCount = "ループ数"
   }
 
-  others = ":/-."
+  others = ":/-.+"
 }
