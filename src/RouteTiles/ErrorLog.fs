@@ -30,7 +30,7 @@ let private errorToMessage date (error: exn) =
       error.StackTrace
 
 let toString (error: exn) =
-  let now = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss")
+  let now = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")
 
   error |> function
   | :? AggregateException as e ->
