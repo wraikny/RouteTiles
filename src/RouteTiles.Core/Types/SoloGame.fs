@@ -22,12 +22,12 @@ type GameMode =
 
 module GameMode =
   let items = [|
-    TimeAttack5000
     ScoreAttack180
+    TimeAttack5000
     Endless
   |]
 
-  let selected = TimeAttack5000
+  let selected = ScoreAttack180
 
   let into = function
     | Endless -> Mode.Endless
