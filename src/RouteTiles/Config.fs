@@ -13,7 +13,7 @@ open System.Security.Cryptography
 
 open FSharp.Json
 
-let [<Literal>] ConfigFile = @"Data/config.bat"
+let [<Literal>] ConfigFile = @"Data/config.bin"
 
 let dirName = Path.GetDirectoryName ConfigFile
 

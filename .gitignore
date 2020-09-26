@@ -365,6 +365,6 @@ Resources.zip
 !/**/.gitkeep
 
 /ResourcesPassword.fs
-config.bat
+config.bin
 
 /SRServer/databases
