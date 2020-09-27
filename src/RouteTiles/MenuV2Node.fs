@@ -329,6 +329,7 @@ type internal MenuV2Node(config: Config, container: Container) =
             )
 
         | GameControlEffect.Quit ->
+          soundControl.StopSE()
           if soundControl.State <> ValueSome SoundControlState.Menu then
             soundControl.SetState(SoundControlState.Menu)
 
@@ -341,6 +342,7 @@ type internal MenuV2Node(config: Config, container: Container) =
           |> Async.StartImmediate
 
         | GameControlEffect.Restart ->
+          soundControl.StopSE()
           soundControl.SetState(SoundControlState.Game)
           gameNode.Value.Clear()
           // gameNode.Value.FlushQueue()

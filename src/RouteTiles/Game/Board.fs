@@ -188,3 +188,4 @@ type internal BoardNode(addCoroutine) =
 
   member __.Clear() =
     tilesPool.Clear()
+    vanishmentEffectPool.Clear()

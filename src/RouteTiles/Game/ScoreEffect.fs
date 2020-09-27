@@ -11,10 +11,13 @@ type ScoreEffect(font, color, addCoroutine: seq<unit> -> unit) =
   let stack = Stack<TextNode>()
   let drawingQueue = Queue<TextNode>()
 
+  let finishEffect (n: TextNode) =
+    n.IsDrawn <- false
+    stack.Push(n)
+
   member __.Clear() =
     for o in drawingQueue do
-      o.IsDrawn <- false
-      stack.Push(o)
+      finishEffect o
 
     drawingQueue.Clear()
 
@@ -40,7 +43,6 @@ type ScoreEffect(font, color, addCoroutine: seq<unit> -> unit) =
         o.Color <- Color(color.R, color.G, color.B, 255.0f * (1.0f - t * t) |> byte)
         yield ()
 
-      o.IsDrawn <- false
-      stack.Push(o)
+      finishEffect o
       drawingQueue.Dequeue() |> ignore
     })

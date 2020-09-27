@@ -1,13 +1,13 @@
 namespace RouteTiles.App
 
+open System.Collections.Generic
 open Altseed2
 
-type internal AnimationSpriteNode(pushToPool) =
+type internal AnimationSpriteNode(onTerminating) =
   inherit SpriteNode()
 
   let mutable time = 0.0f
 
-  member val IsUpdated = true with get, set
   member val Count = Vector2I(1, 1) with get, set
   member val IsLooping = true with get, set
   member val Second = 1.0f with get, set
@@ -16,10 +16,9 @@ type internal AnimationSpriteNode(pushToPool) =
     time <- 0.0f
     this.IsUpdated <- false
     this.IsDrawn <- false
-    pushToPool this
 
   override this.OnUpdate() =
-    if this.IsUpdated && this.Texture <> null && (time < this.Second) then
+    if this.Texture <> null && (time < this.Second) then
       let index = int (time / this.Second * float32 (this.Count.X * this.Count.Y))
 
       let cdn = Vector2I(index % this.Count.X, index / this.Count.X)
@@ -33,8 +32,8 @@ type internal AnimationSpriteNode(pushToPool) =
           time <- time % this.Second
         else
           this.Terminate()
+          onTerminating this
 
-open System.Collections.Generic
 
 [<AbstractClass>]
 type internal EffectPool(initCount) =
@@ -43,10 +42,22 @@ type internal EffectPool(initCount) =
   let mutable initCount = initCount
 
   let stack = Stack<AnimationSpriteNode>()
+  let drawingEffects = Queue<AnimationSpriteNode>()
 
-  let create() = new AnimationSpriteNode(stack.Push)
+  let onTerminating node =
+    stack.Push(node)
+    drawingEffects.Dequeue() |> ignore
+
+  let create() = new AnimationSpriteNode(onTerminating)
 
   abstract InitEffect: AnimationSpriteNode -> unit
+
+  member this.Clear() =
+    for node in drawingEffects do
+      node.Terminate()
+      stack.Push(node)
+
+    drawingEffects.Clear()
 
   member this.AddEffect(f) =
     let node = stack.TryPop() |> function
@@ -61,6 +72,7 @@ type internal EffectPool(initCount) =
     f node
     node.IsUpdated <- true
     node.IsDrawn <- true
+    drawingEffects.Enqueue(node)
 
   override this.OnUpdate() =
     if initCount > 0 then
@@ -73,9 +85,9 @@ type internal EffectPool(initCount) =
       stack.Push(node)
       this.AddChildNode(node)
 
-  override this.OnRemoved() =
-    for child in this.Children do
-      child |> function
-      | :? AnimationSpriteNode as n ->
-        n.Terminate()
-      | _ -> ()
+  // override this.OnRemoved() =
+  //   for child in this.Children do
+  //     child |> function
+  //     | :? AnimationSpriteNode as n ->
+  //       n.Terminate()
+  //     | _ -> ()
