@@ -188,6 +188,7 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
   member this.Clear() =
     boardNode.Clear()
     nextTilesNode.Clear()
+    scoreEffect.Clear()
     childrenCoroutineNode.Clear()
 
   member __.Controller with get() = controller and set(v) = controller <- v

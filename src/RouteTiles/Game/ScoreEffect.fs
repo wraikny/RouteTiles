@@ -9,6 +9,14 @@ type ScoreEffect(font, color, addCoroutine: seq<unit> -> unit) =
   inherit Node()
 
   let stack = Stack<TextNode>()
+  let drawingQueue = Queue<TextNode>()
+
+  member __.Clear() =
+    for o in drawingQueue do
+      o.IsDrawn <- false
+      stack.Push(o)
+
+    drawingQueue.Clear()
 
   member this.Add(score: int, position: Vector2F) =
     Utils.DebugLogn(sprintf "ScoreEffect.Add(%d, %A)" score position)
@@ -24,6 +32,7 @@ type ScoreEffect(font, color, addCoroutine: seq<unit> -> unit) =
     o.Position <- position
     o.Text <- sprintf "+%dpt." score
     o.CenterPosition <- o.ContentSize * 0.5f
+    drawingQueue.Enqueue(o)
 
     addCoroutine(seq {
       for t in Coroutine.milliseconds 1000<millisec> do
@@ -33,4 +42,5 @@ type ScoreEffect(font, color, addCoroutine: seq<unit> -> unit) =
 
       o.IsDrawn <- false
       stack.Push(o)
+      drawingQueue.Dequeue() |> ignore
     })
