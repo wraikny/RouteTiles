@@ -42,6 +42,7 @@ module Board =
       for (keys, _, _, dir) in dirPairs do
         for key in keys do
           yield [|Key.RightShift, ButtonState.Hold; key, ButtonState.Push|], Msg.Slide dir
+          yield [|Key.LeftShift, ButtonState.Hold; key, ButtonState.Push|], Msg.Slide dir
           yield [|key, ButtonState.Push|], Msg.MoveCursor dir
     |]
 
