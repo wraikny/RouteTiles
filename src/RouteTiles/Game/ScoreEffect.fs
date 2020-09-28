@@ -38,7 +38,7 @@ type ScoreEffect(font, color, addCoroutine: seq<unit> -> unit) =
     drawingQueue.Enqueue(o)
 
     addCoroutine(seq {
-      for t in Coroutine.milliseconds 1000<millisec> do
+      for t in Coroutine.milliseconds Consts.Board.scoreEffectTime do
         o.Position <- position + Vector2F(0.0f, -20.0f * t * t)
         o.Color <- Color(color.R, color.G, color.B, 255.0f * (1.0f - t * t) |> byte)
         yield ()

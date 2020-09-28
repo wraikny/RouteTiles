@@ -21,6 +21,7 @@
     <Compile Include="Types/Board.fs" />
     <Compile Include="Types/SoloGame.fs" />
     <Compile Include="Effect.fs" />
+    <Compile Include="PointCalculation.fs" />
     <Compile Include="Board.fs" />
     <Compile Include="SoloGame.fs" />
     <Compile Include="SubMenu/WithContext.fs" />

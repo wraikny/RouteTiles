@@ -55,6 +55,8 @@ module internal Consts =
     let [<Literal>] tilesVanishInterval = 120<millisec>
     let [<Literal>] tilesVanishAnimatinTime = 750<millisec>
 
+    let [<Literal>] scoreEffectTime = 1200<millisec>
+
   module GameCommon =
     let pauseBackground = Color(0, 0, 0, 100)
     let [<Literal>] inputInterval = 120<millisec>

@@ -23,6 +23,10 @@ type RouteState =
 type RouteOrLoop =
   | Route of route:(int Vector2 * int<TileId>)[]
   | Loop of loop:(int Vector2 * int<TileId>)[]
+with
+  member x.Value = x |> function
+    | Route r -> r
+    | Loop l -> l
 
 [<Struct; RequireQualifiedAccess>]
 type TileDir =

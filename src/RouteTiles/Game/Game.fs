@@ -120,7 +120,7 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
             let tileCenterPoses =
               [|
                 for rl in routesAndLoops do
-                  for (cdn, id) in Board.RouteOrLoop.value rl do
+                  for (cdn, id) in rl.Value do
                     (cdn, id)
               |]
               |> Array.distinctBy snd

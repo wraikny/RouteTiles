@@ -77,7 +77,7 @@ module RouteOrLoop =
   let getRoute = function | RouteOrLoop.Route x -> ValueSome x | _ -> ValueNone
   let getLoop = function | RouteOrLoop.Loop x -> ValueSome x | _ -> ValueNone
 
-  let value = function | RouteOrLoop.Route x -> x | RouteOrLoop.Loop x -> x
+  // let value = function | RouteOrLoop.Route x -> x | RouteOrLoop.Loop x -> x
 
 module Tile =
   let inline dir x = x.dir
@@ -95,35 +95,6 @@ module Model =
     |]
 
   let inline tryGetTile (cdn: int Vector2) (board: Model) = board.tiles |> Array2D.tryGet cdn.x cdn.y
-
-  /// 得点計算を行う
-  let calculatePoint (routesAndLoops: Set<RouteOrLoop>) =
-
-    let synchronousBonus = 1.0f + float32 routesAndLoops.Count * 0.5f
-
-    let crossBonus: float32 =
-      let allVanishedTileIds =
-        [|
-          for rl in routesAndLoops do
-            for (_, id) in RouteOrLoop.value rl do
-              yield id
-        |]
-
-      let idDistinctedLength = allVanishedTileIds |> Array.distinct |> Array.length
-      (pown 2.0f <| allVanishedTileIds.Length - idDistinctedLength)
-
-    routesAndLoops
-    |> Seq.sumBy(fun rl ->
-      let kindBonus, tiles = rl |> function
-        | RouteOrLoop.Route tiles -> 3.0f, tiles
-        | RouteOrLoop.Loop tiles -> 12.0f, tiles
-
-      let connectionBonus = pown tiles.Length 2 |> float32
-
-      kindBonus * connectionBonus
-    )
-    |> ( * ) (synchronousBonus * crossBonus)
-    |> int
 
   [<RequireQualifiedAccess>]
   type private RouteResult =
@@ -215,7 +186,7 @@ module Model =
       if routesAndLoops.IsEmpty then
         ValueNone
       else
-        ValueSome(routesAndLoops, calculatePoint routesAndLoops)
+        ValueSome(routesAndLoops, PointCalculation.calculate routesAndLoops)
 
     { board with tiles = tiles; routesAndLoops = routesAndLoopsResult }
 
