@@ -43,14 +43,14 @@ module internal Consts =
     let routeColor = Color(255, 255, 100, 255)
     let loopColor = Color(100, 100, 255, 255)
 
-    let cursorColor = Color(80, 200, 200, 255)
-    let [<Literal>] cursorColorMin = 0.25f
+    let cursorColor = Color(120, 200, 200, 255)
+    let [<Literal>] cursorColorMin = 0.4f
 
     let [<Literal>] tileTexturePath = @"tiles.png"
 
     let [<Literal>] tileVanishmentEffectTexturePath = @"tileVanishEffect.png"
 
-    let [<Literal>] cursorColorFlashingPeriod = 600<millisec>
+    let [<Literal>] cursorColorFlashingPeriod = 900<millisec>
     let [<Literal>] tileSlideInterval = 120<millisec>
     let [<Literal>] tilesVanishInterval = 120<millisec>
     let [<Literal>] tilesVanishAnimatinTime = 750<millisec>
