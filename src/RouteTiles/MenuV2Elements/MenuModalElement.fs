@@ -286,7 +286,8 @@ let createModal (container: Container) (state: MenuV2.State) =
 
         // TODO: wazap
         let elem = state |> function
-          | x when x = MenuV2.HowToMode.Keyboard -> f container.HowToKeyboard
+          | x when x = MenuV2.HowToMode.KeyboardShift -> f container.HowToKeyboardShift
+          | x when x = MenuV2.HowToMode.KeyboardSeparate -> f container.HowToKeyboardSeparate
           | x when x = MenuV2.HowToMode.Joystick -> f container.HowToJoystick
           | x when x = MenuV2.HowToMode.Slide -> f container.HowToSlide
           | x when x = MenuV2.HowToMode.Route -> f container.HowToRoute

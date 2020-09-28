@@ -64,7 +64,8 @@ module ControllerSelect =
 
 [<RequireQualifiedAccess>]
 type HowToMode =
-  | Keyboard
+  | KeyboardShift
+  | KeyboardSeparate
   | Joystick
   | Game
   | Slide
@@ -187,7 +188,8 @@ module Msg =
 let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
   match msg, state with
   | Msg.OpenHowToControl, _ ->
-    do! SinglePage.SinglePageState HowToMode.Keyboard |> stateEnter
+    do! SinglePage.SinglePageState HowToMode.KeyboardShift |> stateEnter
+    // do! SinglePage.SinglePageState HowToMode.KeyboardSeparate |> stateEnter
     do! SinglePage.SinglePageState HowToMode.Joystick |> stateEnter
     return state
 
@@ -251,7 +253,8 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
           do! SinglePage.SinglePageState HowToMode.Route |> stateEnter
           do! SinglePage.SinglePageState HowToMode.Loop |> stateEnter
           do! SinglePage.SinglePageState HowToMode.Point |> stateEnter
-          do! SinglePage.SinglePageState HowToMode.Keyboard |> stateEnter
+          do! SinglePage.SinglePageState HowToMode.KeyboardShift |> stateEnter
+          // do! SinglePage.SinglePageState HowToMode.KeyboardSeparate |> stateEnter
           do! SinglePage.SinglePageState HowToMode.Joystick |> stateEnter
           return state
 

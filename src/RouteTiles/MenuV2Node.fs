@@ -71,7 +71,8 @@ module internal RankingServer =
 module internal MenuUtil =
   let getCurrentControllers() =
     [|
-      yield Controller.Keyboard
+      yield Controller.KeyboardShift
+      yield Controller.KeyboardSeparate
       for i in 0..15 do
         let info = Engine.Joystick.GetJoystickInfo i
         if info <> null && info.IsGamepad then
@@ -246,7 +247,8 @@ type internal MenuV2Node(config: Config, container: Container) =
     |> Option.orElseWith getJoysticksInputs
 
   let isAvailableController = function
-    | Controller.Keyboard -> true
+    | Controller.KeyboardShift
+    | Controller.KeyboardSeparate -> true
     | Controller.Joystick (index, _, guid) ->
       let info = Engine.Joystick.GetJoystickInfo(index)
       info <> null && info.GUID = guid

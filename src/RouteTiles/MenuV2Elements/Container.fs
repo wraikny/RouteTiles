@@ -10,7 +10,7 @@ open Altseed2
 type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
   let withProgress x = progress () |> ignore; x
 
-  static member val ProgressCount = 20
+  static member val ProgressCount = 21
 
   member val TextMap = textMap
 
@@ -25,7 +25,8 @@ type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
   member val ControllerBackground = Texture2D.LoadStrict(@"Menu/controller_background.png") |> withProgress
   member val SelectionArrow = Texture2D.LoadStrict(@"Menu/selection_more.png") |> withProgress
 
-  member val HowToKeyboard = Texture2D.LoadStrict(@"Menu/howto_keyboard.png") |> withProgress
+  member val HowToKeyboardShift = Texture2D.LoadStrict(@"Menu/howto_keyboard.png") |> withProgress
+  member val HowToKeyboardSeparate = Texture2D.LoadStrict(@"Menu/howto_keyboard.png") |> withProgress
   member val HowToJoystick = Texture2D.LoadStrict(@"Menu/howto_joystick.png") |> withProgress
 
   member val HowToSlide = Texture2D.LoadStrict(@"Menu/howtoplay_slide.png") |> withProgress

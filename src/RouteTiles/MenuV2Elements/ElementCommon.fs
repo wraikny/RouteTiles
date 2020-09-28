@@ -224,7 +224,8 @@ let listSelectorModal
 
 let controllerSelect (zOrders: {| button: int; buttonText: int; desc: int; background: int |}) (container: Container) (state: ListSelector.State<Controller>) =
   let selections = state.selection |> Array.map(function
-    | Controller.Keyboard -> container.TextMap.buttons.keyboard
+    | Controller.KeyboardShift -> container.TextMap.buttons.keyboardShift
+    | Controller.KeyboardSeparate -> container.TextMap.buttons.keyboardSeparate
     | Controller.Joystick(_, name, _) -> name)
 
   listSelectorModal

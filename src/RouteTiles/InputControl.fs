@@ -20,34 +20,42 @@ let makeJoystickInputter (inputs) (index): 'msg option =
 
 let pauseInput controller =
   controller |> function
-  | Controller.Keyboard ->
+  | Controller.KeyboardShift
+  | Controller.KeyboardSeparate ->
     Engine.Keyboard.IsPushState(Key.Escape)
   | Controller.Joystick (index, _, _) ->
     Engine.Joystick.IsPushState(index, JoystickButton.Guide)
 
 
 let dirPairs = [|
-  [| Key.W; Key.Up|], JoystickButton.DPadUp, JoystickButton.RightUp, Dir.Up
-  [| Key.D; Key.Right|], JoystickButton.DPadRight, JoystickButton.RightRight, Dir.Right
-  [| Key.S; Key.Down|], JoystickButton.DPadDown, JoystickButton.RightDown, Dir.Down
-  [| Key.A; Key.Left|], JoystickButton.DPadLeft, JoystickButton.RightLeft, Dir.Left
+  ( Key.W, Key.Up), (JoystickButton.DPadUp, JoystickButton.RightUp), Dir.Up
+  ( Key.D, Key.Right), (JoystickButton.DPadRight, JoystickButton.RightRight), Dir.Right
+  ( Key.S, Key.Down), (JoystickButton.DPadDown, JoystickButton.RightDown), Dir.Down
+  ( Key.A, Key.Left), (JoystickButton.DPadLeft, JoystickButton.RightLeft), Dir.Left
 |]
 
 module Board =
   open RouteTiles.Core.Types.Board
   open RouteTiles.Core.Board
 
-  let keyboardMapping =
+  let keyboardShiftMapping =
     [|
-      for (keys, _, _, dir) in dirPairs do
-        for key in keys do
+      for ((k1, k2), _, dir) in dirPairs do
+        for key in [|k1; k2|] do
           yield [|Key.RightShift, ButtonState.Hold; key, ButtonState.Push|], Msg.Slide dir
           yield [|Key.LeftShift, ButtonState.Hold; key, ButtonState.Push|], Msg.Slide dir
           yield [|key, ButtonState.Push|], Msg.MoveCursor dir
     |]
 
+  let keyboardSeparateMapping =
+    [|
+      for ((km, ks), _, dir) in dirPairs do
+        yield [|km, ButtonState.Push|], Msg.MoveCursor dir
+        yield [|ks, ButtonState.Push|], Msg.Slide dir
+    |]
+
   let joystickMapping = [|
-    for (_, btnL, btnR, dir) in dirPairs do
+    for (_, (btnL, btnR), dir) in dirPairs do
     (btnL, ButtonState.Push), Msg.MoveCursor dir
     (btnR, ButtonState.Push), Msg.Slide dir
   |]
@@ -56,8 +64,13 @@ module SoloGame =
   open RouteTiles.Core
   open RouteTiles.Core.SoloGame
 
-  let keyboard = [|
-    for (button, msg) in Board.keyboardMapping do
+  let keyboardShift = [|
+    for (button, msg) in Board.keyboardShiftMapping do
+      yield (button, Msg.Board msg)
+  |]
+
+  let keyboardSeparate = [|
+    for (button, msg) in Board.keyboardSeparateMapping do
       yield (button, Msg.Board msg)
   |]
 
@@ -65,7 +78,8 @@ module SoloGame =
     yield! Board.joystickMapping |> Seq.map(fun (a, b) -> (a, Msg.Board b))
   |]
 
-  let getKeyboardInput = makeKeyboardInputter keyboard
+  let getKeyboardShiftInput = makeKeyboardInputter keyboardShift
+  let getKeyboardSeparateInput = makeKeyboardInputter keyboardSeparate
   let getJoystickInput = makeJoystickInputter joystick
 
 
@@ -111,14 +125,13 @@ module MenuV2 =
           (keys Key.A Key.Z)
           (chars 'a' 'z')
           (chars 'A' 'Z')
-        |> Array.map(fun (key, c, C) ->
+        |> Array.collect(fun (key, c, C) ->
           [|
             [| Key.RightShift, ButtonState.Hold;  key, ButtonState.Push |], C
             [| Key.LeftShift, ButtonState.Hold;  key, ButtonState.Push |], C
             [| key, ButtonState.Push|], c
           |]
         )
-        |> Array.concat
 
       yield!
         Array.zip

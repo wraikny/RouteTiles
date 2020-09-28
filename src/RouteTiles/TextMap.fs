@@ -21,7 +21,8 @@ type Buttons = {
   quitGame: string
   changeController: string
   others: string
-  keyboard: string
+  keyboardShift: string
+  keyboardSeparate: string
   sendToServer: string
   notSendToServer: string
   bgm: string
@@ -110,7 +111,8 @@ let textMapJapanese = {
     quitGame = "ゲームをやめる"
     changeController = "コントローラ切替"
     others = "キーボード"
-    keyboard = "キーボード"
+    keyboardShift = "Keyboard-Shift"
+    keyboardSeparate = "Keyboard-Sep"
     sendToServer = "送信する"
     notSendToServer = "送信しない"
     bgm = "BGM"

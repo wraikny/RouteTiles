@@ -141,8 +141,11 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
       while true do
         if inputEnabled then
           match controller with
-          | ValueSome Controller.Keyboard ->
-            let msg = InputControl.SoloGame.getKeyboardInput()
+          | ValueSome Controller.KeyboardShift ->
+            let msg = InputControl.SoloGame.getKeyboardShiftInput()
+            yield! invokeInput msg
+          | ValueSome Controller.KeyboardSeparate ->
+            let msg = InputControl.SoloGame.getKeyboardSeparateInput()
             yield! invokeInput msg
 
           | ValueSome (Controller.Joystick (index, name, guid)) ->
