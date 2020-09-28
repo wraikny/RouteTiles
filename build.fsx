@@ -86,8 +86,9 @@ Target.create "Serve" (fun _ ->
 
 
 Target.create "Resources" (fun _ ->
-  Shell.rm "Resources.pack"
-  Shell.rm "Resources.zip"
+  File.delete "Resources.pack"
+  File.delete "Resources.zip"
+  
   Shell.cleanDir (resourcesf "/Shader")
 
   Shell.copyDir (resourcesf "/Shader") @"src/Shader" (fun _ -> true)

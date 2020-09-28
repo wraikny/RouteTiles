@@ -153,6 +153,7 @@ let private createControllerSelect =
 
 let private createRankingList (container: Container) (config: Config) (gameMode: SoloGame.GameMode) (id: int64 voption) (data: SimpleRankingsServer.Data<Ranking.Data>[]) =
   ItemList.Create(itemMargin = 20.0f)
+  |> BoxUI.alignCenter
   |> BoxUI.withChildren (
     let makeText alignX pos color text =
       let textElem =
@@ -249,7 +250,6 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
         |]
     )
   )
-  |> BoxUI.alignCenter
 
 
 
