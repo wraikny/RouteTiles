@@ -33,8 +33,8 @@ type OutStatus = StateStatus<State, GameNextSelection>
 and State =
   | ResultWithSendToServerSelectState of Config * SoloGame.GameMode * Ranking.Data * ListSelector.State<SendToServer>
   | WaitingResponseState of Ranking.GameResult.Waiting * (Ranking.GameResult.Response -> OutStatus)
-  | RankingListViewState of Ranking.GameResult.State * (unit -> OutStatus)
-  // | ErrorViewState of SinglePage.State<exn> * (unit -> OutStatus)
+  | RankingListViewState of Ranking.State * (unit -> OutStatus)
+  | ErrorViewState of SinglePage.State<exn> * (unit -> OutStatus)
   | GameNextSelectionState of ListSelector.State<GameNextSelection> * (GameNextSelection voption -> OutStatus)
   | InputName of StringInput.State * (string voption -> OutStatus)
 with
@@ -66,7 +66,7 @@ with
 
   static member StateEnter(s, k) = WaitingResponseState(s, k)
   static member StateEnter(s, k) = RankingListViewState(s, k)
-  // static member StateEnter(s, k) = ErrorViewState(s, k)
+  static member StateEnter(s, k) = ErrorViewState(s, k)
   static member StateEnter(s, k) = GameNextSelectionState(s, k)
   static member StateEnter(s, k) = InputName(s, k)
 
@@ -78,7 +78,7 @@ let equal a b = (a, b) |> function
     (a1, a2, a3, a4) = (b1, b2, b3, b4)
   | WaitingResponseState(a, _), WaitingResponseState(b, _) -> a = b
   | RankingListViewState(a, _), RankingListViewState(b, _) -> a = b
-  // | ErrorViewState(a, _), ErrorViewState(b, _) -> a = b
+  | ErrorViewState(a, _), ErrorViewState(b, _) -> a = b
   | GameNextSelectionState(a, _), GameNextSelectionState(b, _) -> a = b
   | InputName(a, _), InputName(b, _) -> a = b
   | _ -> false
@@ -104,6 +104,12 @@ module Msg =
     | Enter
     | Cancel ->
       ValueSome SinglePage.Msg.Enter
+    | _ -> ValueNone
+
+  let toRankingMsg = function
+    | Enter | Cancel -> ValueSome Ranking.Msg.Enter
+    | Incr -> ValueSome Ranking.Msg.Incr
+    | Decr -> ValueSome Ranking.Msg.Decr
     | _ -> ValueNone
 
 let inline getGameNextSelection () = eff {
@@ -136,9 +142,14 @@ let inline update msg state = eff {
 
           do! GameRankingEffect.InsertSelect(config.guid, gameMode, data)
 
-          let! res = Ranking.GameResult.Waiting |> stateEnter
-          do! Ranking.GameResult.init (config, gameMode, res) |> stateEnter
-          return! getGameNextSelection()
+          match! Ranking.GameResult.Waiting |> stateEnter with
+          | Ok(id, data) ->
+            do! Ranking.State.Init (ValueSome id, config, gameMode, data) |> stateEnter
+            return! getGameNextSelection()
+          | Error e ->
+            // TODO
+            do! SinglePage.SinglePageState e |> stateEnter
+            return! getGameNextSelection()
         }
 
         if config.name.IsNone then
@@ -158,14 +169,14 @@ let inline update msg state = eff {
     | _ -> return Pending state
 
   | RankingListViewState(s, k) ->
+    match msg |> Msg.toRankingMsg with
+    | ValueSome m -> return! stateMapEff (Ranking.update m) (s, k)
+    | ValueNone -> return Pending state
+
+  | ErrorViewState(s, k) ->
     match msg |> Msg.toSinglePageMsg with
     | ValueSome m -> return! stateMapEff (SinglePage.update m) (s, k)
     | ValueNone -> return Pending state
-
-  // | ErrorViewState(s, k) ->
-  //   match msg |> Msg.toSinglePageMsg with
-  //   | ValueSome m -> return stateMap (SinglePage.update m) (s, k)
-  //   | ValueNone -> return Pending state
 
   | GameNextSelectionState(s, k) ->
     match msg |> Msg.toListSelectorMsg with

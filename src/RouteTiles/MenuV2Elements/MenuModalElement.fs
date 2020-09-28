@@ -362,7 +362,7 @@ let createModal (container: Container) (state: MenuV2.State) =
       | GameResult.WaitingResponseState _ ->
         ValueSome <| createWaitingResponse container
 
-      | GameResult.RankingListViewState(SinglePage.SinglePageState (_, _, Error error), _) ->
+      | GameResult.ErrorViewState(SinglePage.SinglePageState error, _) ->
         ValueSome [|
           // createBackground container
           yield! createBlur ()

@@ -85,7 +85,7 @@ and State =
   | GameResultState of GameResult.State * (GameResult.GameNextSelection -> State)
   | PauseState of Pause.State * (Pause.PauseResult -> State)
   | SettingMenuState of Setting.State * (Config voption -> State)
-  | RankingState of Ranking.Rankings.State * (unit -> State)
+  | RankingState of Ranking.State * (unit -> State)
   | WaitingResponseState of Ranking.Rankings.Waiting * (Ranking.Rankings.Response -> State)
   | ErrorViewState of SinglePage.State<exn> * (unit -> State)
   | HowToState of SinglePage.State<HowToMode> * (unit -> State)
@@ -178,6 +178,12 @@ module Msg =
     | Enter | Cancel -> ValueSome SinglePage.Msg.Enter
     | _ -> ValueNone
 
+  let toRankingMsg = function
+    | Incr -> ValueSome Ranking.Msg.Incr
+    | Decr -> ValueSome Ranking.Msg.Decr
+    | Enter | Cancel -> ValueSome Ranking.Msg.Enter
+    | _ -> ValueNone
+
 let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
   match msg, state with
   | Msg.OpenHowToControl, _ ->
@@ -225,18 +231,17 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
         | ValueSome Mode.Ranking ->
           do! GameRankingEffect.SelectAll
 
-          match! Ranking.Rankings.Waiting |> stateEnter with
+          match! SubMenu.Ranking.Rankings.Waiting |> stateEnter with
           | Error e ->
             do! SinglePage.SinglePageState e |> stateEnter
             do! ErrorLogEffect e
             return state
           | Ok dataMap ->
             let gameMode = SoloGame.GameMode.ScoreAttack180
-            do! Ranking.Rankings.init (config, gameMode, dataMap.[gameMode]) |> stateEnter
+            do! Ranking.State.Init(ValueNone, config, gameMode, dataMap.[gameMode]) |> stateEnter
 
             let gameMode = SoloGame.GameMode.TimeAttack5000
-            do! Ranking.Rankings.init (config, gameMode, dataMap.[gameMode]) |> stateEnter
-
+            do! Ranking.State.Init(ValueNone, config, gameMode, dataMap.[gameMode]) |> stateEnter
 
             return state
 
@@ -388,9 +393,9 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
     | ValueSome msg -> return! stateMapEff (Setting.update msg) (s, k)
 
   | _, RankingState (s, k) ->
-    match Msg.toSinglePageMsg msg with
+    match Msg.toRankingMsg msg with
     | ValueSome msg ->
-      return! stateMapEff (SinglePage.update msg) (s, k)
+      return! stateMapEff (Ranking.update msg) (s, k)
     | _ -> return state
 
   | _, ErrorViewState(s, k) ->

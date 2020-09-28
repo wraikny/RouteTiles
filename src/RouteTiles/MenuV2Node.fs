@@ -41,13 +41,12 @@ module internal RankingServer =
     let table = toTable gameMode
 
     async {
-
       let! res =
         client.AsyncSelect<RouteTiles.Core.Types.Ranking.Data>
           ( table
           , orderBy = orderKey
           , isDescending = isDescending
-          , limit = 5
+          , limit = 1000
           )
 
       Utils.DebugLogn (sprintf "select from %s: %A" table res)

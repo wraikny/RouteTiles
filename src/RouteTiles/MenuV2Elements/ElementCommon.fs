@@ -146,6 +146,27 @@ let centeredSprite zOrder texture =
 let modalFrame zOrder (container: Container) =
   centeredSprite zOrder container.InputBackground
 
+let moreArrowSize = Vector2F(24.0f, 24.0f)
+
+let createArrow (container: Container) zOrder (isUp: bool) (drawn: bool) =
+  let elem = FixedSize.Create(moreArrowSize) :> Element
+
+  if drawn then
+    elem.AddChild(
+      Sprite.Create
+        ( aspect = Aspect.Fixed
+        , texture = container.SelectionArrow
+        // , verticalFlip = flip
+        , src = Nullable (RectF((if isUp then moreArrowSize.X else 0.0f), 0.0f, moreArrowSize.X, moreArrowSize.Y))
+        , zOrder = zOrder
+        )
+      |> BoxUI.alignCenter
+    )
+
+  elem
+  |> BoxUI.debug
+
+let makeMargin x = FixedHeight.Create(x) :> Element
 
 let listSelectorModal
   (zOrders: {| button: int; buttonText: int; desc: int; background: int |})
@@ -157,32 +178,13 @@ let listSelectorModal
   =
   let current = state.current |> Option.filter((=) state.cursor) |> Option.map(fun _ -> state.cursor)
 
-  let createArrow (isUp: bool) (drawn: bool) =
-    let size = Vector2F(24.0f, 24.0f)
-
-    let elem = FixedSize.Create(size) :> Element
-
-    if drawn then
-      elem.AddChild(
-        Sprite.Create
-          ( aspect = Aspect.Fixed
-          , texture = container.SelectionArrow
-          // , verticalFlip = flip
-          , src = Nullable (RectF((if isUp then size.X else 0.0f), 0.0f, size.X, size.Y))
-          , zOrder = zOrders.button
-          )
-        |> BoxUI.alignCenter
-      )
-
-    elem
-    |> BoxUI.debug
+  let createArrow = createArrow container zOrders.button
 
   [|
     modalFrame zOrders.background container
     |> BoxUI.withChild (
       ItemList.Create()
       |> BoxUI.withChildren (
-        let makeMargin x = FixedHeight.Create(x) :> Element
         [|
           makeMargin 60.0f
 

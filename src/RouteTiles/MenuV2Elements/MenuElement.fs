@@ -151,8 +151,10 @@ let private createControllerSelect =
   controllerSelect {| buttonZOrders with desc = ZOrder.Menu.description; background = ZOrder.Menu.frameBackground |}
 
 
-let private createRankingList (container: Container) (config: Config) (gameMode: SoloGame.GameMode) (id: int64 voption) (data: SimpleRankingsServer.Data<Ranking.Data>[]) =
-  ItemList.Create(itemMargin = 20.0f)
+let rankingFrameSize = Vector2F(1120.0f, 88.0f)
+
+let private createRankingList (container: Container) (state: Ranking.State) =
+  ItemList.Create()
   |> BoxUI.alignCenter
   |> BoxUI.withChildren (
     let makeText alignX pos color text =
@@ -172,28 +174,32 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
       :> Element)
       , textElem
 
-    let texSize = Vector2F(1120.0f, 88.0f)
+    let firstIndex = Ranking.OnePageItemCount * state.page
 
     // data
     // |> fun a -> if a.Length > 5 then a.[0..4] else a
-    [| 0..4 |]
+    [| firstIndex .. firstIndex + Ranking.OnePageItemCount - 1 |]
     |> Array.map (fun i ->
       Sprite.Create
         (
           texture = container.RankingFrame
-        , src = Nullable(RectF(Vector2F(0.0f, 0.0f), texSize))
+        , src = Nullable(RectF(Vector2F(0.0f, 0.0f), rankingFrameSize))
         , zOrder = ZOrder.Menu.buttonBackground
         , aspect = Aspect.Fixed
         )
       |> BoxUI.withChildren
         [|
-          match data |> Array.tryItem i with
-          | None -> ()
+          let white = Color(255uy, 255uy, 255uy)
+          match state.data |> Array.tryItem i with
+          | None ->
+            let elem1, _textElem1 = makeText Align.Center 56.0f white (sprintf "%d" <| i + 1)
+            elem1
+
           | Some data ->
             let color =
-              if id = ValueSome data.id then Color(255uy, 255uy, 100uy)
-              elif config.guid = data.userId then Color(100uy, 100uy, 255uy)
-              else Color(255uy, 255uy, 255uy)
+              if state.insertedId = ValueSome data.id then Color(255uy, 255uy, 100uy)
+              elif state.config.guid = data.userId then Color(100uy, 100uy, 255uy)
+              else white
             
             let elem1, textElem1 = makeText Align.Center 56.0f color (sprintf "%d" <| i + 1)
             elem1
@@ -201,7 +207,7 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
             let elem2 ,textElem2 = makeText Align.Center 272.0f color data.values.Name
             elem2
 
-            match gameMode with
+            match state.gameMode with
             | SoloGame.GameMode.ScoreAttack180 -> sprintf "%d pt." data.values.Point
             | _ -> secondToDisplayTime data.values.Time
             |> makeText Align.Max 728.0f (Color(0uy, 0uy, 0uy))
@@ -221,12 +227,11 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
               |> BoxUI.alignX Align.Max
             )
 
-            if id = ValueSome data.id then
-              
+            if state.insertedId = ValueSome data.id then
               Sprite.Create
                 (
                   texture = container.RankingFrame
-                , src = Nullable(RectF(Vector2F(0.0f, texSize.Y), texSize))
+                , src = Nullable(RectF(Vector2F(0.0f, rankingFrameSize.Y), rankingFrameSize))
                 , zOrder = ZOrder.Menu.buttonBackground
                 , aspect = Aspect.Fixed
                 )
@@ -248,9 +253,30 @@ let private createRankingList (container: Container) (config: Config) (gameMode:
                 )
                 e
         |]
+        
     )
-  )
+    |> fun x ->
+      let makeMargin height =
+        FixedSize.Create(Vector2F(rankingFrameSize.X, height)) :> Element
 
+      let createArrow isUp isDrawn =
+        FixedSize.Create(Vector2F(rankingFrameSize.X, moreArrowSize.Y)).With(
+          createArrow container ZOrder.Menu.buttonBackground isUp isDrawn 
+          |> BoxUI.alignX Align.Center
+        ) :> Element
+
+      [|
+        createArrow true (state.page > 0)
+        makeMargin 12.0f
+        for i in 0..3 do
+          x.[i] :> Element
+          makeMargin 20.0f
+        x.[4]
+
+        makeMargin 12.0f
+        createArrow false (state.page < state.data.Length / Ranking.OnePageItemCount - 1)
+      |]
+  )
 
 
 let private createGameResult (container: Container) state =
@@ -273,11 +299,11 @@ let private createGameResult (container: Container) state =
       rightArea().With(createDesc container container.GameResultNextSelectionDescriptions.[selector.cursor])
     |]
 
-  | GameResult.RankingListViewState(SinglePage.SinglePageState (config, gameMode, Ok (id, data)), _) ->
+  | GameResult.RankingListViewState(state, _) ->
     [|
       yield! createBlurOverGameInfo ()
-      createCurrentMode ZOrder.Menu.currentModeOverGameInfo container container.RankingGameMode.[gameMode]
-      createRankingList container config gameMode (ValueSome id) data
+      createCurrentMode ZOrder.Menu.currentModeOverGameInfo container container.RankingGameMode.[state.gameMode]
+      createRankingList container state
     |]
 
   | _ -> Array.empty
@@ -310,11 +336,11 @@ let create (container: Container) (state: MenuV2.State) =
     | MenuV2.State.GameResultState(state, _) ->
       createGameResult container state
 
-    | MenuV2.State.RankingState(SinglePage.SinglePageState(config, gameMode, data), _) ->
+    | MenuV2.State.RankingState(state, _) ->
       [|
         createBackground container
-        createCurrentMode ZOrder.Menu.currentModeOverGameInfo container container.RankingGameMode.[gameMode]
-        createRankingList container config gameMode ValueNone data
+        createCurrentMode ZOrder.Menu.currentModeOverGameInfo container container.RankingGameMode.[state.gameMode]
+        createRankingList container state
       |]
 
     | _ -> Array.empty
