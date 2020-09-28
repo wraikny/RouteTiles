@@ -1,7 +1,3 @@
-#if run_with_bin_sh
-  exec dotnet fake run $0 $*
-#endif
-
 #r "paket:
 source https://api.nuget.org/v3/index.json
 nuget Fake.DotNet.Cli
@@ -44,6 +40,7 @@ let dotnet cmd arg =
   if not res.OK then
     failwithf "Failed 'dotnet %s %s'" cmd arg
 
+Target.initEnvironment()
 
 Target.create "Test" (fun _ ->
   [ for x in testProjects ->
@@ -164,12 +161,22 @@ Target.create "Publish" (fun _ ->
     packedResources
     |> Shell.copyFile (sprintf "%s/%s" outputPath packedResources)
 
-    if target.Contains("osx") then
+    let isTargetOSX = target.Contains("osx")
+    let isTargetLinux = target.Contains("linux")
+
+    let targetShellFileName = 
+      if isTargetOSX then Some "RouteTiles.command"
+      elif isTargetLinux then Some "RouteTiles.sh"
+      else None
+
+    targetShellFileName
+    |> Option.iter(fun shellfile ->
       "publishContents/RouteTiles.command"
-    |> Shell.copyFile (sprintf "%s/RouteTiles.command" outputPath)
+      |> Shell.copyFile (sprintf "%s/%s" outputPath shellfile)
+    )
 
     let binaryOutputDirectory =
-      if target.Contains("osx") then sprintf "%s/Bin" outputPath else outputPath
+      if isTargetOSX || isTargetLinux then sprintf "%s/Bin" outputPath else outputPath
 
     // Publish
     "src/RouteTiles/RouteTiles.fsproj"
@@ -188,6 +195,19 @@ Target.create "Publish" (fun _ ->
           OutputPath = binaryOutputDirectory |> Some
       }
     )
+
+    let patform = Environment.OSVersion.Platform
+
+    let isUnixLike = (patform = PlatformID.Unix || patform = PlatformID.MacOSX)
+    
+    if isUnixLike then
+      targetShellFileName
+      |> Option.iter(fun shellfile ->
+        Shell.Exec("chmod", sprintf "+x %s/%s" outputPath shellfile) |> ignore
+      )
+
+      if isTargetOSX || isTargetLinux then
+        Shell.Exec("chmod", sprintf "+x %s/RouteTiles" binaryOutputDirectory) |> ignore
 
     // Make zip
     Trace.tracefn "Make %s.zip" outputPath
