@@ -74,7 +74,7 @@ let inline update msg (state: State) = eff {
   | Msg.Enter -> return Completed ()
 
   | Msg.Incr ->
-    if state.data.Length / OnePageItemCount > state.page then
+    if (state.data.Length - 1) / OnePageItemCount > state.page then
       do! SoundEffect.Move
       return Pending { state with page = state.page + 1 }
     else
