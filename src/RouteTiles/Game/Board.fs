@@ -92,23 +92,6 @@ type internal BoardNode(addCoroutine) =
     cursorTime <- 0.0f
 
   do
-    addCoroutine(seq {
-      while true do
-        cursorTime <- cursorTime + Engine.DeltaSecond
-
-        let t = cursorTime / (float32 Consts.Board.cursorColorFlashingPeriod / 1000.0f)
-        let col =
-          Helper.lerpColor
-            Consts.Board.backGroundColor
-            Consts.Board.cursorColor
-            (Consts.Board.cursorColorMin + (1.0f - Consts.Board.cursorColorMin) * (cos t * cos t))
-        cursorX.Color <- col
-        cursorY.Color <- col
-
-        yield()
-    })
-
-  do
     let markers = [|
       for x in [-1; Consts.Core.boardSize.x] do
       for y in 1..3 do
@@ -189,3 +172,14 @@ type internal BoardNode(addCoroutine) =
   member __.Clear() =
     tilesPool.Clear()
     vanishmentEffectPool.Clear()
+
+  override __.OnUpdate() =
+    cursorTime <- cursorTime + Engine.DeltaSecond
+    let t = cursorTime / (float32 Consts.Board.cursorColorFlashingPeriod / 1000.0f)
+    let col =
+      Helper.lerpColor
+        Consts.Board.backGroundColor
+        Consts.Board.cursorColor
+        (Consts.Board.cursorColorMin + (1.0f - Consts.Board.cursorColorMin) * (cos t * cos t))
+    cursorX.Color <- col
+    cursorY.Color <- col
