@@ -22,7 +22,7 @@
             "username": "username",
             "password": "password",
             "tables": {
-                "SG_v1_Time5000": {
+                "SG_v2_Time5000": {
                     "Name": "Text",
                     "Time": "Float",
                     "Point": "Int",
@@ -31,7 +31,7 @@
                     "RoutesCount": "Int",
                     "LoopsCount": "Int"
                 },
-                "SG_v1_Score180": {
+                "SG_v2_Score180": {
                     "Name": "Text",
                     "Time": "Float",
                     "Point": "Int",
