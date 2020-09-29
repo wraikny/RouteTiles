@@ -19,7 +19,7 @@ let getStringPropertyCharacters (x: 'a) =
       | _ -> eprintfn "%O is not string" v
   |]
 
-let primitiveCharacters = [|
+let alphabetAndNums = [|
   for c in 'a'..'z' -> c
   for c in 'A'..'Z' -> c
   for c in '0'..'9' -> c
@@ -29,7 +29,7 @@ let fonts = [|
   ( @"Makinas-4-Square.otf"
   , 32
   , ([|
-        yield! primitiveCharacters
+        yield! alphabetAndNums
 
         yield!
           TextMap.textMapJapanese.buttons
@@ -48,7 +48,7 @@ let fonts = [|
 
         yield! TextMap.textMapJapanese.others
 
-    |] |> Array.distinct |> fun cs -> new String(cs))
+    |] |> Array.distinct |> fun cs -> String(cs))
   )
 |]
 

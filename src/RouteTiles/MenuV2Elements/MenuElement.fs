@@ -157,10 +157,10 @@ let private createRankingList (container: Container) (state: Ranking.State) =
   ItemList.Create()
   |> BoxUI.alignCenter
   |> BoxUI.withChildren (
-    let makeText alignX pos color text =
+    let makeTextRaw font alignX pos color text =
       let textElem =
         Text.Create
-          ( font = container.Font
+          ( font = font
           , text = text
           , color = Nullable(color)
           , zOrder = ZOrder.Menu.buttonText
@@ -173,6 +173,9 @@ let private createRankingList (container: Container) (state: Ranking.State) =
       |> BoxUI.withChild textElem
       :> Element)
       , textElem
+
+    // let makeText = makeTextRaw container.MonoFont
+    let makeText = makeTextRaw container.Font
 
     let firstIndex = Ranking.OnePageItemCount * state.page
 
@@ -204,11 +207,11 @@ let private createRankingList (container: Container) (state: Ranking.State) =
             let elem1, textElem1 = makeText Align.Center 56.0f color (sprintf "%d" <| i + 1)
             elem1
             
-            let elem2 ,textElem2 = makeText Align.Center 272.0f color data.values.Name
+            let elem2, textElem2 = makeText Align.Center 272.0f color data.values.Name
             elem2
 
             match state.gameMode with
-            | SoloGame.GameMode.ScoreAttack180 -> sprintf "%d pt." data.values.Point
+            | SoloGame.GameMode.ScoreAttack180 -> sprintf "%dpt." data.values.Point
             | _ -> secondToDisplayTime data.values.Time
             |> makeText Align.Max 728.0f (Color(0uy, 0uy, 0uy))
             |> fst

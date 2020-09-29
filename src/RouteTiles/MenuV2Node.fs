@@ -145,14 +145,14 @@ type MenuV2Handler = {
     Eff.capture(fun h ->
       async {
         match e with
-        | GameRankingEffect.InsertSelect (guid, gameMode, data) ->
+        | InsertSelect (guid, gameMode, data) ->
           let! res = RankingServer.insertSelect guid gameMode data  |> Async.Catch
           let res = res |> function
             | Choice1Of2 (id, data) -> Ok (id, data)
             | Choice2Of2 e -> Error e
-          h.dispatch <| MenuV2.Msg.ReceiveRankingGameResult res
+          MenuV2.Msg.ReceiveRankingGameResult res |> h.dispatch
 
-        | GameRankingEffect.SelectAll ->
+        | SelectAll ->
           let! res =
             RankingServer.select SoloGame.GameMode.TimeAttack5000
             |> Async.CatchResult
@@ -170,7 +170,7 @@ type MenuV2Handler = {
                   |]
                 )
             })
-          h.dispatch <| MenuV2.Msg.ReceiveRankingRankings res
+          MenuV2.Msg.ReceiveRankingRankings res |> h.dispatch
       }
       |> Async.StartImmediate
       k ()

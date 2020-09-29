@@ -26,6 +26,8 @@ type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
   member val SelectionArrow = Texture2D.LoadStrict(@"Menu/selection_more.png") |> withProgress
 
   member val HowToKeyboardShift = Texture2D.LoadStrict(@"Menu/howto_keyboard.png") |> withProgress
+
+  // TODO
   member val HowToKeyboardSeparate = Texture2D.LoadStrict(@"Menu/howto_keyboard.png") |> withProgress
   member val HowToJoystick = Texture2D.LoadStrict(@"Menu/howto_joystick.png") |> withProgress
 

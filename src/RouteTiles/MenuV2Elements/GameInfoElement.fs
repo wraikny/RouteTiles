@@ -12,17 +12,17 @@ open RouteTiles.App.MenuV2.ElementCommon
 
 
 let createGameInfo (container: Container) name =
-  let createText text color =
+  let createText font text color =
     Text.Create
-      ( font = container.Font
+      ( font = font
       , text = text
       , color = color
       , zOrder = ZOrder.Menu.gameInfoText
       )
     |> BoxUI.alignY Align.Center
 
-  let nameElem = createText name Consts.GameInfo.nameColor
-  let dataElem = createText "" Consts.GameInfo.dataColor
+  let nameElem = createText container.Font name Consts.GameInfo.nameColor
+  let dataElem = createText container.Font "" Consts.GameInfo.dataColor
 
   let updater data =
     dataElem.Node.Text <- data
