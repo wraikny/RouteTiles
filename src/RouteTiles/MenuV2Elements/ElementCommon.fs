@@ -13,10 +13,10 @@ open RouteTiles.App
 open RouteTiles.App.BoxUIElements
 
 let secondToDisplayTime second =
-  sprintf "%02i:%02i.%03i"
+  sprintf "%02i:%02i.%02i"
     (second / 60.0f |> int)
     (second % 60.0f |> int)
-    ((second % 1.0f) * 1000.0f |> int)
+    (int(second * 100.0f) % 100)
 
 let empty() = Empty.Create() :> Element
 
