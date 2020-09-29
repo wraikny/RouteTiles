@@ -12,6 +12,8 @@ open RouteTiles.Core.Effects
 open RouteTiles.App
 open RouteTiles.App.BoxUIElements
 
+let replaceOne (s: string) = s.Replace("1", " 1")
+
 let secondToDisplayTime second =
   sprintf "%02i:%02i.%02i"
     (second / 60.0f |> int)

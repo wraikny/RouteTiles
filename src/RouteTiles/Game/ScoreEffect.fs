@@ -33,7 +33,7 @@ type ScoreEffect(font, color, addCoroutine: seq<unit> -> unit) =
     o.IsDrawn <- true
     o.Color <- color
     o.Position <- position
-    o.Text <- sprintf "+%dpt." score
+    o.Text <- (sprintf "+%dpt." score).Replace("1", " 1")
     o.CenterPosition <- o.ContentSize * 0.5f
     drawingQueue.Enqueue(o)
 

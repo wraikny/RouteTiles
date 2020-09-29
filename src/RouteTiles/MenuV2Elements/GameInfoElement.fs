@@ -25,7 +25,7 @@ let createGameInfo (container: Container) name =
   let dataElem = createText container.Font "" Consts.GameInfo.dataColor
 
   let updater data =
-    dataElem.Node.Text <- data
+    dataElem.Node.Text <- replaceOne data
 
   let elem =
     twoSplitFrame ZOrder.Menu.gameInfoFrame container

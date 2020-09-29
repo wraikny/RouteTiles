@@ -211,8 +211,9 @@ let private createRankingList (container: Container) (state: Ranking.State) =
             elem2
 
             match state.gameMode with
-            | SoloGame.GameMode.ScoreAttack180 -> sprintf "%dpt." data.values.Point
+            | SoloGame.GameMode.ScoreAttack180 -> sprintf "%d pt." data.values.Point
             | _ -> secondToDisplayTime data.values.Time
+            |> replaceOne
             |> makeText Align.Max 728.0f (Color(0uy, 0uy, 0uy))
             |> fst
 
@@ -222,7 +223,7 @@ let private createRankingList (container: Container) (state: Ranking.State) =
             |> BoxUI.withChild (
               Text.Create
                 ( font = container.Font
-                , text = data.utcDate.ToLocalTime().ToString("yyyy/MM/dd HH:mm")
+                , text = (data.utcDate.ToLocalTime().ToString("yyyy/MM/dd HH:mm") |> replaceOne)
                 , color = Nullable(Color(0uy, 0uy, 0uy))
                 , zOrder = ZOrder.Menu.buttonText
                 )

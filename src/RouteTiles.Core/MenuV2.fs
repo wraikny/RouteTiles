@@ -241,9 +241,11 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
           | Ok dataMap ->
             let gameMode = SoloGame.GameMode.ScoreAttack180
             do! Ranking.State.Init(ValueNone, config, gameMode, dataMap.[gameMode]) |> stateEnter
+            do! SoundEffect.Move
 
             let gameMode = SoloGame.GameMode.TimeAttack5000
             do! Ranking.State.Init(ValueNone, config, gameMode, dataMap.[gameMode]) |> stateEnter
+            do! SoundEffect.Move
 
             return state
 
