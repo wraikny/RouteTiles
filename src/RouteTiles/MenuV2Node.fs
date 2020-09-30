@@ -211,6 +211,8 @@ type internal MenuV2Node(config: Config, container: Container) =
 
     soundControl.SetState(SoundControlState.Menu)
 
+    let mutable lastModalIsSome = false
+
     updater.Subscribe (fun state ->
       lastState |> function
       | ValueSome x when MenuV2.equal x state -> ()
@@ -221,11 +223,16 @@ type internal MenuV2Node(config: Config, container: Container) =
         MenuModalElement.createModal container state
         |> function
         | ValueSome elem ->
+          lastModalIsSome <- true
           uiRootModal.SetElement elem
         | _ ->
-          uiRootMenu.ClearElement()
-          let elem = MenuElement.create container state
-          uiRootMenu.SetElement elem
+          if lastModalIsSome then
+            lastModalIsSome <- false
+          else
+            uiRootMenu.ClearElement()
+            let elem = MenuElement.create container state
+            uiRootMenu.SetElement elem
+
     ) |> ignore
 
   let mutable lastControllerCount = Engine.Joystick.ConnectedJoystickCount
