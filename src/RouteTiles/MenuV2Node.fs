@@ -16,15 +16,15 @@ module internal RankingServer =
 
   let client =
     new SimpleRankingsServer.Client(
-      #if DEBUG
+#if DEBUG
       @"http://localhost:8080/api/RouteTiles",
       "username",
       "password"
-      #else
+#else
       Server.url,
       Server.username,
       Server.password
-      #endif
+#endif
     )
 
   let toTable = function
