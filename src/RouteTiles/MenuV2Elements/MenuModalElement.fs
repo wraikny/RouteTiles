@@ -294,6 +294,7 @@ let createModal (container: Container) (state: MenuV2.State) =
           | x when x = MenuV2.HowToMode.Loop -> f container.HowToLoop
           | x when x = MenuV2.HowToMode.Game -> f container.HowToGame
           | x when x = MenuV2.HowToMode.Point -> f container.HowToPoint
+          | x when x = MenuV2.HowToMode.Board -> f container.HowToBoard
           | _ -> failwith "unexpected: WAZAP!!!!!!!!!!!"
 
         yield elem
