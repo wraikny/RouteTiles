@@ -270,7 +270,7 @@ let private createRankingList (container: Container) (state: Ranking.State) =
         ) :> Element
 
       [|
-        createArrow true (state.page > 0)
+        createArrow true state.IsDecrementable
         makeMargin 12.0f
         for i in 0..3 do
           x.[i] :> Element
@@ -278,7 +278,7 @@ let private createRankingList (container: Container) (state: Ranking.State) =
         x.[4]
 
         makeMargin 12.0f
-        createArrow false (state.page < state.data.Length / Ranking.OnePageItemCount - 1)
+        createArrow false state.IsIncrementable
       |]
   )
 

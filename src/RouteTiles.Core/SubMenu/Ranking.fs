@@ -61,6 +61,10 @@ type State = {
       data = data
     }
 
+  member state.IsIncrementable = state.page < (state.data.Length - 1) / OnePageItemCount
+  member state.IsDecrementable = 0 < state.page
+
+
 
 [<RequireQualifiedAccess>]
 type Msg =
@@ -74,7 +78,7 @@ let inline update msg (state: State) = eff {
   | Msg.Enter -> return Completed ()
 
   | Msg.Incr ->
-    if (state.data.Length - 1) / OnePageItemCount > state.page then
+    if state.IsIncrementable then
       do! SoundEffect.Move
       return Pending { state with page = state.page + 1 }
     else
@@ -82,7 +86,7 @@ let inline update msg (state: State) = eff {
       return Pending state
 
   | Msg.Decr ->
-    if state.page > 0 then
+    if state.IsDecrementable then
       do! SoundEffect.Move
       return Pending { state with page = state.page - 1 }
     else
