@@ -128,6 +128,20 @@ Target.create "Publish" (fun _ ->
   Trace.tracefn "Clean 'publish'"
   Shell.cleanDir "publish"
 
+  let licenseContent =
+    [|
+      "RouteTiles", "LICENSE"
+      ".NET Core", "publishContents/LICENSES/dotnetcore.txt"
+      "FSharp.Json", "publishContents/LICENSES/fsharp.json.txt"
+      "SimpleRankingServer", "lib/simple-rankings-server/LICENSE"
+      "Affogato", "lib/Affogato/LICENSE"
+      "EffFs", "lib/EffFs/LICENSE"
+      "Altseed2", "lib/Altseed2/LICENSE"
+      "Altseed2.BoxUI", "lib/Altseed2.BoxUI/LICENSE"
+    |]
+    |> Array.map (fun (libname, path) -> sprintf "%s\n\n%s" libname (File.readAsString path))
+    |> String.concat (sprintf "\n%s\n" <| String.replicate 50 "-")
+
   runtimes
   |> Seq.iter (fun target ->
     Trace.tracefn "Start for '%s'" target
@@ -141,18 +155,7 @@ Target.create "Publish" (fun _ ->
     |> Shell.copyFile (sprintf "%s/README.txt" outputPath)
 
     // LICENSES
-    [|
-      "RouteTiles", "LICENSE"
-      ".NET Core", "publishContents/LICENSES/dotnetcore.txt"
-      "FSharp.Json", "publishContents/LICENSES/fsharp.json.txt"
-      "SimpleRankingServer", "publishContents/LICENSES/simplerankingserver.txt"
-      "Affogato", "lib/Affogato/LICENSE"
-      "EffFs", "lib/EffFs/LICENSE"
-      "Altseed2", "lib/Altseed2/LICENSE"
-      "Altseed2.BoxUI", "lib/Altseed2.BoxUI/LICENSE"
-    |]
-    |> Array.map (fun (libname, path) -> sprintf "%s\n\n%s" libname (File.readAsString path))
-    |> String.concat (sprintf "\n%s\n" <| String.replicate 50 "-")
+    licenseContent
     |> File.writeString false (sprintf "%s/LICENSE.txt" outputPath)
 
     // Copy Resources
