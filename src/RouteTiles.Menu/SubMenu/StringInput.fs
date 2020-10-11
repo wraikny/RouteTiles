@@ -1,5 +1,5 @@
-module RouteTiles.Core.SubMenu.StringInput
-open RouteTiles.Core
+module RouteTiles.Menu.SubMenu.StringInput
+open RouteTiles.Menu
 
 [<Struct>]
 type State = {
@@ -26,7 +26,7 @@ let setInputs inputs state =
       current = System.String (inputs)
   }
 
-open RouteTiles.Core.Effects
+open RouteTiles.Menu.Effects
 open EffFs
 open EffFs.Library.StateMachine
 

@@ -1,20 +1,14 @@
-namespace RouteTiles.Core.Effects
-
-open RouteTiles.Core
-open RouteTiles.Core.Types
+module RouteTiles.Menu.Effects
 
 open EffFs
-
-// [<Struct>]
-// type EmitVanishParticleEffect = EmitVanishParticleEffect of Set<Types.Board.RouteOrLoop>
-// with
-//   static member Effect(_: EmitVanishParticleEffect) = Eff.marker<unit>
+open RouteTiles.Common.Types
+open RouteTiles.Menu.Types
 
 [<Struct; RequireQualifiedAccess>]
 type GameControlEffect =
   | Pause
   | Resume
-  | Start of SoloGame.Mode * Controller * Config
+  | Start of GameMode * Controller * Config
   | Restart
   | Quit
 with
@@ -28,7 +22,6 @@ with
 type CurrentControllers = CurrentControllers with
   static member Effect(_) = Eff.marker<Controller[]>
 
-
 [<Struct; RequireQualifiedAccess>]
 type SoundEffect =
   | Select
@@ -41,21 +34,16 @@ with
   static member Effect(_) = Eff.marker<unit>
 
 [<Struct>]
-type GameStartEffect = GameStartEffect of SoloGame.Mode * Controller
+type GameStartEffect = GameStartEffect of GameMode * Controller
 with
   static member Effect(_) = Eff.marker<unit>
-
 
 [<Struct>]
 type GameRankingEffect =
   | SelectAll
-  | InsertSelect of System.Guid * SoloGame.GameMode * Ranking.Data
+  | InsertSelect of System.Guid * GameMode * RankingData
 with
   static member Effect(_) = Eff.marker<unit>
-
-// type AsyncEffect<'msg> = AsyncEffect of Async<'msg>
-// with
-//   static member Effect(_) = Eff.marker<unit>
 
 [<Struct>]
 type SaveConfig = SaveConfig of Config

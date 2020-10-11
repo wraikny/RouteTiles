@@ -1,8 +1,9 @@
 namespace RouteTiles.App
 
+open RouteTiles.Common
 open RouteTiles.Core
 open RouteTiles.Core.Types
-open RouteTiles.Core.Effects
+open RouteTiles
 
 open System
 open System.Collections.Generic
@@ -31,7 +32,7 @@ type internal IGameHandler =
   abstract FinishGame: SoloGame.Model * time:float32 -> unit
   abstract SelectController: unit -> unit
 
-type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, soundControl: SoundControl) =
+type internal Game(container: Menu.Container, gameInfoViewer: IGameHandler, soundControl: SoundControl) =
   inherit Node()
 
   let mutable gameMode = ValueNone
@@ -51,7 +52,7 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
 
   let setModel, setTime =
     let gameInfoElement, gameInfoScoreUpdater, gameInfoTimeUpdater =
-      MenuV2.GameInfoElement.createSologameInfoElement container
+      Menu.GameInfoElement.createSologameInfoElement container
 
     uiRootGameInfoNode.SetElement gameInfoElement
 
@@ -232,7 +233,7 @@ type internal Game(container: MenuV2.Container, gameInfoViewer: IGameHandler, so
         yield! finishGame resTime
       }).GetEnumerator()
 
-  member this.Initialize(gameMode_, controller_, config_: Config) =
+  member this.Initialize(gameMode_, controller_, config_: Menu.Types.Config) =
     uniqueCoroutine <- null
 
     gameMode <- ValueSome gameMode_

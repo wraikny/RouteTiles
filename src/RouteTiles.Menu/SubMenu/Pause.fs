@@ -1,9 +1,10 @@
-module RouteTiles.Core.SubMenu.Pause
+module RouteTiles.Menu.SubMenu.Pause
 
-open RouteTiles.Core
-open RouteTiles.Core.Types
-open RouteTiles.Core.SubMenu
-open RouteTiles.Core.Effects
+open RouteTiles.Common.Types
+open RouteTiles.Menu
+open RouteTiles.Menu.Types
+open RouteTiles.Menu.SubMenu
+open RouteTiles.Menu.Effects
 
 open EffFs
 open EffFs.Library.StateMachine

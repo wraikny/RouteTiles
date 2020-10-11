@@ -1,9 +1,10 @@
-module RouteTiles.Core.MenuV2
+module RouteTiles.Menu.Menu
 
-open RouteTiles.Core
-open RouteTiles.Core.Types
-open RouteTiles.Core.SubMenu
-open RouteTiles.Core.Effects
+open RouteTiles.Common.Types
+open RouteTiles.Menu
+open RouteTiles.Menu.Types
+open RouteTiles.Menu.SubMenu
+open RouteTiles.Menu.Effects
 
 open EffFs
 open EffFs.Library.StateMachine
@@ -22,8 +23,6 @@ module Mode =
     Mode.HowTo
     Mode.Setting
   |]
-
-
 
 [<Struct>]
 type ControllerSelect =
@@ -81,9 +80,9 @@ and WSListSelector<'item> = WithState<ListSelector.State<'item>>
 
 and State =
   | MainMenuState of Config * ListSelector.State<Mode>
-  | GameModeSelectState of WSListSelector<SoloGame.GameMode> * (State * SoloGame.GameMode voption -> State)
+  | GameModeSelectState of WSListSelector<GameMode> * (State * GameMode voption -> State)
   | ControllerSelectState of WithState<ControllerSelect> * (State * Controller voption -> State)
-  | GameState of Config * Controller * SoloGame.GameMode
+  | GameState of Config * Controller * GameMode
   | GameResultState of GameResult.State * (GameResult.GameNextSelection -> State)
   | PauseState of Pause.State * (Pause.PauseResult -> State)
   | SettingMenuState of Setting.State * (Config voption -> State)
@@ -133,7 +132,7 @@ type Msg =
   | MsgOfInput of msgInput:StringInput.Msg
   | PauseGame
   | QuitGame
-  | FinishGame of SoloGame.Model * time:float32
+  | FinishGame of RankingData
   | UpdateControllers of Controller[]
   | SelectController
   | ReceiveRankingGameResult of Ranking.GameResult.Response
@@ -209,7 +208,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
         match mode with
         | ValueSome Mode.GamePlay ->
           match!
-            ListSelector.State<_>.Init(SoloGame.GameMode.selected, SoloGame.GameMode.items)
+            ListSelector.State<_>.Init(GameMode.selected, GameMode.items)
             |> WithContext
             |> stateEnter with
           | _, ValueNone ->
@@ -228,7 +227,7 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
               return gameModeState
 
             | _, ValueSome controller ->
-              do! GameControlEffect.Start(gameMode |> SoloGame.GameMode.into, controller, config)
+              do! GameControlEffect.Start(gameMode, controller, config)
               return GameState (config, controller, gameMode)
 
         | ValueSome Mode.Ranking ->
@@ -240,11 +239,11 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
             do! ErrorLogEffect e
             return state
           | Ok dataMap ->
-            let gameMode = SoloGame.GameMode.ScoreAttack180
+            let gameMode = GameMode.ScoreAttack180
             do! Ranking.State.Init(ValueNone, config, gameMode, dataMap.[gameMode]) |> stateEnter
             do! SoundEffect.Move
 
-            let gameMode = SoloGame.GameMode.TimeAttack5000
+            let gameMode = GameMode.TimeAttack5000
             do! Ranking.State.Init(ValueNone, config, gameMode, dataMap.[gameMode]) |> stateEnter
             do! SoundEffect.Move
 
@@ -341,11 +340,11 @@ let inline update (msg: Msg) (state: State): Eff<State, _> = eff {
         return failwithf "Invalid State of ControllerSelectState Context: %A" controllerState
 
 
-  | Msg.FinishGame (model, time), GameState(config, controller, gameMode) ->
+  | Msg.FinishGame (data), GameState(config, controller, gameMode) ->
     do! GameControlEffect.Pause
 
     match!
-      GameResult.State.Init(config, gameMode, model, time)
+      GameResult.State.Init(config, gameMode, data)
       |> stateEnter
         with
     | GameResult.GameNextSelection.Restart ->

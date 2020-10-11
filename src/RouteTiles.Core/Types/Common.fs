@@ -5,13 +5,6 @@ module RouteTiles.Core.Types.Common
 [<Struct; RequireQualifiedAccess>]
 type Dir = Up | Down | Right | Left
 
-[<Struct; RequireQualifiedAccess>]
-type Controller =
-  | KeyboardShift
-  | KeyboardSeparate
-  | Joystick of index:int * name:string * guid:string
-
-
 open Affogato
 
 module Dir =

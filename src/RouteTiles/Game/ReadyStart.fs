@@ -2,7 +2,7 @@ namespace RouteTiles.App
 
 open System.Collections.Generic
 open Altseed2
-open RouteTiles.Core.Utils
+open RouteTiles.Common.Utils
 
 
 type ReadyStart(soundControl: SoundControl, initPosition) =

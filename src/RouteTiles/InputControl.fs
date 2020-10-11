@@ -1,5 +1,6 @@
 module internal RouteTiles.App.InputControl
 
+open RouteTiles.Common.Types
 open RouteTiles.Core.Types
 open Altseed2
 
@@ -83,9 +84,9 @@ module SoloGame =
   let getJoystickInput = makeJoystickInputter joystick
 
 
-module MenuV2 =
-  open RouteTiles.Core.SubMenu
-  open RouteTiles.Core.MenuV2
+module Menu =
+  open RouteTiles.Menu.SubMenu
+  open RouteTiles.Menu.Menu
 
   let keyboard =
     [|

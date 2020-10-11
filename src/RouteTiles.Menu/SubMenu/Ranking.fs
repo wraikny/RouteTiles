@@ -1,20 +1,21 @@
-module RouteTiles.Core.SubMenu.Ranking
+module RouteTiles.Menu.SubMenu.Ranking
 
-open RouteTiles.Core
-open RouteTiles.Core.Types
-open RouteTiles.Core.Effects
-open RouteTiles.Core.SubMenu
+open RouteTiles.Common.Types
+open RouteTiles.Menu
+open RouteTiles.Menu.Types
+open RouteTiles.Menu.Effects
+open RouteTiles.Menu.SubMenu
 
 open EffFs
 open EffFs.Library.StateMachine
 
-type SRSData = SimpleRankingsServer.Data<Ranking.Data>
+type SRSData = SimpleRankingsServer.Data<RankingData>
 
 module GameResult =
   type Response = Result<int64 * SRSData[], exn>
 
   // type State =
-  //   SinglePage.State<Config * SoloGame.GameMode * Response>
+  //   SinglePage.State<Config * GameMode * Response>
 
   // let init x: State = SinglePage.SinglePageState x
 
@@ -22,9 +23,9 @@ module GameResult =
     static member StateOut(_) = Eff.marker<Response>
 
 module Rankings =
-  type Response = Result<Map<SoloGame.GameMode, SRSData[]>, exn>
+  type Response = Result<Map<GameMode, SRSData[]>, exn>
 
-  // type State = SinglePage.State<Config * SoloGame.GameMode * SRSData[]>
+  // type State = SinglePage.State<Config * GameMode * SRSData[]>
 
   // let init x: State = SinglePage.SinglePageState x
 
@@ -37,7 +38,7 @@ let [<Literal>] OnePageItemCount = 5
 type State = {
   page: int
   config: Config
-  gameMode: SoloGame.GameMode
+  gameMode: GameMode
   insertedId: int64 voption
   data: SRSData[]
 } with

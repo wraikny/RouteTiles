@@ -1,5 +1,5 @@
-module RouteTiles.Core.SubMenu.ListSelector
-open RouteTiles.Core
+module RouteTiles.Menu.SubMenu.ListSelector
+open RouteTiles.Menu
 
 [<Struct>]
 type State<'item> = {
@@ -36,7 +36,7 @@ type Msg =
 
 open EffFs
 open EffFs.Library.StateMachine
-open RouteTiles.Core.Effects
+open RouteTiles.Menu.Effects
 
 type State<'a> with
   static member StateOut(_: State<'a>) = Eff.marker<'a voption>

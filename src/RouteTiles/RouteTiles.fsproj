@@ -17,6 +17,8 @@
     <ProjectReference Include="..\..\lib\EffFs\src\EffFs\EffFs.fsproj" />
     <ProjectReference Include="..\RouteTiles.Core\RouteTiles.Core.fsproj" />
     <ProjectReference Include="..\..\lib\Altseed2.BoxUI\src\Altseed2.BoxUI\Altseed2.BoxUI.csproj" />
+    <ProjectReference Include="..\RouteTiles.Menu\RouteTiles.Menu.fsproj" />
+    <ProjectReference Include="..\RouteTiles.Common\RouteTiles.Common.fsproj" />
   </ItemGroup>
 
   <ItemGroup Condition="(('$(OS)'=='Windows' Or '$(OS)'=='Windows_NT') And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='win-x64'">
@@ -54,11 +56,11 @@
     <Compile Include="PostEffect/Fade.fs" />
     <Compile Include="SoundControl.fs" />
     <Compile Include="Loading.fs" />
-    <Compile Include="MenuV2Elements/Container.fs" />
-    <Compile Include="MenuV2Elements/ElementCommon.fs" />
-    <Compile Include="MenuV2Elements/MenuElement.fs" />
-    <Compile Include="MenuV2Elements/MenuModalElement.fs" />
-    <Compile Include="MenuV2Elements/GameInfoElement.fs" />
+    <Compile Include="MenuElements/Container.fs" />
+    <Compile Include="MenuElements/ElementCommon.fs" />
+    <Compile Include="MenuElements/MenuElement.fs" />
+    <Compile Include="MenuElements/MenuModalElement.fs" />
+    <Compile Include="MenuElements/GameInfoElement.fs" />
     <Compile Include="Game/DrawnNodePool.fs" />
     <Compile Include="Game/AnimationSpriteNode.fs" />
     <Compile Include="Game/ScoreEffect.fs" />
@@ -69,13 +71,11 @@
     <Compile Include="../../ResourcesPassword.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="ErrorLog.fs" />
-    <Compile Include="MenuV2Node.fs" />
+    <Compile Include="MenuNode.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="..\..\lib\Altseed2\Altseed2.dll" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="FSharp.Json" Version="0.4.0" />
-  </ItemGroup>
+  <Import Project="../Shared.targets" />
 </Project>

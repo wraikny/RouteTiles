@@ -1,9 +1,10 @@
-module RouteTiles.Core.SubMenu.GameResult
+module RouteTiles.Menu.SubMenu.GameResult
 
-open RouteTiles.Core
-open RouteTiles.Core.Types
-open RouteTiles.Core.Effects
-open RouteTiles.Core.SubMenu
+open RouteTiles.Common.Types
+open RouteTiles.Menu
+open RouteTiles.Menu.Types
+open RouteTiles.Menu.Effects
+open RouteTiles.Menu.SubMenu
 
 open EffFs
 open EffFs.Library.StateMachine
@@ -27,36 +28,25 @@ module GameNextSelection =
     GameNextSelection.Quit
     GameNextSelection.Restart
   |]
-
 type OutStatus = StateStatus<State, GameNextSelection>
 
 and State =
-  | ResultWithSendToServerSelectState of Config * SoloGame.GameMode * Ranking.Data * ListSelector.State<SendToServer>
+  | ResultWithSendToServerSelectState of Config * GameMode * RankingData * ListSelector.State<SendToServer>
   | WaitingResponseState of Ranking.GameResult.Waiting * (Ranking.GameResult.Response -> OutStatus)
   | RankingListViewState of Ranking.State * (unit -> OutStatus)
   | ErrorViewState of SinglePage.State<exn> * (unit -> OutStatus)
   | GameNextSelectionState of ListSelector.State<GameNextSelection> * (GameNextSelection voption -> OutStatus)
   | InputName of StringInput.State * (string voption -> OutStatus)
 with
-  static member Init(config, gameMode, model: SoloGame.Model, time) =
+  static member Init(config, gameMode, data: RankingData) =
     match gameMode with
     // オンラインランキング対応モード
-    | SoloGame.GameMode.TimeAttack5000
-    | SoloGame.GameMode.ScoreAttack180 ->
-      let data: Ranking.Data =
-        { Name = ""
-          Time = time
-          Point = model.board.point
-          SlideCount = model.board.slideCount
-          TilesCount = model.board.vanishedTilesCount
-          RoutesCount = model.board.routesHistory.Length
-          LoopsCount = model.board.loopsHistory.Length
-        }
-
+    | GameMode.TimeAttack5000
+    | GameMode.ScoreAttack180 ->
       let selector = ListSelector.State<SendToServer>.Init(SendToServer.Yes, SendToServer.items)
       ResultWithSendToServerSelectState (config, gameMode, data, selector)
 
-    | SoloGame.GameMode.Endless ->
+    | GameMode.Endless ->
       let selector = ListSelector.State<GameNextSelection>.Init(GameNextSelection.Quit, GameNextSelection.items)
       GameNextSelectionState(selector,
         function

@@ -1,14 +1,15 @@
-module internal RouteTiles.App.MenuV2.ElementCommon
+module internal RouteTiles.App.Menu.ElementCommon
 
 open System
 open Altseed2
 open Altseed2.BoxUI
 open Altseed2.BoxUI.Elements
 
-open RouteTiles.Core
-open RouteTiles.Core.SubMenu
-open RouteTiles.Core.Types
-open RouteTiles.Core.Effects
+open RouteTiles.Common
+open RouteTiles.Menu
+open RouteTiles.Menu.SubMenu
+open RouteTiles.Menu.Types
+open RouteTiles.Menu.Effects
 open RouteTiles.App
 open RouteTiles.App.BoxUIElements
 

@@ -4,7 +4,7 @@ open System
 open Altseed2
 open Affogato
 
-open RouteTiles.Core.Utils
+open RouteTiles.Common
 
 module internal Consts =
   // -- Core --
@@ -160,7 +160,7 @@ module internal Helper =
     Color(f x.R y.R, f x.G y.G, f x.B y.B, f x.A y.A)
 
   module PostEffect =
-    open RouteTiles.Core
+    open RouteTiles.Menu.Types
 
     let toPath = function
       | Background.Wave -> Consts.PostEffect.wavepath

@@ -1,5 +1,5 @@
 [<AutoOpen>]
-module RouteTiles.Core.Utils
+module RouteTiles.Common.Utils
 
 open System
 open System.Diagnostics

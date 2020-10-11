@@ -1,6 +1,6 @@
 namespace RouteTiles.App
 
-open RouteTiles.Core.Utils
+open RouteTiles.Common.Utils
 
 open System.Collections.Generic
 open Altseed2

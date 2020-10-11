@@ -1,18 +1,18 @@
-module internal RouteTiles.App.MenuV2.MenuModalElement
+module internal RouteTiles.App.Menu.MenuModalElement
 
 open System
 open Altseed2
 open Altseed2.BoxUI
 open Altseed2.BoxUI.Elements
 
-open RouteTiles.Core
-open RouteTiles.Core.SubMenu
-open RouteTiles.Core.Types
-open RouteTiles.Core.Effects
+open RouteTiles.Menu
+open RouteTiles.Menu.SubMenu
+open RouteTiles.Menu.Types
+open RouteTiles.Menu.Effects
 open RouteTiles.App
 open RouteTiles.App.BoxUIElements
-open RouteTiles.App.MenuV2.MenuElement
-open RouteTiles.App.MenuV2.ElementCommon
+open RouteTiles.App.Menu.MenuElement
+open RouteTiles.App.Menu.ElementCommon
 
 let private createBlur () =
   [|
@@ -273,11 +273,11 @@ let private createErrorModal (container: Container) (error: exn) =
     |]
 
 
-let createModal (container: Container) (state: MenuV2.State) =
+let createModal (container: Container) (state: Menu.State) =
   let tm = container.TextMap
 
   state |> function
-    | MenuV2.State.HowToState (SinglePage.SinglePageState state, _) ->
+    | Menu.State.HowToState (SinglePage.SinglePageState state, _) ->
       ValueSome [|
         yield! createBlur()
         yield createCurrentMode container tm.modes.howTo
@@ -286,35 +286,35 @@ let createModal (container: Container) (state: MenuV2.State) =
 
         // TODO: wazap
         let elem = state |> function
-          | x when x = MenuV2.HowToMode.KeyboardShift -> f container.HowToKeyboardShift
-          | x when x = MenuV2.HowToMode.KeyboardSeparate -> f container.HowToKeyboardSeparate
-          | x when x = MenuV2.HowToMode.Joystick -> f container.HowToJoystick
-          | x when x = MenuV2.HowToMode.Slide -> f container.HowToSlide
-          | x when x = MenuV2.HowToMode.Route -> f container.HowToRoute
-          | x when x = MenuV2.HowToMode.Loop -> f container.HowToLoop
-          | x when x = MenuV2.HowToMode.Game -> f container.HowToGame
-          | x when x = MenuV2.HowToMode.Point -> f container.HowToPoint
-          | x when x = MenuV2.HowToMode.Board -> f container.HowToBoard
+          | x when x = Menu.HowToMode.KeyboardShift -> f container.HowToKeyboardShift
+          | x when x = Menu.HowToMode.KeyboardSeparate -> f container.HowToKeyboardSeparate
+          | x when x = Menu.HowToMode.Joystick -> f container.HowToJoystick
+          | x when x = Menu.HowToMode.Slide -> f container.HowToSlide
+          | x when x = Menu.HowToMode.Route -> f container.HowToRoute
+          | x when x = Menu.HowToMode.Loop -> f container.HowToLoop
+          | x when x = Menu.HowToMode.Game -> f container.HowToGame
+          | x when x = Menu.HowToMode.Point -> f container.HowToPoint
+          | x when x = Menu.HowToMode.Board -> f container.HowToBoard
           | _ -> failwith "unexpected: WAZAP!!!!!!!!!!!"
 
         yield elem
       |]
 
-    | MenuV2.State.SettingMenuState (Setting.State.InputName(state, _), _) ->
+    | Menu.State.SettingMenuState (Setting.State.InputName(state, _), _) ->
       ValueSome [|
           yield! createBlur ()
           createCurrentMode container tm.modes.nameSetting
           createInputUsernameModal container state
       |]
 
-    | MenuV2.State.SettingMenuState (Setting.State.Volume(state, _), _) ->
+    | Menu.State.SettingMenuState (Setting.State.Volume(state, _), _) ->
       ValueSome [|
         yield! createBlur ()
         createCurrentMode container tm.modes.volumeSetting
         createVolumeSettingModal container state
       |]
 
-    | MenuV2.State.SettingMenuState (Setting.State.Background(state, _), _) ->
+    | Menu.State.SettingMenuState (Setting.State.Background(state, _), _) ->
       ValueSome [|
         PostEffect.BackgroundElement.Create
           ( Helper.PostEffect.toPath Background.items.[state.cursor]
@@ -334,10 +334,10 @@ let createModal (container: Container) (state: MenuV2.State) =
             container.BackgroundButtons
       |]
 
-    | MenuV2.State.ControllerSelectState (WithContext(MenuV2.ControllerSelectToPlay _), _) -> ValueNone
-    | MenuV2.State.PauseState(Pause.ControllerSelectState (state, _), _)
-    | MenuV2.State.ControllerSelectState (WithContext (MenuV2.ControllerSelectToPlay state), _)
-    | MenuV2.State.ControllerSelectState (WithContext (MenuV2.ControllerSelectWhenRejected state), _) ->
+    | Menu.State.ControllerSelectState (WithContext(Menu.ControllerSelectToPlay _), _) -> ValueNone
+    | Menu.State.PauseState(Pause.ControllerSelectState (state, _), _)
+    | Menu.State.ControllerSelectState (WithContext (Menu.ControllerSelectToPlay state), _)
+    | Menu.State.ControllerSelectState (WithContext (Menu.ControllerSelectWhenRejected state), _) ->
       [|
         createBackground container
 
@@ -349,17 +349,17 @@ let createModal (container: Container) (state: MenuV2.State) =
       |]
       |> ValueSome
 
-    | MenuV2.State.WaitingResponseState _ ->
+    | Menu.State.WaitingResponseState _ ->
       ValueSome <| createWaitingResponse container
 
-    | MenuV2.State.ErrorViewState(SinglePage.SinglePageState(error), _) ->
+    | Menu.State.ErrorViewState(SinglePage.SinglePageState(error), _) ->
       ValueSome [|
           // createBackground container
           yield! createBlur ()
           createErrorModal container error
         |]
 
-    | MenuV2.State.GameResultState(resultState, _) ->
+    | Menu.State.GameResultState(resultState, _) ->
       resultState |> function
       | GameResult.WaitingResponseState _ ->
         ValueSome <| createWaitingResponse container

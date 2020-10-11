@@ -1,6 +1,7 @@
 module RouteTiles.App.Config
 
-open RouteTiles.Core
+open RouteTiles.Common
+open RouteTiles.Menu.Types
 
 open System
 open System.Threading

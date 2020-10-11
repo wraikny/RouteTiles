@@ -3,7 +3,6 @@ module RouteTiles.Core.SoloGame
 open RouteTiles.Core
 open RouteTiles.Core.Types
 open RouteTiles.Core.Types.SoloGame
-open RouteTiles.Core.Effects
 
 [<Struct; RequireQualifiedAccess>]
 type Msg =

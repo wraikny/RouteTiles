@@ -1,9 +1,9 @@
 module RouteTiles.Core.Board
 
+open RouteTiles.Common
 open RouteTiles.Core
 open RouteTiles.Core.Types
 open RouteTiles.Core.Types.Board
-open RouteTiles.Core.Effects
 
 open Affogato
 

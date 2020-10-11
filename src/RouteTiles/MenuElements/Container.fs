@@ -1,9 +1,12 @@
-namespace RouteTiles.App.MenuV2
+namespace RouteTiles.App.Menu
 
 open RouteTiles.App
+open RouteTiles.Common
 open RouteTiles.Core
-open RouteTiles.Core.SubMenu
 open RouteTiles.Core.Types
+open RouteTiles.Menu.SubMenu
+open RouteTiles.Menu.Types
+open RouteTiles.Menu
 
 open Altseed2
 
@@ -43,43 +46,43 @@ type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
 
   // member val Font = Font.LoadDynamicFontStrict(@"mplus-1c-bold.ttf", 32)
 
-  member val RankingGameMode: Map<SoloGame.GameMode, string> =
+  member val RankingGameMode: Map<GameMode, string> =
     [|
-      SoloGame.GameMode.TimeAttack5000, textMap.buttons.timeattack5000
-      SoloGame.GameMode.ScoreAttack180, textMap.buttons.scoreattack180
-      SoloGame.GameMode.Endless, textMap.buttons.endless
+      GameMode.TimeAttack5000, textMap.buttons.timeattack5000
+      GameMode.ScoreAttack180, textMap.buttons.scoreattack180
+      GameMode.Endless, textMap.buttons.endless
     |]
     |> Array.map(fun (m, s) -> m, sprintf "%s%s" textMap.modes.rankingOf s)
     |> Map.ofArray
 
   member val MainMenuButtons: string[] =
-    MenuV2.Mode.items |> Array.map (function
-      | MenuV2.Mode.GamePlay -> textMap.buttons.play
-      | MenuV2.Mode.Ranking -> textMap.buttons.ranking
-      | MenuV2.Mode.HowTo -> textMap.buttons.howTo
-      | MenuV2.Mode.Setting -> textMap.buttons.setting
+    Menu.Mode.items |> Array.map (function
+      | Menu.Mode.GamePlay -> textMap.buttons.play
+      | Menu.Mode.Ranking -> textMap.buttons.ranking
+      | Menu.Mode.HowTo -> textMap.buttons.howTo
+      | Menu.Mode.Setting -> textMap.buttons.setting
     )
 
   member val MainMenuDescriptions: string[] =
-    MenuV2.Mode.items |> Array.map (function
-      | MenuV2.Mode.GamePlay -> textMap.descriptions.play
-      | MenuV2.Mode.Ranking -> textMap.descriptions.ranking
-      | MenuV2.Mode.HowTo -> textMap.descriptions.howTo
-      | MenuV2.Mode.Setting -> textMap.descriptions.setting
+    Menu.Mode.items |> Array.map (function
+      | Menu.Mode.GamePlay -> textMap.descriptions.play
+      | Menu.Mode.Ranking -> textMap.descriptions.ranking
+      | Menu.Mode.HowTo -> textMap.descriptions.howTo
+      | Menu.Mode.Setting -> textMap.descriptions.setting
     )
 
   member val GameModeButtons: string[] =
-    SoloGame.GameMode.items |> Array.map(function
-      | SoloGame.GameMode.TimeAttack5000 -> textMap.buttons.timeattack5000
-      | SoloGame.GameMode.ScoreAttack180 -> textMap.buttons.scoreattack180
-      | SoloGame.GameMode.Endless -> textMap.buttons.endless
+    GameMode.items |> Array.map(function
+      | GameMode.TimeAttack5000 -> textMap.buttons.timeattack5000
+      | GameMode.ScoreAttack180 -> textMap.buttons.scoreattack180
+      | GameMode.Endless -> textMap.buttons.endless
     )
 
   member val GameModeDescriptions: string[] =
-    SoloGame.GameMode.items |> Array.map (function
-    | SoloGame.GameMode.TimeAttack5000 -> textMap.descriptions.timeattack5000
-    | SoloGame.GameMode.ScoreAttack180 -> textMap.descriptions.scoreattack180
-    | SoloGame.GameMode.Endless -> textMap.descriptions.endless
+    GameMode.items |> Array.map (function
+    | GameMode.TimeAttack5000 -> textMap.descriptions.timeattack5000
+    | GameMode.ScoreAttack180 -> textMap.descriptions.scoreattack180
+    | GameMode.Endless -> textMap.descriptions.endless
   )
 
   member val SettingMenuButtons: string[] =

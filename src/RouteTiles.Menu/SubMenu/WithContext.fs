@@ -1,5 +1,5 @@
-namespace RouteTiles.Core.SubMenu
-open RouteTiles.Core
+namespace RouteTiles.Menu.SubMenu
+open RouteTiles.Menu
 
 open EffFs
 open EffFs.Library.StateMachine

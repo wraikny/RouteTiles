@@ -1,17 +1,17 @@
-module internal RouteTiles.App.MenuV2.MenuElement
+module internal RouteTiles.App.Menu.MenuElement
 
 open System
 open Altseed2
 open Altseed2.BoxUI
 open Altseed2.BoxUI.Elements
 
-open RouteTiles.Core
-open RouteTiles.Core.SubMenu
-open RouteTiles.Core.Types
-open RouteTiles.Core.Effects
+open RouteTiles.Menu
+open RouteTiles.Menu.SubMenu
+open RouteTiles.Menu.Types
+open RouteTiles.Menu.Effects
 open RouteTiles.App
 open RouteTiles.App.BoxUIElements
-open RouteTiles.App.MenuV2.ElementCommon
+open RouteTiles.App.Menu.ElementCommon
 
 let leftArea() =
   FixedArea.Create(RectF(0.0f, 0.0f, 445.0f, 720.0f))
@@ -79,7 +79,7 @@ let createCurrentMode zOrder (container: Container) (text: string) =
 
 let createCurrentModeMenu = createCurrentMode ZOrder.Menu.currentMode
 
-let private createMainMenu (container: Container) (state: ListSelector.State<MenuV2.Mode>) =
+let private createMainMenu (container: Container) (state: ListSelector.State<Menu.Mode>) =
   [|
     createBackground container
     createButtons container container.MainMenuButtons (state.cursor, state.current)
@@ -91,7 +91,7 @@ let private createMainMenu (container: Container) (state: ListSelector.State<Men
     |]
   |]
 
-let private createGamemodeSelect (container: Container) (state: ListSelector.State<SoloGame.GameMode>) =
+let private createGamemodeSelect (container: Container) (state: ListSelector.State<GameMode>) =
   [|
     createBackground container
 
@@ -211,7 +211,7 @@ let private createRankingList (container: Container) (state: Ranking.State) =
             elem2
 
             match state.gameMode with
-            | SoloGame.GameMode.ScoreAttack180 -> sprintf "%d pt." data.values.Point
+            | GameMode.ScoreAttack180 -> sprintf "%d pt." data.values.Point
             | _ -> secondToDisplayTime data.values.Time
             |> replaceOne
             |> makeText Align.Max 728.0f (Color(0uy, 0uy, 0uy))
@@ -313,20 +313,20 @@ let private createGameResult (container: Container) state =
   | _ -> Array.empty
 
 
-let create (container: Container) (state: MenuV2.State) =
+let create (container: Container) (state: Menu.State) =
   createBase()
   |> BoxUI.withChildren (
     state |> function
-    | MenuV2.State.MainMenuState (_, state) ->
+    | Menu.State.MainMenuState (_, state) ->
       createMainMenu container state
 
-    | MenuV2.State.GameModeSelectState (WithContext state, _) ->
+    | Menu.State.GameModeSelectState (WithContext state, _) ->
       createGamemodeSelect container state
 
-    | MenuV2.State.SettingMenuState (state, _) ->
+    | Menu.State.SettingMenuState (state, _) ->
       createSetting container state
 
-    | MenuV2.State.ControllerSelectState (WithContext(MenuV2.ControllerSelectToPlay state), _) ->
+    | Menu.State.ControllerSelectState (WithContext(Menu.ControllerSelectToPlay state), _) ->
       [|
         createBackground container
         createCurrentModeMenu container container.TextMap.modes.controllerSelect
@@ -334,13 +334,13 @@ let create (container: Container) (state: MenuV2.State) =
           createControllerSelect container state
       |]
 
-    | MenuV2.State.PauseState(state, _) ->
+    | Menu.State.PauseState(state, _) ->
       createPause container state
 
-    | MenuV2.State.GameResultState(state, _) ->
+    | Menu.State.GameResultState(state, _) ->
       createGameResult container state
 
-    | MenuV2.State.RankingState(state, _) ->
+    | Menu.State.RankingState(state, _) ->
       [|
         createBackground container
         createCurrentMode ZOrder.Menu.currentModeOverGameInfo container container.RankingGameMode.[state.gameMode]

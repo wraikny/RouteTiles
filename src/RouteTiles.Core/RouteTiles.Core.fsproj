@@ -11,31 +11,14 @@
   <ItemGroup>
     <ProjectReference Include="..\..\lib\Affogato\src\Affogato\Affogato.fsproj" />
     <ProjectReference Include="..\..\lib\EffFs\src\EffFs\EffFs.fsproj" />
+    <ProjectReference Include="..\RouteTiles.Common\RouteTiles.Common.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Utils.fs" />
-    <Compile Include="../../lib/simple-rankings-server/sample/FSharp/SimpleRankingsServer.fs" />
-    <Compile Include="Config.fs" />
-    <Compile Include="Types/Ranking.fs" />
     <Compile Include="Types/Common.fs" />
     <Compile Include="Types/Board.fs" />
     <Compile Include="Types/SoloGame.fs" />
-    <Compile Include="Effect.fs" />
     <Compile Include="PointCalculation.fs" />
     <Compile Include="Board.fs" />
     <Compile Include="SoloGame.fs" />
-    <Compile Include="SubMenu/WithContext.fs" />
-    <Compile Include="SubMenu/SinglePage.fs" />
-    <Compile Include="SubMenu/ListSelector.fs" />
-    <Compile Include="SubMenu/StringInput.fs" />
-    <Compile Include="SubMenu/VolumeSetting.fs" />
-    <Compile Include="SubMenu/Pause.fs" />
-    <Compile Include="SubMenu/Setting.fs" />
-    <Compile Include="SubMenu/Ranking.fs" />
-    <Compile Include="SubMenu/GameResult.fs" />
-    <Compile Include="MenuV2.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="FSharp.Json" Version="0.4.0" />
   </ItemGroup>
 </Project>

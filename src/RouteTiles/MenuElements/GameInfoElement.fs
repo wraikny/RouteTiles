@@ -1,14 +1,15 @@
-module internal RouteTiles.App.MenuV2.GameInfoElement
+module internal RouteTiles.App.Menu.GameInfoElement
 
 open System
 open Altseed2
 open Altseed2.BoxUI
 open Altseed2.BoxUI.Elements
 
-open RouteTiles.Core
+open RouteTiles.Core.Types
+open RouteTiles.Menu
 open RouteTiles.App
 open RouteTiles.App.BoxUIElements
-open RouteTiles.App.MenuV2.ElementCommon
+open RouteTiles.App.Menu.ElementCommon
 
 
 let createGameInfo (container: Container) name =
@@ -78,9 +79,9 @@ let createSologameInfoElement (container: Container) =
       )
     )
 
-  let updater (model: Types.SoloGame.Model): unit =
+  let updater (model: SoloGame.Model): unit =
     model.mode |> function
-    | Types.SoloGame.Mode.TimeAttack maxScore ->
+    | SoloGame.Mode.TimeAttack maxScore ->
       sprintf "%d/%d" ((maxScore - model.board.point) |> max 0) maxScore
     | _ -> sprintf "%d" model.board.point
     |> scoreUpdater

@@ -1,8 +1,9 @@
-module RouteTiles.Core.SubMenu.VolumeSetting
+module RouteTiles.Menu.SubMenu.VolumeSetting
 
-open RouteTiles.Core
-open RouteTiles.Core.Effects
-open RouteTiles.Core.SubMenu
+open RouteTiles.Common.Utils
+open RouteTiles.Menu
+open RouteTiles.Menu.Effects
+open RouteTiles.Menu.SubMenu
 
 open EffFs
 open EffFs.Library.StateMachine

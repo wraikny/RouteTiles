@@ -1,8 +1,8 @@
-module RouteTiles.Core.SubMenu.SinglePage
+module RouteTiles.Menu.SubMenu.SinglePage
 
-open RouteTiles.Core
-open RouteTiles.Core.Effects
-open RouteTiles.Core.SubMenu
+open RouteTiles.Menu
+open RouteTiles.Menu.Effects
+open RouteTiles.Menu.SubMenu
 
 open EffFs
 open EffFs.Library.StateMachine

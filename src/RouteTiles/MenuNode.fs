@@ -1,12 +1,13 @@
-namespace RouteTiles.App.MenuV2
+namespace RouteTiles.App.Menu
 
 open System
 open Altseed2
 open Altseed2.BoxUI
 
-open RouteTiles.Core
-open RouteTiles.Core.Types
-open RouteTiles.Core.Effects
+open RouteTiles.Common
+open RouteTiles.Menu
+open RouteTiles.Menu.Types
+open RouteTiles.Menu.Effects
 open RouteTiles.App
 
 open EffFs
@@ -28,21 +29,21 @@ module internal RankingServer =
     )
 
   let toTable = function
-    | SoloGame.GameMode.TimeAttack5000 -> Server.tableTime5000
-    | SoloGame.GameMode.ScoreAttack180 -> Server.tableScore180
+    | GameMode.TimeAttack5000 -> Server.tableTime5000
+    | GameMode.ScoreAttack180 -> Server.tableScore180
     | _ -> failwith "Unexpected"
 
   let select gameMode: Async<_> =
     let orderKey, isDescending = gameMode |> function
-      | SoloGame.GameMode.TimeAttack5000 -> "Time", false
-      | SoloGame.GameMode.ScoreAttack180 -> "Point", true
+      | GameMode.TimeAttack5000 -> "Time", false
+      | GameMode.ScoreAttack180 -> "Point", true
       | _ -> failwith "Unexpected"
 
     let table = toTable gameMode
 
     async {
       let! res =
-        client.AsyncSelect<RouteTiles.Core.Types.Ranking.Data>
+        client.AsyncSelect<RankingData>
           ( table
           , orderBy = orderKey
           , isDescending = isDescending
@@ -54,7 +55,7 @@ module internal RankingServer =
       return res
     }
 
-  let insertSelect guid gameMode (data: RouteTiles.Core.Types.Ranking.Data) =
+  let insertSelect guid gameMode (data: RankingData) =
     let table = toTable gameMode
 
     async {
@@ -79,9 +80,16 @@ module internal MenuUtil =
       yield Controller.KeyboardShift
     |]
 
+  open RouteTiles.Core.Types
 
-type MenuV2Handler = {
-  dispatch: MenuV2.Msg -> unit
+  let fromGameMode = function
+    | GameMode.ScoreAttack180 -> SoloGame.Mode.ScoreAttack 180
+    | GameMode.TimeAttack5000 -> SoloGame.Mode.TimeAttack 5000
+    | GameMode.Endless -> SoloGame.Mode.Endless
+
+
+type MenuHandler = {
+  dispatch: Menu.Msg -> unit
   handleGameControlEffect: GameControlEffect -> unit
   handleSetController: Controller -> bool
   soundControl: SoundControl
@@ -150,38 +158,38 @@ type MenuV2Handler = {
           let res = res |> function
             | Choice1Of2 (id, data) -> Ok (id, data)
             | Choice2Of2 e -> Error e
-          MenuV2.Msg.ReceiveRankingGameResult res |> h.dispatch
+          Menu.Msg.ReceiveRankingGameResult res |> h.dispatch
 
         | SelectAll ->
           let! res =
-            RankingServer.select SoloGame.GameMode.TimeAttack5000
+            RankingServer.select GameMode.TimeAttack5000
             |> Async.CatchResult
             |> AsyncResult.bind (fun time5000 -> async {
               let! resScore180 =
-                RankingServer.select SoloGame.GameMode.ScoreAttack180
+                RankingServer.select GameMode.ScoreAttack180
                 |> Async.CatchResult
               
               return
                 resScore180
                 |> Result.map(fun score180 ->
                   Map.ofArray [|
-                    SoloGame.GameMode.TimeAttack5000, time5000
-                    SoloGame.GameMode.ScoreAttack180, score180
+                    GameMode.TimeAttack5000, time5000
+                    GameMode.ScoreAttack180, score180
                   |]
                 )
             })
-          MenuV2.Msg.ReceiveRankingRankings res |> h.dispatch
+          Menu.Msg.ReceiveRankingRankings res |> h.dispatch
       }
       |> Async.StartImmediate
       k ()
     )
 
 
-type internal MenuV2Node(config: Config, container: Container) =
+type internal MenuNode(config: Config, container: Container) =
   inherit Node()
 
   let mutable lastState = ValueNone
-  let updater = Updater<MenuV2.State, MenuV2.Msg>()
+  let updater = Updater<Menu.State, Menu.Msg>()
 
   let coroutineNode = CoroutineNode()
 
@@ -215,7 +223,7 @@ type internal MenuV2Node(config: Config, container: Container) =
 
     updater.Subscribe (fun state ->
       lastState |> function
-      | ValueSome x when MenuV2.equal x state -> ()
+      | ValueSome x when Menu.equal x state -> ()
       | _ ->
         lastState <- ValueSome state
 
@@ -243,14 +251,14 @@ type internal MenuV2Node(config: Config, container: Container) =
       for i in 0..count-1 do
         let info = Engine.Joystick.GetJoystickInfo(i)
         if info <> null && info.IsGamepad then
-          match InputControl.MenuV2.getJoystickInput i with
+          match InputControl.Menu.getJoystickInput i with
           | Some x -> yield x
           | _ -> ()
     }
     |> Seq.tryHead
 
   let getInput() =
-    InputControl.MenuV2.getKeyboardInput ()
+    InputControl.Menu.getKeyboardInput ()
     |> Option.orElseWith getJoysticksInputs
 
   let isAvailableController = function
@@ -309,7 +317,7 @@ type internal MenuV2Node(config: Config, container: Container) =
           gameNode |> function
           | ValueSome n ->
             initWithFading (fun () ->
-              n.Initialize(gameMode, controller, config)
+              n.Initialize(MenuUtil.fromGameMode gameMode, controller, config)
               Engine.AddNode(n)
             )
           | ValueNone ->
@@ -318,13 +326,23 @@ type internal MenuV2Node(config: Config, container: Container) =
                 soundControl.StopSE()
                 soundControl.SetState(SoundControlState.Menu)
 
-                MenuV2.Msg.FinishGame(model, t)
+                let data : RankingData = {
+                  Name = ""
+                  Time = t
+                  Point = model.board.point
+                  RoutesCount = model.board.routesHistory.Length
+                  LoopsCount = model.board.loopsHistory.Length
+                  SlideCount = model.board.slideCount
+                  TilesCount = model.board.vanishedTilesCount
+                }
+
+                Menu.Msg.FinishGame(data)
                 |> updater.Dispatch
 
                 dispachableIntervalTime <- 0.5f
 
               member __.SelectController() =
-                MenuV2.Msg.SelectController
+                Menu.Msg.SelectController
                 |> updater.Dispatch
             }
             let n = Game(container, gameHandler, soundControl)
@@ -333,7 +351,7 @@ type internal MenuV2Node(config: Config, container: Container) =
             Engine.AddNode postEffectFade
             initWithFading (fun () ->
               Engine.AddNode(n)
-              n.Initialize(gameMode, controller, config)
+              n.Initialize(MenuUtil.fromGameMode gameMode, controller, config)
             )
 
         | GameControlEffect.Quit ->
@@ -368,8 +386,8 @@ type internal MenuV2Node(config: Config, container: Container) =
           false
     }
 
-    updater.Init(MenuV2.State.Init (config), fun msg state ->
-      let newState = MenuV2.update msg state |> Eff.handle handler
+    updater.Init(Menu.State.Init (config), fun msg state ->
+      let newState = Menu.update msg state |> Eff.handle handler
       Utils.DebugLogn (sprintf "Msg: %A\nState: %A\n" msg newState)
       newState
     )
@@ -378,28 +396,28 @@ type internal MenuV2Node(config: Config, container: Container) =
 
     // 名前未設定の場合は初心者っぽい。
     if config.name.IsNone then
-      updater.Dispatch MenuV2.Msg.OpenHowToControl
+      updater.Dispatch Menu.Msg.OpenHowToControl
 
 
   override this.OnUpdate() =
     if dispachableIntervalTime <= 0.0f then
       updater.Model.Value |> function
-      | MenuV2.GameState (_, controller, _) ->
+      | Menu.GameState (_, controller, _) ->
         if InputControl.pauseInput controller then
-          updater.Dispatch MenuV2.Msg.PauseGame
+          updater.Dispatch Menu.Msg.PauseGame
 
-      | MenuV2.SettingMenuState(SubMenu.Setting.State.InputName _, _)
-      | MenuV2.GameResultState(SubMenu.GameResult.State.InputName _, _) ->
-        InputControl.MenuV2.getCharacterInput ()
+      | Menu.SettingMenuState(SubMenu.Setting.State.InputName _, _)
+      | Menu.GameResultState(SubMenu.GameResult.State.InputName _, _) ->
+        InputControl.Menu.getCharacterInput ()
         |> Option.orElseWith getJoysticksInputs
         |> Option.iter updater.Dispatch
 
-      | MenuV2.ControllerSelectState _ ->
+      | Menu.ControllerSelectState _ ->
         let curretConnectedCount = Engine.Joystick.ConnectedJoystickCount
         if curretConnectedCount <> lastControllerCount then
           lastControllerCount <- curretConnectedCount
           let controllers = MenuUtil.getCurrentControllers()
-          updater.Dispatch(MenuV2.UpdateControllers controllers) |> ignore
+          updater.Dispatch(Menu.UpdateControllers controllers) |> ignore
 
         getInput()
         |> Option.iter updater.Dispatch
