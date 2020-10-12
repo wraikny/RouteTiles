@@ -16,6 +16,9 @@ static const float speed = 0.1;
 static const float rorateSpeed = 20.0;
 static const float timeOffset = 123.45;
 
+static const float tileSizeMin = 0.05;
+static const float tileSizeMax = 0.15;
+
 cbuffer Consts : register(b1)
 {
   float4 time;
@@ -41,20 +44,23 @@ float3 getColor(float2 p) {
 
     p = p + float2(0.0, offset);
 
-    float2 repSpan = float2(0.1, 0.1 + cellXRand2 * 0.05);
+    float2 repSpan = float2(1.0/cell, 1.0/cell + cellXRand2 * 0.05);
     float2 repP = repeat2(p, repSpan);
     int2 repId = p / repSpan;
     float rotation = random(repId) + random(repId * 123.45) * t * rorateSpeed * 0.1;
     repP = rotate(repP, random(repId) * t * rorateSpeed + sin(rotation) * PI * 2.0);
-    p = repP / (0.2 + (1.0 - repId.y * repSpan.y) * random(repId) * 0.015);
+    p = repP / (tileSizeMin + (1.0 - repSpan.y) * (tileSizeMax - tileSizeMin) * random(repId) * 10.0 / cell);
 
-    float d = sdBox2(p, float2(0.1, 0.1));
 
-    float a = argP.y * argP.y;
+    float d = sdRoundBox2(p, float2(1.0, 1.0) / cell, 0.1);
 
-    float3 baseColor = HSVtoRGB(0.66 + time.x * 0.02, 1.0, 0.3);
+    float a = argP.y;
 
-    float3 color = d < 0.1 ? (1 - a) * baseColor.xyz + (p.y + 0.5) * 0.1 : a * baseColor.xyz;
+    float3 col = HSVtoRGB(time.x * 0.02, 1.0, 0.3);
+
+    float3 baseColor = float3(0.0, 0.0, 0.0);
+
+    float3 color = d < 0.1 ? lerp(col.xyz, baseColor.xyz, p.y * 0.5 + 0.2) : a * lerp(baseColor.xyz, col.xyz, a);
 
     return color;
 }
