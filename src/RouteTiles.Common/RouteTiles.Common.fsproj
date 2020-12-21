@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <OtherFlags>--langversion:4.7</OtherFlags>
   </PropertyGroup>
 
   <ItemGroup>
