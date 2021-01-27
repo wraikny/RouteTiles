@@ -52,6 +52,3 @@ jobs:
         dotnet fake build -t Build
       env:
         CI: true
-
-    - name: Test
-      run: dotnet fake build -t Test
