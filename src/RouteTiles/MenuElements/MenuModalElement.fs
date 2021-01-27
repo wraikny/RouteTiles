@@ -284,18 +284,16 @@ let createModal (container: Container) (state: Menu.State) =
 
         let f x = centeredSprite ZOrder.MenuModal.background x
 
-        // TODO: wazap
         let elem = state |> function
-          | x when x = Menu.HowToMode.KeyboardShift -> f container.HowToKeyboardShift
-          | x when x = Menu.HowToMode.KeyboardSeparate -> f container.HowToKeyboardSeparate
-          | x when x = Menu.HowToMode.Joystick -> f container.HowToJoystick
-          | x when x = Menu.HowToMode.Slide -> f container.HowToSlide
-          | x when x = Menu.HowToMode.Route -> f container.HowToRoute
-          | x when x = Menu.HowToMode.Loop -> f container.HowToLoop
-          | x when x = Menu.HowToMode.Game -> f container.HowToGame
-          | x when x = Menu.HowToMode.Point -> f container.HowToPoint
-          | x when x = Menu.HowToMode.Board -> f container.HowToBoard
-          | _ -> failwith "unexpected: WAZAP!!!!!!!!!!!"
+          | Menu.HowToMode.KeyboardShift -> f container.HowToKeyboardShift
+          | Menu.HowToMode.KeyboardSeparate -> f container.HowToKeyboardSeparate
+          | Menu.HowToMode.Joystick -> f container.HowToJoystick
+          | Menu.HowToMode.Slide -> f container.HowToSlide
+          | Menu.HowToMode.Route -> f container.HowToRoute
+          | Menu.HowToMode.Loop -> f container.HowToLoop
+          | Menu.HowToMode.Game -> f container.HowToGame
+          | Menu.HowToMode.Point -> f container.HowToPoint
+          | Menu.HowToMode.Board -> f container.HowToBoard
 
         yield elem
       |]

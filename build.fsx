@@ -94,7 +94,7 @@ Target.create "Resources" (fun _ ->
 
   let targetProject = "RouteTiles"
 
-  let outDir x = sprintf "src/%s/bin/%s/netcoreapp3.1" targetProject x
+  let outDir x = sprintf "src/%s/bin/%s/net5.0" targetProject x
 
   // for Debug
   (
