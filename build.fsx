@@ -3,9 +3,6 @@ source https://api.nuget.org/v3/index.json
 nuget Fake.DotNet.Cli
 nuget Fake.IO.FileSystem
 nuget Fake.Core.Target
-nuget Fake.Core.ReleaseNotes
-nuget Fake.DotNet.AssemblyInfoFile
-nuget Fake.DotNet.Testing.Expecto
 nuget FAKE.IO.Zip
 nuget FAKE.Net.Http
 nuget FSharp.Json //"
