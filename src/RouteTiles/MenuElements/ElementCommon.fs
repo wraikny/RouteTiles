@@ -152,7 +152,7 @@ let modalFrame zOrder (container: Container) =
 let moreArrowSize = Vector2F(24.0f, 24.0f)
 
 let createArrow (container: Container) zOrder (isUp: bool) (drawn: bool) =
-  let elem = FixedSize.Create(moreArrowSize) :> Element
+  let elem = FixedHeight.Create(moreArrowSize.Y)
 
   if drawn then
     elem.AddChild(
