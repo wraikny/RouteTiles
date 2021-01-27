@@ -31,6 +31,7 @@ type FixedHeight private () =
   override this.CalcSize(size) = new Vector2F(size.X, this.Height)
 
   override this.OnResize(area) =
+    let area = this.LayoutArea(area)
     let area = RectF(area.Position, new Vector2F(area.Width, this.Height))
 
     for child in this.Children do
@@ -53,6 +54,7 @@ type FixedWidth private () =
   override this.CalcSize(size) = new Vector2F(this.Width, size.Y)
 
   override this.OnResize(area) =
+    let area = this.LayoutArea(area)
     let area = RectF(area.Position, new Vector2F(this.Width, area.Height))
 
     for child in this.Children do
@@ -78,9 +80,10 @@ type PostEffectElement<'p when 'p :> PostEffectNode and 'p : null and 'p : (new 
 
   override this.CalcSize(size) = size
 
-  override this.OnResize(size) =
+  override this.OnResize(area) =
+    let area = this.LayoutArea(area)
     for child in this.Children do
-      child.Resize(size)
+      child.Resize(area)
 
 
 [<AllowNullLiteral; Sealed; AutoSerializable(true)>]
@@ -146,6 +149,7 @@ type ItemList private() =
     |> Vector2F
 
   override this.OnResize(area) =
+    let area = this.LayoutArea(area)
     this.ItemHeight |> function
     | None ->
       let itemSize = Vector2F(area.Width, area.Width)
@@ -190,6 +194,7 @@ type Grid private() =
     Vector2F(size.X, ySize)
 
   override this.OnResize(area) =
+    let area = this.LayoutArea(area)
     let xCount = area.Width / this.ItemSize.X |> int
 
     let itemMargin = (area.Width * Vector2F(1.0f, 1.0f) - (float32 xCount) * this.ItemSize) / (float32 xCount - 1.0f)
