@@ -23,9 +23,9 @@ let pauseInput controller =
   controller |> function
   | Controller.KeyboardShift
   | Controller.KeyboardSeparate ->
-    Engine.Keyboard.IsPushState(Key.Escape)
+    Engine.Keyboard.GetKeyState(Key.Escape) = ButtonState.Push
   | Controller.Joystick (index, _, _) ->
-    Engine.Joystick.IsPushState(index, JoystickButton.Guide)
+    Engine.Joystick.GetButtonState(index, JoystickButton.Guide) = ButtonState.Push
 
 
 let dirPairs = [|
