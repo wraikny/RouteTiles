@@ -79,7 +79,7 @@ Target.create "Resources" (fun _ ->
 
   let targetProject = "RouteTiles"
 
-  let outDir x = sprintf "src/%s/bin/%s/net5.0" targetProject x
+  let outDir x = sprintf "src/%s/bin/%s/net6.0" targetProject x
 
   // for Debug
   (
@@ -118,11 +118,11 @@ Target.create "Publish" (fun _ ->
       "RouteTiles", "LICENSE"
       ".NET Core", "publishContents/LICENSES/dotnetcore.txt"
       "FSharp.Json", "publishContents/LICENSES/fsharp.json.txt"
+      "Altseed2", "publishContents/LICENSES/altseed2.txt"
+      "Altseed2.BoxUI", "publishContents/LICENSES/altseed2.boxui.txt"
       "SimpleRankingServer", "lib/simple-rankings-server/LICENSE"
       "Affogato", "lib/Affogato/LICENSE"
       "EffFs", "lib/EffFs/LICENSE"
-      "Altseed2", "lib/Altseed2/LICENSE"
-      "Altseed2.BoxUI", "lib/Altseed2.BoxUI/LICENSE"
     |]
     |> Array.map (fun (libname, path) -> sprintf "%s\n\n%s" libname (File.readAsString path))
     |> String.concat (sprintf "\n%s\n" <| String.replicate 50 "-")
@@ -202,62 +202,6 @@ Target.create "Publish" (fun _ ->
     !! (sprintf "%s/**" outputPath)
     |> Zip.zip "publish" (sprintf "%s.zip" outputPath)
   )
-)
-
-Target.create "CopyLib" (fun _ ->
-  [|
-    @"lib/Altseed2.BoxUI/lib/Altseed2"
-  |]
-  |> Seq.iter (fun dir ->
-    Shell.copyDir dir altseed2Dir (fun _ -> true)
-  )
-)
-
-Target.create "Download" (fun _ ->
-  let token = Environment.GetEnvironmentVariable("GITHUB_TOKEN")
-  let url = @"https://api.github.com/repos/altseed/altseed2-csharp/actions/artifacts"
-
-  use client = new Net.Http.HttpClient()
-  client.DefaultRequestHeaders.UserAgent.ParseAdd("wraikny.RouteTiles")
-  client.DefaultRequestHeaders.Authorization <- Net.Http.Headers.AuthenticationHeaderValue("Bearer", token)
-
-  let downloadName = sprintf "Altseed2-%s" altseed2CommitId
-
-  let rec getArchiveUrl page = async {
-    Trace.tracefn "page %d" page
-    let! data = client.GetStringAsync(sprintf "%s?page=%d" url page) |> Async.AwaitTask
-
-    let artifacts =
-      data
-      |> Json.deserialize<{| artifacts: {| name: string; archive_download_url: string; expired: bool |} [] |}>
-
-    if artifacts.artifacts |> Array.isEmpty then
-      failwithf "'%s' is not found" downloadName
-
-    match
-      artifacts.artifacts
-      |> Seq.tryFind(fun x -> x.name = downloadName) with
-    | Some x when x.expired -> return failwithf "'%s' is expired" downloadName
-    | Some x -> return x.archive_download_url
-    | None -> return! getArchiveUrl (page + 1)
-  }
-
-  let outputFilePath = sprintf "%s.zip" altseed2Dir
-
-  async {
-    let! archiveUrl = getArchiveUrl 1
-
-    let! res =
-      client.GetAsync(archiveUrl, Net.Http.HttpCompletionOption.ResponseHeadersRead)
-      |> Async.AwaitTask
-
-    use fileStream = IO.File.Create(outputFilePath)
-    use! httpStream = res.Content.ReadAsStreamAsync() |> Async.AwaitTask
-    do! httpStream.CopyToAsync(fileStream) |> Async.AwaitTask
-    do! fileStream.FlushAsync() |> Async.AwaitTask
-  } |> Async.RunSynchronously
-
-  Zip.unzip altseed2Dir outputFilePath
 )
 
 Target.create "CISetting" (fun _ ->

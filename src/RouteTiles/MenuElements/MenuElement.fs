@@ -58,6 +58,7 @@ let private createDesc (container: Container) text =
     Text.Create
       ( text = text
       , font = container.Font
+      , fontSize = 32.0f
       , zOrder = ZOrder.Menu.description
       )
     |> BoxUI.alignY Align.Max
@@ -72,6 +73,7 @@ let createCurrentMode zOrder (container: Container) (text: string) =
     Text.Create
       ( text = text
       , font = container.Font
+      , fontSize = 32.0f
       , zOrder = zOrder
       )
     |> BoxUI.debug
@@ -157,10 +159,11 @@ let private createRankingList (container: Container) (state: Ranking.State) =
   ItemList.Create()
   |> BoxUI.alignCenter
   |> BoxUI.withChildren (
-    let makeTextRaw font alignX pos color text =
+    let makeTextRaw font fontize alignX pos color text =
       let textElem =
         Text.Create
           ( font = font
+          , fontSize = fontize
           , text = text
           , color = Nullable(color)
           , zOrder = ZOrder.Menu.buttonText
@@ -175,7 +178,7 @@ let private createRankingList (container: Container) (state: Ranking.State) =
       , textElem
 
     // let makeText = makeTextRaw container.MonoFont
-    let makeText = makeTextRaw container.Font
+    let makeText = makeTextRaw container.Font 32.0f
 
     let firstIndex = Ranking.OnePageItemCount * state.page
 
@@ -223,6 +226,7 @@ let private createRankingList (container: Container) (state: Ranking.State) =
             |> BoxUI.withChild (
               Text.Create
                 ( font = container.Font
+                , fontSize = 32.0f
                 , text = (data.utcDate.ToLocalTime().ToString("yyyy/MM/dd HH:mm") |> replaceOne)
                 , color = Nullable(Color(0uy, 0uy, 0uy))
                 , zOrder = ZOrder.Menu.buttonText

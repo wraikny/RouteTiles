@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <OtherFlags>--langversion:4.7 --warnon:1182</OtherFlags>
+    <TargetFramework>net6.0</TargetFramework>
+    <OtherFlags>--warnon:1182</OtherFlags>
     <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -15,30 +15,8 @@
     <ProjectReference Include="..\..\lib\Affogato\src\Affogato\Affogato.fsproj" />
     <ProjectReference Include="..\..\lib\EffFs\src\EffFs\EffFs.fsproj" />
     <ProjectReference Include="..\RouteTiles.Core\RouteTiles.Core.fsproj" />
-    <ProjectReference Include="..\..\lib\Altseed2.BoxUI\src\Altseed2.BoxUI\Altseed2.BoxUI.csproj" />
     <ProjectReference Include="..\RouteTiles.Menu\RouteTiles.Menu.fsproj" />
     <ProjectReference Include="..\RouteTiles.Common\RouteTiles.Common.fsproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="(('$(OS)'=='Windows' Or '$(OS)'=='Windows_NT') And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='win-x64'">
-    <None Include="../../lib/Altseed2/Altseed2_Core.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup Condition=" ($([MSBuild]::IsOsPlatform('OSX'))  And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='osx-x64' ">
-    <None Include="../../lib/Altseed2/libAltseed2_Core.dylib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup Condition=" ($([MSBuild]::IsOsPlatform('Linux'))  And '$(RuntimeIdentifier)'=='') Or '$(RuntimeIdentifier)'=='linux-x64' ">
-    <None Include="../../lib/Altseed2/libAltseed2_Core">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -73,8 +51,10 @@
     <Compile Include="MenuNode.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
+
   <ItemGroup>
-    <Reference Include="..\..\lib\Altseed2\Altseed2.dll" />
+    <PackageReference Include="Altseed2" Version="2.1.0" />
+    <PackageReference Include="Altseed2.BoxUI" Version="2.1.1" />
   </ItemGroup>
   <Import Project="../Shared.targets" />
 </Project>

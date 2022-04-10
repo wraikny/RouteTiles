@@ -104,8 +104,9 @@ let buttons
         let textElem =
           Text.Create
             ( font = container.Font
+            , fontSize = 32.f
             , text = text
-            , zOrder =  zOrders.buttonText
+            , zOrder = zOrders.buttonText
             , color = Nullable(textColor)
           )
           |> BoxUI.alignCenter
@@ -175,7 +176,7 @@ let listSelectorModal
   (zOrders: {| button: int; buttonText: int; desc: int; background: int |})
   (container: Container)
   (title: string)
-  (font: Font)
+  (font: Font, fontSize: float32)
   (state: ListSelector.State<'a>)
   (selections: string[])
   =
@@ -194,6 +195,7 @@ let listSelectorModal
           Text.Create
             ( text = title
             , font = font
+            , fontSize = fontSize
             , zOrder = zOrders.desc
             )
           :> Element
@@ -235,7 +237,7 @@ let controllerSelect (zOrders: {| button: int; buttonText: int; desc: int; backg
     zOrders
     container
     container.TextMap.descriptions.selectController
-    container.DynamicFont
+    (container.Font, 32.0f)
     state
     selections
 

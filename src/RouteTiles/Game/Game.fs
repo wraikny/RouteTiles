@@ -44,7 +44,7 @@ type internal Game(container: Menu.Container, gameInfoViewer: IGameHandler, soun
   let coroutineNode = CoroutineNode()
   let childrenCoroutineNode = CoroutineNode()
 
-  let boardNode = BoardNode(childrenCoroutineNode.Add, Position = Helper.SoloGame.boardViewPos)
+  let boardNode = BoardNode(childrenCoroutineNode.Add, Position = Helper.SoloGame.boardViewPos, Scale = Vector2F(1.f, 1.f) * 1.0f)
   let scoreEffect = ScoreEffect(container.Font, Color(255, 255, 255, 255), childrenCoroutineNode.Add)
 
   let nextTilesNode = NextTilesNode(childrenCoroutineNode.Add, Position = Helper.SoloGame.nextsViewPos)

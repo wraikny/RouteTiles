@@ -10,41 +10,90 @@ open RouteTiles.Menu
 
 open Altseed2
 
-type internal Container (textMap: TextMap.TextMap, progress: unit -> int) =
-  let withProgress x = progress () |> ignore; x
+type internal Container (textMap: TextMap.TextMap) =
+  let mutable progressCount = 0
 
-  static member val ProgressCount = 22
+  let makeLoadingTarget a =
+    progressCount <- progressCount + 1
+    a
+
+  let backgroundTexture = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/background_dark.png"))
+  let maskTexture = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/background_mask.png"))
+  let titleTexture = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/title.png"))
+  let buttonBackground = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/button-metalic-dark-highlight-320x80.png"))
+  let inputBackground = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/input_background.png"))
+  let inputFrame = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/input_frame.png"))
+  let gameInfoFrame = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/game_info_frame.png"))
+  let rankingFrame = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/ranking_frame.png"))
+  let controllerBackground = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/controller_background.png"))
+  let selectionArrow = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/selection_more.png"))
+
+  let howToKeyboardShift = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/howto_keyboard_shift.png"))
+  let howToKeyboardSeparate = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/howto_keyboard_separate.png"))
+  let howToJoystick = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/howto_joystick.png"))
+  let howToSlide = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/howtoplay_slide.png"))
+  let howToRoute = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/howtoplay_route.png"))
+  let howToLoop = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/howtoplay_loop.png"))
+  let howToGame = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/howtoplay_game.png"))
+  let howToPoint = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/howtoplay_point.png"))
+  let howToBoard = makeLoadingTarget <| lazy(Texture2D.LoadStrict(@"Menu/howtoplay_board.png"))
+
+  let font = makeLoadingTarget <| lazy(Font.LoadStaticFontStrict(@"Font/Makinas-4-Square/font.a2f"))
+  let errorMessageFont = makeLoadingTarget <| lazy(Font.LoadDynamicFontStrict(@"Font/mplus-1c-medium.ttf", 48))
+
+  member x.ProgressCount with get() = progressCount
+
+  member _.Load (progress) =
+    let progress a = a |> ignore |> progress
+
+    backgroundTexture.Force() |> progress
+    maskTexture.Force() |> progress
+    titleTexture.Force() |> progress
+    buttonBackground.Force() |> progress
+    inputBackground.Force() |> progress
+    inputFrame.Force() |> progress
+    gameInfoFrame.Force() |> progress
+    rankingFrame.Force() |> progress
+    controllerBackground.Force() |> progress
+    selectionArrow.Force() |> progress
+    howToKeyboardShift.Force() |> progress
+    howToKeyboardSeparate.Force() |> progress
+    howToJoystick.Force() |> progress
+    howToSlide.Force() |> progress
+    howToRoute.Force() |> progress
+    howToLoop.Force() |> progress
+    howToGame.Force() |> progress
+    howToPoint.Force() |> progress
+    howToBoard.Force() |> progress
+    font.Force() |> progress
+    errorMessageFont.Force() |> progress
 
   member val TextMap = textMap
 
-  member val BackgroundTexture = Texture2D.LoadStrict(@"Menu/background_dark.png") |> withProgress
-  member val MaskTexture = Texture2D.LoadStrict(@"Menu/background_mask.png") |> withProgress
-  member val TitleTexture = Texture2D.LoadStrict(@"Menu/title.png") |> withProgress
-  member val ButtonBackground = Texture2D.LoadStrict(@"Menu/button-metalic-dark-highlight-320x80.png") |> withProgress
-  member val InputBackground = Texture2D.LoadStrict(@"Menu/input_background.png") |> withProgress
-  member val InputFrame = Texture2D.LoadStrict(@"Menu/input_frame.png") |> withProgress
-  member val GameInfoFrame = Texture2D.LoadStrict(@"Menu/game_info_frame.png") |> withProgress
-  member val RankingFrame = Texture2D.LoadStrict(@"Menu/ranking_frame.png") |> withProgress
-  member val ControllerBackground = Texture2D.LoadStrict(@"Menu/controller_background.png") |> withProgress
-  member val SelectionArrow = Texture2D.LoadStrict(@"Menu/selection_more.png") |> withProgress
+  member val BackgroundTexture = backgroundTexture.Value
+  member val MaskTexture = maskTexture.Value
+  member val TitleTexture = titleTexture.Value
+  member val ButtonBackground = buttonBackground.Value
+  member val InputBackground = inputBackground.Value
+  member val InputFrame = inputFrame.Value
+  member val GameInfoFrame = gameInfoFrame.Value
+  member val RankingFrame = rankingFrame.Value
+  member val ControllerBackground = controllerBackground.Value
+  member val SelectionArrow = selectionArrow.Value
 
-  member val HowToKeyboardShift = Texture2D.LoadStrict(@"Menu/howto_keyboard_shift.png") |> withProgress
-  member val HowToKeyboardSeparate = Texture2D.LoadStrict(@"Menu/howto_keyboard_separate.png") |> withProgress
-  member val HowToJoystick = Texture2D.LoadStrict(@"Menu/howto_joystick.png") |> withProgress
+  member val HowToKeyboardShift = howToKeyboardShift.Value
+  member val HowToKeyboardSeparate = howToKeyboardSeparate.Value
+  member val HowToJoystick = howToJoystick.Value
 
-  member val HowToSlide = Texture2D.LoadStrict(@"Menu/howtoplay_slide.png") |> withProgress
-  member val HowToRoute = Texture2D.LoadStrict(@"Menu/howtoplay_route.png") |> withProgress
-  member val HowToLoop = Texture2D.LoadStrict(@"Menu/howtoplay_loop.png") |> withProgress
-  member val HowToGame = Texture2D.LoadStrict(@"Menu/howtoplay_game.png") |> withProgress
-  member val HowToPoint = Texture2D.LoadStrict(@"Menu/howtoplay_point.png") |> withProgress
-  member val HowToBoard = Texture2D.LoadStrict(@"Menu/howtoplay_board.png") |> withProgress
+  member val HowToSlide = howToSlide.Value
+  member val HowToRoute = howToRoute.Value
+  member val HowToLoop =howToLoop.Value
+  member val HowToGame = howToGame.Value
+  member val HowToPoint = howToPoint.Value
+  member val HowToBoard = howToBoard.Value
 
-  // member val InputUsernameBackground = Texture2D.LoadStrict(@"Menu/input_username.png")
-  member val Font = Font.LoadStaticFontStrict(@"Font/Makinas-4-Square-32/font.a2f") |> withProgress
-  member val ErrorMessageFont = Font.LoadDynamicFontStrict(@"Font/mplus-1c-medium.ttf", 24) |> withProgress
-  member val DynamicFont = Font.LoadDynamicFontStrict(@"Font/Makinas-4-Square.otf", 32) |> withProgress
-
-  // member val Font = Font.LoadDynamicFontStrict(@"mplus-1c-bold.ttf", 32)
+  member val Font = font.Value
+  member val ErrorMessageFont = errorMessageFont.Value
 
   member val RankingGameMode: Map<GameMode, string> =
     [|

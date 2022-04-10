@@ -26,7 +26,7 @@ type ScoreEffect(font, color, addCoroutine: seq<unit> -> unit) =
     let o = stack.TryPop() |> function
       | true, node -> node
       | _ ->
-        let node = TextNode(Font = font, ZOrder = ZOrder.Board.scoreEffect)
+        let node = TextNode(Font = font, FontSize = 32.f, ZOrder = ZOrder.Board.scoreEffect)
         this.AddChildNode(node)
         node
 

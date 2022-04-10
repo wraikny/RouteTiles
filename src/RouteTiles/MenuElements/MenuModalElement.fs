@@ -40,9 +40,10 @@ let private createBlur () =
 //     )
 //   )
 
-let private modalText font color text =
+let private modalText font fontSize color text =
   Text.Create
     ( font = font
+    , fontSize = fontSize
     , text = text
     , color = Nullable(color)
     , zOrder = ZOrder.MenuModal.text
@@ -57,7 +58,7 @@ let modalWithDescriptionAndChildren (container: Container) marginBottom (descrip
     |> BoxUI.marginBottom (LengthScale.Fixed, marginBottom)
     |> BoxUI.marginX (LengthScale.Fixed, 40.0f)
     |> BoxUI.withChild (
-      modalText container.Font (Color(255, 255, 255, 255)) description
+      modalText container.Font 32.0f (Color(255, 255, 255, 255)) description
       |> BoxUI.alignX Align.Center
       |> BoxUI.alignY Align.Min
       |> BoxUI.debug
@@ -72,7 +73,7 @@ let private createTextsModal (container: Container) (description: string) alignX
     |> BoxUI.alignY Align.Max
     |> BoxUI.withChildren (
       texts |> Array.map(fun text ->
-        modalText container.Font (Color(255, 255, 255, 255)) text
+        modalText container.Font 32.0f (Color(255, 255, 255, 255)) text
         |> BoxUI.alignX alignX
         |> BoxUI.debug
       )
@@ -123,6 +124,7 @@ let createInputUsernameModal (container: Container) (state: StringInput.State) =
 
         Text.Create
           ( font = container.Font
+          , fontSize = 32.0f
           , text = text
           , color = Nullable(color)
           , zOrder = ZOrder.MenuModal.text
@@ -137,6 +139,7 @@ let createVolumeSettingModal (container: Container) (state: VolumeSetting.State)
   let createText color text =
     Text.Create
       ( font = container.Font
+      , fontSize = 32.0f
       , text = text
       , color = Nullable(color)
       , zOrder = ZOrder.MenuModal.buttonText
@@ -267,7 +270,7 @@ let private createErrorModal (container: Container) (error: exn) =
       |> BoxUI.marginTop (LengthScale.Fixed, 120.0f)
       |> BoxUI.withChild (
         errorToMessage error
-        |> modalText container.ErrorMessageFont white
+        |> modalText container.ErrorMessageFont 32.0f white
         |> BoxUI.alignX Align.Center
       )
     |]
@@ -327,7 +330,7 @@ let createModal (container: Container) (state: Menu.State) =
             listSelectorZOrders
             container
             tm.descriptions.selectBackground
-            container.Font
+            (container.Font, 32.0f)
             state
             container.BackgroundButtons
       |]

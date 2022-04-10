@@ -3,12 +3,12 @@
 # RouteTiles
 
 ## Requirements
-.NET Core 3.1  
+.NET6  
 https://dotnet.microsoft.com/download  
 
 ```shell
 $ dotnet --version
-3.1.201
+6.0.101
 ```
 
 ### Restoring after Clone
@@ -16,28 +16,6 @@ $ dotnet --version
 $ git submodule update --init
 $ dotnet tool restore
 ```
-
-### Download Altseed
-Download artifact `Altseed2-{commit id}` from [Altseed2-csharp](https://github.com/altseed/Altseed2-csharp/tree/7f02df407b10a78d1aa44258b9739151ae905b75), and place it as follows
-
-```
-lib
-|--.gitkeep
-|--Altseed2
-|  |--Altseed2.dll
-|  |--Altseed2.xml
-|  |--Altseed2_Core.dll
-|  |--libAltseed2_Core
-|  |--libAltseed2_Core.dylib
-|  |--LICENSE
-```
-
-then,
-
-```shell
-$ fake build -t copylib
-```
-
 
 ### Build
 

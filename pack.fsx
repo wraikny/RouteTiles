@@ -1,5 +1,5 @@
 #r "netstandard"
-#r "./lib/Altseed2/Altseed2.dll"
+#r "nuget: Altseed2"
 #load "ResourcesPassword.fs"
 #load "src/RouteTiles/TextMap.fs"
 
@@ -27,7 +27,6 @@ let alphabetAndNums = [|
 
 let fonts = [|
   ( @"Makinas-4-Square.otf"
-  , 32
   , ([|
         yield! alphabetAndNums
 
@@ -60,9 +59,9 @@ let coreModules = CoreModules.File ||| CoreModules.Graphics
 if not <| Engine.Initialize("Pack", 1, 1, Configuration(ConsoleLoggingEnabled=true, EnabledCoreModules = coreModules)) then
   failwith "Failed to initialize the Engine"
 
-for (fontname, size, chars) in fonts do
+for (fontname, chars) in fonts do
   let inPath = sprintf "%s/%s" fontDir fontname
-  let outDir = sprintf "%s/Font/%s-%d" target (IO.Path.GetFileNameWithoutExtension (fontname)) size
+  let outDir = sprintf "%s/Font/%s" target (IO.Path.GetFileNameWithoutExtension (fontname))
   let outPath = sprintf "%s/font.a2f" outDir
 
   if IO.Directory.Exists(outDir) then
@@ -74,14 +73,13 @@ for (fontname, size, chars) in fonts do
     sprintf """GenerateFontFile
 InPath: %s
 OutPath: %s
-size:%d
 characters:%s
 """
-      inPath outPath size chars
+      inPath outPath chars
 
   printfn "%s" msg
 
-  if Font.GenerateFontFile(inPath, outPath, size, chars) then
+  if Font.GenerateFontFile(inPath, outPath, chars, 48) then
     printfn "Success!"
   else
     failwith msg

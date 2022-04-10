@@ -21,7 +21,9 @@ let private main _ =
   let initGame() =
     let soundProgress, soundInit = SoundControl.loading
 
-    let progressSum = 1 + Menu.Container.ProgressCount + soundProgress
+    let container = Menu.Container(TextMap.textMapJapanese)
+
+    let progressSum = 1 + container.ProgressCount + soundProgress
     let loadingSize = windowSize.To2F() * Vector2F(0.75f, 0.125f)
     let loading =
       Loading
@@ -39,7 +41,7 @@ let private main _ =
       loading.Progress() |> ignore
 
       let! child = Async.StartChild (async {
-        let container = Menu.Container(TextMap.textMapJapanese, loading.Progress)
+        container.Load(loading.Progress >> ignore)
 
         do! soundInit loading.Progress
 
