@@ -182,6 +182,8 @@ Target.create "Publish" (fun _ ->
               Properties =
                 ("PublishSingleFile", "true")
                 :: ("PublishTrimmed", "true")
+                :: ("DebugSymbols", "false")
+                :: ("DebugType", "None")
                 :: p.MSBuildParams.Properties
           }
           OutputPath = binaryOutputDirectory |> Some
