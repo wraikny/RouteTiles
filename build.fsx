@@ -56,7 +56,10 @@ Target.create "Clean" (fun _ ->
 Target.create "Build" (fun _ ->
   !! "src/**/*.*proj"
   ++ "tests/**/*.*proj"
-  |> Seq.iter (DotNet.build id)
+  |> Seq.iter (DotNet.build (fun p ->
+        { p with
+            MSBuildParams = { p.MSBuildParams with DisableInternalBinLog = true }
+        }))
 )
 
 
@@ -175,6 +178,7 @@ Target.create "Publish" (fun _ ->
           SelfContained = Some true
           MSBuildParams = {
             p.MSBuildParams with
+              DisableInternalBinLog = true
               Properties =
                 ("PublishSingleFile", "true")
                 :: ("PublishTrimmed", "true")
