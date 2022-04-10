@@ -111,6 +111,24 @@ let buttons
           )
           |> BoxUI.alignCenter
 
+        // ボタンサイズを超過したテキストを省略する
+        let rec onUpdateEvent = new Action<_>(fun (node: TextNode) ->
+          if node.ContentSize.X > buttonSize.X * 0.9f then
+            let rec f a b =
+              if (b - a) > 1 then
+                let l = (a + b) / 2
+                node.Text <- text.[0..l] + "..."
+                if node.ContentSize.X > buttonSize.X * 0.9f then
+                  f a l
+                else
+                  f l b
+            f 0 text.Length
+            textElem.RequireResize()
+          textElem.remove_OnUpdateEvent onUpdateEvent
+        )
+
+        textElem.add_OnUpdateEvent onUpdateEvent
+
         yield
           Sprite.Create
             ( aspect = Aspect.Fixed
