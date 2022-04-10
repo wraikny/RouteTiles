@@ -20,12 +20,19 @@ let makeJoystickInputter (inputs) (index): 'msg option =
   |> Option.map snd
 
 let pauseInput controller =
-  controller |> function
-  | Controller.KeyboardShift
-  | Controller.KeyboardSeparate ->
-    Engine.Keyboard.GetKeyState(Key.Escape) = ButtonState.Push
-  | Controller.Joystick (index, _, _) ->
-    Engine.Joystick.GetButtonState(index, JoystickButton.Guide) = ButtonState.Push
+  Engine.Keyboard.GetKeyState(Key.Escape) = ButtonState.Push
+  || (
+    controller |> function
+    | Controller.Joystick (index, _, _) ->
+      [|
+        JoystickButton.Back
+        JoystickButton.Start
+        JoystickButton.Guide
+      |] |> Array.exists (fun btn ->
+        Engine.Joystick.GetButtonState(index, btn) = ButtonState.Push
+      )
+    | _ -> false
+  )
 
 
 let dirPairs = [|
