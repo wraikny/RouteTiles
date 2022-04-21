@@ -1,5 +1,5 @@
 #r "netstandard"
-#r "nuget: Altseed2"
+#r "nuget: Altseed2, 2.2.2"
 #load "ResourcesPassword.fs"
 #load "src/RouteTiles/TextMap.fs"
 

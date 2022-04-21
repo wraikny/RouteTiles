@@ -53,8 +53,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Altseed2" Version="2.1.0" />
-    <PackageReference Include="Altseed2.BoxUI" Version="2.1.1" />
+    <PackageReference Include="Altseed2" Version="2.2.2" />
+    <PackageReference Include="Altseed2.BoxUI" Version="2.2.0" />
   </ItemGroup>
   <Import Project="../Shared.targets" />
 </Project>
